@@ -26,7 +26,7 @@ jobs:
       )
     steps:
       - name: Merge pull request
-        uses: pascalgn/automerge-action@v0.13.0
+        uses: pascalgn/automerge-action@v0.13.1
         env:
           MERGE_LABELS: ''
           UPDATE_LABELS: autorebase
