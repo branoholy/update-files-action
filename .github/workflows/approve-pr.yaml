@@ -63,7 +63,7 @@
 
 name: Approve PR
 
-on: pull_request
+on: pull_request_target
 
 jobs:
   approve-dependabots-pr:

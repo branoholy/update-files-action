@@ -1,6 +1,6 @@
 name: Request PR review
 
-on: pull_request
+on: pull_request_target
 
 jobs:
   request-dependabots-pr-review:
