@@ -1,8 +1,6 @@
 name: Automatically merge PR
 
-on:
-  pull_request_target:
-    types: opened
+on: pull_request_target
 
 jobs:
   auto-merge-pr:
