@@ -31,10 +31,13 @@ inputs:
     required: false
     default: 'true'
   pull-request.title:
-    description: A custom pull request title.
+    description: 'A custom pull request title. Default: `commit.message`.'
     required: false
   pull-request.body:
     description: A custom pull request body.
+    required: false
+  pull-request.base:
+    description: 'A custom base branch for the pull request. Default: default branch.'
     required: false
   pull-request.labels:
     description: A comma-separated list of labels.

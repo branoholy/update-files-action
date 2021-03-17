@@ -20,6 +20,7 @@ export const E2EConstants = {
 
   pullRequestTitle: 'pull-request-title',
   pullRequestBody: 'pull-request-body',
+  pullRequestBase: 'custom-base-branch',
   pullRequestLabels: 'label1, label2',
   pullRequestAssignees: 'assignee1',
   pullRequestReviewers: 'reviewer1, reviewer2, reviewer3',

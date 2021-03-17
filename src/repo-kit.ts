@@ -12,7 +12,7 @@ export interface CommitFilesArgs {
 
 export interface CreatePullRequestArgs {
   readonly branch: string;
-  readonly baseBranch: string;
+  readonly base?: string;
   readonly title?: string;
   readonly body?: string;
   readonly labels?: string[];
@@ -195,7 +195,7 @@ export class RepoKit {
 
   async createPullRequest({
     branch,
-    baseBranch,
+    base,
     title,
     body,
     labels,
@@ -207,7 +207,7 @@ export class RepoKit {
   }: CreatePullRequestArgs) {
     const { data } = await this.octokit.pulls.create({
       ...this.getRepositoryInfo(),
-      base: baseBranch,
+      base: base || (await this.getDefaultBranchName()),
       head: branch,
       title: await this.createPullRequestTitle(branch, title),
       body,

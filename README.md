@@ -41,6 +41,7 @@ with:
   pull-request: true
   pull-request.title: Pull request title
   pull-request.body: Pull request body
+  pull-request.base: develop
   pull-request.labels: label1, label2
   pull-request.assignees: assignee1, assignee2
   pull-request.reviewers: reviewer1, reviewer2

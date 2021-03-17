@@ -290,6 +290,7 @@ describe('e2e tests', () => {
     process.env.INPUT_BRANCH = E2EConstants.branch;
     process.env['INPUT_PULL-REQUEST.TITLE'] = E2EConstants.pullRequestTitle;
     process.env['INPUT_PULL-REQUEST.BODY'] = E2EConstants.pullRequestBody;
+    process.env['INPUT_PULL-REQUEST.BASE'] = E2EConstants.pullRequestBase;
     process.env['INPUT_PULL-REQUEST.LABELS'] = E2EConstants.pullRequestLabels;
     process.env['INPUT_PULL-REQUEST.ASSIGNEES'] = E2EConstants.pullRequestAssignees;
     process.env['INPUT_PULL-REQUEST.REVIEWERS'] = E2EConstants.pullRequestReviewers;

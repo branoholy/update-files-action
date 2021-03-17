@@ -40,6 +40,7 @@ describe('app', () => {
   const pullRequest: PullRequestArgs = {
     title: 'pull-request-title',
     body: 'pull-request-body',
+    base: 'custom-base-branch',
     labels: ['label1', 'label2'],
     assignees: ['assignee1'],
     reviewers: ['reviewer1', 'reviewer2', 'reviewer3'],
@@ -91,7 +92,7 @@ describe('app', () => {
     RepoKitMock.prototype.createPullRequest.mockResolvedValue(createPullRequestResult);
   });
 
-  it('flow #1: no file is changed', async () => {
+  test('flow #1: no file is changed', async () => {
     // No file is changed
     isFileChangedMock.mockReturnValue(false);
 
@@ -107,7 +108,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances.length).toBe(0);
   });
 
-  it('flow #2: all files are changed, the branch does not exist, use defaults for the commit and the pull request', async () => {
+  test('flow #2: all files are changed, the branch does not exist, use defaults for the commit and the pull request', async () => {
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
@@ -152,17 +153,10 @@ describe('app', () => {
     TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
 
     // A pull request is created
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [
-      [
-        {
-          branch: branchDefaultArg,
-          baseBranch: defaultBranch
-        }
-      ]
-    ]);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [[{ branch: branchDefaultArg }]]);
   });
 
-  it('flow #3: all files are changed, the branch exists, delete the branch', async () => {
+  test('flow #3: all files are changed, the branch exists, delete the branch', async () => {
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
@@ -211,17 +205,10 @@ describe('app', () => {
     TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
 
     // A pull request is created
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [
-      [
-        {
-          branch,
-          baseBranch: defaultBranch
-        }
-      ]
-    ]);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [[{ branch }]]);
   });
 
-  it('flow #4: all files are changed, the branch (ref) exists, do not delete the branch', async () => {
+  test('flow #4: all files are changed, the branch (ref) exists, do not delete the branch', async () => {
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
@@ -267,17 +254,10 @@ describe('app', () => {
     TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
 
     // A pull request is created
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [
-      [
-        {
-          branch,
-          baseBranch: defaultBranch
-        }
-      ]
-    ]);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [[{ branch }]]);
   });
 
-  it('flow #5: all files are changed, the branch exists, do not delete the branch, do not create a pull request', async () => {
+  test('flow #5: all files are changed, the branch exists, do not delete the branch, do not create a pull request', async () => {
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
@@ -325,7 +305,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances[0]?.createPullRequest).not.toBeCalled();
   });
 
-  it('flow #6: all files are changed, the branch exists, do not delete the branch, amend the commit, do not create a pull request', async () => {
+  test('flow #6: all files are changed, the branch exists, do not delete the branch, amend the commit, do not create a pull request', async () => {
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
@@ -385,7 +365,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances[0]?.createPullRequest).not.toBeCalled();
   });
 
-  it('flow #7: an exception is thrown', async () => {
+  test('flow #7: an exception is thrown', async () => {
     const error = new Error('error-message');
 
     isFileChangedMock.mockImplementation(() => {
@@ -404,7 +384,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances.length).toBe(0);
   });
 
-  it('flow #8: all files are changed, the branch does not exist, use all custom arguments for the pull request', async () => {
+  test('flow #8: all files are changed, the branch does not exist, use all custom arguments for the pull request', async () => {
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
@@ -454,14 +434,13 @@ describe('app', () => {
       [
         {
           branch,
-          baseBranch: defaultBranch,
           ...pullRequest
         }
       ]
     ]);
   });
 
-  it('flow #9: wrong repository is used', async () => {
+  test('flow #9: wrong repository is used', async () => {
     // A wrong repository is used
     const exitCode = await app({ ...appArgs, repository: 'wrong' });
     expect(consoleInfoMock).not.toBeCalled();
@@ -478,7 +457,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances.length).toBe(0);
   });
 
-  it('flow #10: commit message is missing', async () => {
+  test('flow #10: commit message is missing', async () => {
     // The commit message is missing
     const exitCode = await app({ ...appArgs, commit: {} });
     expect(consoleInfoMock).not.toBeCalled();
