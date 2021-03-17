@@ -23,6 +23,7 @@ const getPullRequestArgs = () => {
   const pullRequestArgs: PullRequestArgs = {
     title: ActionUtils.getInputAsString('pull-request.title'),
     body: ActionUtils.getInputAsString('pull-request.body'),
+    base: ActionUtils.getInputAsString('pull-request.base'),
     labels: ActionUtils.getInputAsStrings('pull-request.labels'),
     assignees: ActionUtils.getInputAsStrings('pull-request.assignees'),
     reviewers: ActionUtils.getInputAsStrings('pull-request.reviewers'),

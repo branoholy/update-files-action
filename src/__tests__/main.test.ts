@@ -36,6 +36,7 @@ describe('main', () => {
   const pullRequest: PullRequestArgs = {
     title: 'pull-request-title',
     body: 'pull-request-body',
+    base: 'custom-base-branch',
     labels: ['label1', 'label2'],
     assignees: ['assignee1'],
     reviewers: ['reviewer1', 'reviewer2', 'reviewer3'],
@@ -104,6 +105,7 @@ describe('main', () => {
 
     expect(ActionUtilsMock.getInputAsString).toBeCalledWith('pull-request.title');
     expect(ActionUtilsMock.getInputAsString).toBeCalledWith('pull-request.body');
+    expect(ActionUtilsMock.getInputAsString).toBeCalledWith('pull-request.base');
 
     expect(ActionUtilsMock.getInputAsStrings).toBeCalledWith('pull-request.labels');
     expect(ActionUtilsMock.getInputAsStrings).toBeCalledWith('pull-request.assignees');
@@ -209,6 +211,9 @@ describe('main', () => {
       }
       if (name === 'pull-request.body') {
         return pullRequest.body;
+      }
+      if (name === 'pull-request.base') {
+        return pullRequest.base;
       }
 
       return undefined;

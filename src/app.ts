@@ -61,8 +61,7 @@ const commitChangedFiles = async (repoKit: RepoKit, paths: string[], branch: str
 const createPullRequest = async (repoKit: RepoKit, branch: string, pullRequestArgs: PullRequestArgs) => {
   const pullRequest = await repoKit.createPullRequest({
     ...pullRequestArgs,
-    branch,
-    baseBranch: await repoKit.getDefaultBranchName()
+    branch
   });
 
   console.info(`Pull request has been created at ${pullRequest.html_url}`);
@@ -77,6 +76,7 @@ export interface CommitArgs {
 export interface PullRequestArgs {
   readonly title?: string;
   readonly body?: string;
+  readonly base?: string;
   readonly labels?: string[];
   readonly assignees?: string[];
   readonly reviewers?: string[];

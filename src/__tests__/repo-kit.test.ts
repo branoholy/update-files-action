@@ -339,7 +339,7 @@ describe('RepoKit', () => {
 
       expectCommitMethods();
 
-      // Use instance[0] to use token for createCommit
+      // Use instance[0] to be sure the token for createCommit is used
       expect(OctokitMock.mock.instances[0]?.git.createCommit).toBeCalledWith({
         ...repositoryInfo,
         parents: ['sha'],
@@ -367,7 +367,7 @@ describe('RepoKit', () => {
       // A new instance of Octokit is created with commitToken
       expect(OctokitMock.mock.calls[1]?.[0]).toStrictEqual({ auth: commitToken });
 
-      // Use instance[1] to use commitToken for createCommit
+      // Use instance[1] to be sure the commitToken for createCommit is used
       expect(OctokitMock.mock.instances[1]?.git.createCommit).toBeCalledWith({
         ...repositoryInfo,
         parents: ['sha'],
@@ -477,16 +477,18 @@ describe('RepoKit', () => {
 
     const pullRequest = { number: 42 } as Awaited<ReturnType<Octokit['pulls']['create']>>['data'];
 
-    it('should call all necessary methods in the correct order', async () => {
+    beforeEach(() => {
       octokitMock.pulls.create.mockResolvedValue({
         ...response201,
         data: pullRequest
       });
+    });
 
+    it('should call all necessary methods in the correct order', async () => {
       expect(
         await repoKit.createPullRequest({
           branch,
-          baseBranch,
+          base: baseBranch,
           title,
           body,
           labels,
@@ -523,6 +525,22 @@ describe('RepoKit', () => {
       });
     });
 
+    it('should use the default branch when base is not defined', async () => {
+      const defaultBranch = 'defaultBranch';
+      const getDefaultBranchName = jest.spyOn(repoKit, 'getDefaultBranchName').mockResolvedValue(defaultBranch);
+
+      await repoKit.createPullRequest({ branch, title });
+
+      expect(getDefaultBranchName).toBeCalled();
+
+      expect(octokitMock.pulls.create).toBeCalledWith({
+        ...repositoryInfo,
+        base: defaultBranch,
+        head: branch,
+        title
+      });
+    });
+
     it('should use message of last commit as title when title is not defined', async () => {
       const message = 'commit-mesage';
 
@@ -537,22 +555,10 @@ describe('RepoKit', () => {
         }
       } as Awaited<ReturnType<Octokit['repos']['getBranch']>>);
 
-      octokitMock.pulls.create.mockResolvedValue({
-        ...response201,
-        data: pullRequest
-      });
-
       expect(
         await repoKit.createPullRequest({
           branch,
-          baseBranch,
-          body,
-          labels,
-          assignees,
-          reviewers,
-          teamReviewers,
-          milestone,
-          draft
+          base: baseBranch
         })
       ).toBe(pullRequest);
 
@@ -565,123 +571,43 @@ describe('RepoKit', () => {
         ...repositoryInfo,
         base: baseBranch,
         head: branch,
-        title: message,
-        body,
-        draft
-      });
-
-      expect(octokitMock.pulls.requestReviewers).toBeCalledWith({
-        ...repositoryInfo,
-        pull_number: pullRequest.number,
-        reviewers,
-        team_reviewers: teamReviewers
-      });
-
-      expect(octokitMock.issues.update).toBeCalledWith({
-        ...repositoryInfo,
-        issue_number: pullRequest.number,
-        labels,
-        assignees,
-        milestone
+        title: message
       });
     });
 
     it('should not call requestReviewers when reviewers and team reviewers are not defined', async () => {
-      const createMock = OctokitMock.mock.instances[0]?.pulls.create;
-      const createReviewRequestMock = OctokitMock.mock.instances[0]?.pulls.requestReviewers;
-
-      createMock?.mockResolvedValue({
-        ...response201,
-        data: pullRequest
-      });
-
-      await repoKit.createPullRequest({ branch, baseBranch, title });
-
-      expect(createReviewRequestMock).not.toBeCalled();
+      await repoKit.createPullRequest({ branch, base: baseBranch, title });
+      expect(octokitMock.pulls.requestReviewers).not.toBeCalled();
     });
 
     it('should call requestReviewers when reviewers are defined', async () => {
-      const createMock = OctokitMock.mock.instances[0]?.pulls.create;
-      const createReviewRequestMock = OctokitMock.mock.instances[0]?.pulls.requestReviewers;
-
-      createMock?.mockResolvedValue({
-        ...response201,
-        data: pullRequest
-      });
-
-      await repoKit.createPullRequest({ branch, baseBranch, title, reviewers });
-
-      expect(createReviewRequestMock).toBeCalled();
+      await repoKit.createPullRequest({ branch, base: baseBranch, title, reviewers });
+      expect(octokitMock.pulls.requestReviewers).toBeCalled();
     });
 
     it('should call requestReviewers when team reviewers are defined', async () => {
-      const createMock = OctokitMock.mock.instances[0]?.pulls.create;
-      const createReviewRequestMock = OctokitMock.mock.instances[0]?.pulls.requestReviewers;
-
-      createMock?.mockResolvedValue({
-        ...response201,
-        data: pullRequest
-      });
-
-      await repoKit.createPullRequest({ branch, baseBranch, title, teamReviewers });
-
-      expect(createReviewRequestMock).toBeCalled();
+      await repoKit.createPullRequest({ branch, base: baseBranch, title, teamReviewers });
+      expect(octokitMock.pulls.requestReviewers).toBeCalled();
     });
 
     it('should not call update when labels and assignees and milestone are not defined', async () => {
-      const createMock = OctokitMock.mock.instances[0]?.pulls.create;
-      const updateMock = OctokitMock.mock.instances[0]?.issues.update;
-
-      createMock?.mockResolvedValue({
-        ...response201,
-        data: pullRequest
-      });
-
-      await repoKit.createPullRequest({ branch, baseBranch, title });
-
-      expect(updateMock).not.toBeCalled();
+      await repoKit.createPullRequest({ branch, base: baseBranch, title });
+      expect(octokitMock.issues.update).not.toBeCalled();
     });
 
     it('should call update when labels are defined', async () => {
-      const createMock = OctokitMock.mock.instances[0]?.pulls.create;
-      const updateMock = OctokitMock.mock.instances[0]?.issues.update;
-
-      createMock?.mockResolvedValue({
-        ...response201,
-        data: pullRequest
-      });
-
-      await repoKit.createPullRequest({ branch, baseBranch, title, labels });
-
-      expect(updateMock).toBeCalled();
+      await repoKit.createPullRequest({ branch, base: baseBranch, title, labels });
+      expect(octokitMock.issues.update).toBeCalled();
     });
 
     it('should call update when assignees are defined', async () => {
-      const createMock = OctokitMock.mock.instances[0]?.pulls.create;
-      const updateMock = OctokitMock.mock.instances[0]?.issues.update;
-
-      createMock?.mockResolvedValue({
-        ...response201,
-        data: pullRequest
-      });
-
-      await repoKit.createPullRequest({ branch, baseBranch, title, assignees });
-
-      expect(updateMock).toBeCalled();
+      await repoKit.createPullRequest({ branch, base: baseBranch, title, assignees });
+      expect(octokitMock.issues.update).toBeCalled();
     });
 
     it('should call update when milestone is defined', async () => {
-      const createMock = OctokitMock.mock.instances[0]?.pulls.create;
-      const updateMock = OctokitMock.mock.instances[0]?.issues.update;
-
-      createMock?.mockResolvedValue({
-        ...response201,
-        data: pullRequest
-      });
-
-      await repoKit.createPullRequest({ branch, baseBranch, title, milestone });
-
-      expect(updateMock).toBeCalled();
+      await repoKit.createPullRequest({ branch, base: baseBranch, title, milestone });
+      expect(octokitMock.issues.update).toBeCalled();
     });
   });
 });

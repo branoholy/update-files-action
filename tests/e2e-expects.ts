@@ -98,10 +98,12 @@ const pullRequestIsCreated = (gitHubMock: GitHubMock, branch: string, full = fal
     ? {
         title: E2EConstants.pullRequestTitle,
         body: E2EConstants.pullRequestBody,
+        base: E2EConstants.pullRequestBase,
         draft: E2EConstants.pullRequestDraft === 'true'
       }
     : {
-        title: E2EConstants.commitMessage
+        title: E2EConstants.commitMessage,
+        base: E2EConstants.defaultBranch
       };
 
   TestUtils.expectToBeCalled(gitHubMock.restMocks.pulls.create, [
@@ -109,7 +111,6 @@ const pullRequestIsCreated = (gitHubMock: GitHubMock, branch: string, full = fal
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'pulls', 'create'>>>({
         head: branch,
-        base: E2EConstants.defaultBranch,
         ...pullsCreateArgs
       })
     ]
