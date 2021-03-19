@@ -21,8 +21,8 @@ steps:
     uses: branoholy/update-files-action
     with:
       token: ${{ secrets.GITHUB_TOKEN }}
-      paths: package-lock.json
       delete-branch: true
+      commit.paths: package-lock.json
       commit.message: Update lock file
 ```
 
@@ -32,9 +32,9 @@ steps:
 uses: branoholy/update-files-action
 with:
   token: ${{ secrets.GITHUB_TOKEN }}
-  paths: 'path/to/file/a.txt, path/to/file/b.txt, path/to/file/c.txt'
   branch: branch-name
   delete-branch: false
+  commit.paths: 'path/to/file/a.txt, path/to/file/b.txt, path/to/file/c.txt'
   commit.message: Commit message
   commit.token: ${{ secrets.ANOTHER_TOKEN }}
   commit.amend: false
@@ -79,9 +79,9 @@ jobs:
         uses: branoholy/update-files-action
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          paths: package-lock.json
           branch: update-lock-file
           delete-branch: true
+          commit.paths: package-lock.json
           commit.message: Update lock file
 ```
 

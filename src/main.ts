@@ -4,7 +4,14 @@ import { app, CommitArgs, PullRequestArgs } from './app';
 import { ActionUtils } from './utils/action-utils';
 
 const getCommitArgs = () => {
+  const commit = ActionUtils.getInputAsBoolean('commit') ?? true;
+
+  if (!commit) {
+    return undefined;
+  }
+
   const commitArgs: CommitArgs = {
+    paths: ActionUtils.getInputAsStrings('commit.paths', { required: true }),
     message: ActionUtils.getInputAsString('commit.message'),
     token: ActionUtils.getInputAsString('commit.token'),
     amend: ActionUtils.getInputAsBoolean('commit.amend')
@@ -44,7 +51,6 @@ export const main = async () => {
     const exitCode = await app({
       repository: requiredEnv.GITHUB_REPOSITORY,
       token: ActionUtils.getInputAsString('token', { required: true }),
-      paths: ActionUtils.getInputAsStrings('paths', { required: true }),
       branch: ActionUtils.getInputAsString('branch'),
       deleteBranch: ActionUtils.getInputAsBoolean('delete-branch'),
       commit: getCommitArgs(),

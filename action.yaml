@@ -4,9 +4,6 @@ inputs:
   token:
     description: A token for committing the updated files and creating the pull request.
     required: true
-  paths:
-    description: A comma-separated list of paths to commit if they were changed.
-    required: true
   branch:
     description: A custom branch name.
     required: false
@@ -15,8 +12,15 @@ inputs:
     description: A flag for deleting the branch if it exists.
     required: false
     default: 'false'
+  commit:
+    description: A flag for committing changes.
+    required: false
+    default: 'true'
+  commit.paths:
+    description: A comma-separated list of paths to commit if they were changed. It is required if `commit` is `'true'` (default).
+    required: false
   commit.message:
-    description: A commit message. It is required if `commit.amend` is `'false'`.
+    description: A commit message. It is required if `commit` is `'true'` (default) and `commit.amend` is `'false'`.
     required: false
   commit.token:
     description: A token that will be used to commit the files instead of token.
