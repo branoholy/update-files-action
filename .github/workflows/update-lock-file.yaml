@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v2.1.5
         with:
-          node-version: 15.11.0
+          node-version: 15.12.0
       - name: Update the lock file
         run: rm package-lock.json && npm i
       - name: Create a pull request with the updated file
