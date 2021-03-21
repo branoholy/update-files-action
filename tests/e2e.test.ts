@@ -62,7 +62,7 @@ describe('e2e tests', () => {
 
     process.env.GITHUB_REPOSITORY = E2EConstants.repository;
     process.env.INPUT_TOKEN = E2EConstants.token;
-    process.env.INPUT_PATHS = E2EConstants.paths;
+    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.paths;
     process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
   });
 
@@ -85,6 +85,7 @@ describe('e2e tests', () => {
     );
 
     await main();
+
     expect(E2EMocks.consoleError).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
 
@@ -100,7 +101,11 @@ describe('e2e tests', () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
+    // Create a pull request
+    process.env['INPUT_PULL-REQUEST'] = 'true';
+
     await main();
+
     expect(E2EMocks.consoleError).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
 
@@ -124,14 +129,16 @@ describe('e2e tests', () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
-    // Use a custom branch, delete the branch
+    // Use a custom branch, delete the branch, create a pull request
     process.env.INPUT_BRANCH = E2EConstants.branch;
     process.env['INPUT_DELETE-BRANCH'] = 'true';
+    process.env['INPUT_PULL-REQUEST'] = 'true';
 
     // The branch exists
     gitHubMock.createBranch(E2EConstants.branch);
 
     await main();
+
     expect(E2EMocks.consoleError).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
 
@@ -160,13 +167,15 @@ describe('e2e tests', () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
-    // Use a custom branch (ref)
+    // Use a custom branch (ref), create a pull request
     process.env.INPUT_BRANCH = `refs/heads/${E2EConstants.branch}`;
+    process.env['INPUT_PULL-REQUEST'] = 'true';
 
     // The branch exists
     gitHubMock.createBranch(E2EConstants.branch);
 
     await main();
+
     expect(E2EMocks.consoleError).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
 
@@ -200,6 +209,7 @@ describe('e2e tests', () => {
     gitHubMock.createBranch(E2EConstants.branch);
 
     await main();
+
     expect(E2EMocks.consoleError).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
 
@@ -241,6 +251,7 @@ describe('e2e tests', () => {
     gitHubMock.commit(E2EConstants.branch);
 
     await main();
+
     expect(E2EMocks.consoleError).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
 
@@ -272,6 +283,7 @@ describe('e2e tests', () => {
     const error = new Error(`Command failed: ${command}`);
 
     await main();
+
     expect(E2EMocks.consoleInfo).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
 
@@ -299,6 +311,7 @@ describe('e2e tests', () => {
     process.env['INPUT_PULL-REQUEST.DRAFT'] = E2EConstants.pullRequestDraft;
 
     await main();
+
     expect(E2EMocks.consoleError).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
 
@@ -324,6 +337,7 @@ describe('e2e tests', () => {
     ChildProcess.execSync(E2EConstants.commands);
 
     await main();
+
     expect(E2EMocks.consoleInfo).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
 
@@ -341,6 +355,7 @@ describe('e2e tests', () => {
     ChildProcess.execSync(E2EConstants.commands);
 
     await main();
+
     expect(E2EMocks.consoleInfo).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
 

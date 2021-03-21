@@ -12,7 +12,7 @@ export interface NonRequiredInputOptions extends ActionsCore.InputOptions {
 
 export type InputOptions = RequiredInputOptions | NonRequiredInputOptions;
 
-function getInput(name: string, options?: InputOptions) {
+const getInput = (name: string, options?: InputOptions) => {
   const input = ActionsCore.getInput(name, options);
 
   if (!options?.required && input === '') {
@@ -20,7 +20,7 @@ function getInput(name: string, options?: InputOptions) {
   }
 
   return input;
-}
+};
 
 function getInputAsBoolean(name: string): boolean | undefined;
 function getInputAsBoolean(name: string, options: RequiredInputOptions): boolean;
@@ -70,9 +70,13 @@ function getInputAsStrings(name: string, options?: InputOptions): string[] | und
   return StringUtils.parseList(getInput(name, options));
 }
 
+const hasInput = (name: string) => getInput(name) !== undefined;
+
 export const ActionUtils = {
   getInputAsBoolean,
   getInputAsInteger,
   getInputAsString,
-  getInputAsStrings
+  getInputAsStrings,
+
+  hasInput
 };

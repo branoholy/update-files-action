@@ -3,8 +3,25 @@ import * as envalid from 'envalid';
 import { app, CommitArgs, PullRequestArgs } from './app';
 import { ActionUtils } from './utils/action-utils';
 
+const commitArgFields = ['paths', 'message', 'token', 'amend'];
+
+const pullRequestArgFields = [
+  'title',
+  'body',
+  'base',
+  'labels',
+  'assignees',
+  'reviewers',
+  'teamReviewers',
+  'milestone',
+  'draft'
+];
+
+const hasCommitArgs = () => commitArgFields.some((field) => ActionUtils.hasInput(`commit.${field}`));
+const hasPullRequestArgs = () => pullRequestArgFields.some((field) => ActionUtils.hasInput(`pull-request.${field}`));
+
 const getCommitArgs = () => {
-  const commit = ActionUtils.getInputAsBoolean('commit') ?? true;
+  const commit = ActionUtils.getInputAsBoolean('commit') ?? hasCommitArgs();
 
   if (!commit) {
     return undefined;
@@ -21,7 +38,7 @@ const getCommitArgs = () => {
 };
 
 const getPullRequestArgs = () => {
-  const pullRequest = ActionUtils.getInputAsBoolean('pull-request') ?? true;
+  const pullRequest = ActionUtils.getInputAsBoolean('pull-request') ?? hasPullRequestArgs();
 
   if (!pullRequest) {
     return undefined;

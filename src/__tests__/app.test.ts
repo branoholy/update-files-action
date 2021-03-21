@@ -30,10 +30,10 @@ describe('app', () => {
   const repository = `${owner}/${repositoryName}`;
   const token = 'token';
 
-  const paths = ['path1', 'path2'];
   const branch = 'branch';
 
   const commit: CommitArgs = {
+    paths: ['path1', 'path2'],
     message: 'commit-message'
   };
 
@@ -52,7 +52,6 @@ describe('app', () => {
   const appArgs: AppArgs = {
     repository,
     token,
-    paths,
     commit,
     pullRequest: {}
   };
@@ -143,7 +142,7 @@ describe('app', () => {
       [
         {
           branch: branchDefaultArg,
-          paths,
+          paths: commit.paths,
           message: commit.message
         }
       ]
@@ -195,7 +194,7 @@ describe('app', () => {
       [
         {
           branch,
-          paths,
+          paths: commit.paths,
           message: commit.message
         }
       ]
@@ -244,7 +243,7 @@ describe('app', () => {
       [
         {
           branch,
-          paths,
+          paths: commit.paths,
           message: commit.message
         }
       ]
@@ -292,7 +291,7 @@ describe('app', () => {
       [
         {
           branch,
-          paths,
+          paths: commit.paths,
           message: commit.message
         }
       ]
@@ -351,7 +350,7 @@ describe('app', () => {
       [
         {
           branch,
-          paths,
+          paths: commit.paths,
           message: commit.message,
           amend: true
         }
@@ -420,7 +419,7 @@ describe('app', () => {
       [
         {
           branch,
-          paths,
+          paths: commit.paths,
           message: commit.message
         }
       ]
@@ -459,7 +458,7 @@ describe('app', () => {
 
   test('flow #10: commit message is missing', async () => {
     // The commit message is missing
-    const exitCode = await app({ ...appArgs, commit: {} });
+    const exitCode = await app({ ...appArgs, commit: { paths: commit.paths } });
     expect(consoleInfoMock).not.toBeCalled();
     expect(exitCode).toBe(1);
 
