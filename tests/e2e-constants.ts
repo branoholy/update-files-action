@@ -13,9 +13,9 @@ export const E2EConstants = {
   repository: `${owner}/${repositoryName}`,
   token: 'token',
 
-  paths: `${testFilesDirectory}/path1, ${testFilesDirectory}/path2`,
   branch: 'branch',
 
+  commitPaths: `${testFilesDirectory}/path1, ${testFilesDirectory}/path2`,
   commitMessage: 'commit-message',
 
   pullRequestTitle: 'pull-request-title',

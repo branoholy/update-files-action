@@ -62,8 +62,6 @@ describe('e2e tests', () => {
 
     process.env.GITHUB_REPOSITORY = E2EConstants.repository;
     process.env.INPUT_TOKEN = E2EConstants.token;
-    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.paths;
-    process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
   });
 
   afterEach(() => {
@@ -84,6 +82,10 @@ describe('e2e tests', () => {
       `echo -n content1 > ${E2EConstants.testFilesDirectory}/path1 && echo -n content2 > ${E2EConstants.testFilesDirectory}/path2`
     );
 
+    // Commit the changes
+    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+    process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+
     await main();
 
     expect(E2EMocks.consoleError).not.toBeCalled();
@@ -100,6 +102,10 @@ describe('e2e tests', () => {
 
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
+
+    // Commit the changes
+    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+    process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
 
     // Create a pull request
     process.env['INPUT_PULL-REQUEST'] = 'true';
@@ -129,9 +135,15 @@ describe('e2e tests', () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
-    // Use a custom branch, delete the branch, create a pull request
+    // Use a custom branch, delete the branch
     process.env.INPUT_BRANCH = E2EConstants.branch;
     process.env['INPUT_DELETE-BRANCH'] = 'true';
+
+    // Commit the changes
+    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+    process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+
+    // Create a pull request
     process.env['INPUT_PULL-REQUEST'] = 'true';
 
     // The branch exists
@@ -167,8 +179,14 @@ describe('e2e tests', () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
-    // Use a custom branch (ref), create a pull request
+    // Use a custom branch (ref)
     process.env.INPUT_BRANCH = `refs/heads/${E2EConstants.branch}`;
+
+    // Commit the changes
+    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+    process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+
+    // Create a pull request
     process.env['INPUT_PULL-REQUEST'] = 'true';
 
     // The branch exists
@@ -201,8 +219,14 @@ describe('e2e tests', () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
-    // Use a custom branch, do not create a pull request
+    // Use a custom branch
     process.env.INPUT_BRANCH = E2EConstants.branch;
+
+    // Commit the changes
+    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+    process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+
+    // Do not create a pull request
     process.env['INPUT_PULL-REQUEST'] = 'false';
 
     // The branch exists
@@ -240,7 +264,9 @@ describe('e2e tests', () => {
     // Use a custom branch
     process.env.INPUT_BRANCH = E2EConstants.branch;
 
-    // Amend the commit
+    // Commit the changes, amend the commit
+    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+    process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
     process.env['INPUT_COMMIT.AMEND'] = 'true';
 
     // Do not create a pull request
@@ -275,12 +301,16 @@ describe('e2e tests', () => {
     expect(gitHubMock.restMocks.pulls.create).not.toBeCalled();
   });
 
-  test('flow #7: an exception is thrown', async () => {
+  test('flow #7: an exception is thrown when checking for changed files', async () => {
     FileSystem.writeFileSync(`${E2EConstants.shellMocksDirectory}/wc`, 'exit 1');
     FileSystem.chmodSync(`${E2EConstants.shellMocksDirectory}/wc`, 0o755);
 
     const command = 'git diff --shortstat temp-e2e-test-files/path1 | wc -l';
     const error = new Error(`Command failed: ${command}`);
+
+    // Commit the changes
+    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+    process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
 
     await main();
 
@@ -298,8 +328,14 @@ describe('e2e tests', () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
-    // Use a custom branch, specify pull request arguments
+    // Use a custom branch
     process.env.INPUT_BRANCH = E2EConstants.branch;
+
+    // Commit the changes
+    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+    process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+
+    // Create a pull request with all arguments
     process.env['INPUT_PULL-REQUEST.TITLE'] = E2EConstants.pullRequestTitle;
     process.env['INPUT_PULL-REQUEST.BODY'] = E2EConstants.pullRequestBody;
     process.env['INPUT_PULL-REQUEST.BASE'] = E2EConstants.pullRequestBase;
@@ -332,9 +368,11 @@ describe('e2e tests', () => {
   });
 
   test('flow #9: wrong repository is used', async () => {
+    // All files are changed
+    ChildProcess.execSync(E2EConstants.commands);
+
     // A wrong repository is used
     process.env.GITHUB_REPOSITORY = 'wrong';
-    ChildProcess.execSync(E2EConstants.commands);
 
     await main();
 
@@ -350,9 +388,11 @@ describe('e2e tests', () => {
   });
 
   test('flow #10: commit message is missing', async () => {
-    // The commit message is missing
-    process.env['INPUT_COMMIT.MESSAGE'] = '';
+    // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
+
+    // Commit the changes without a commit message
+    process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
 
     await main();
 

@@ -51,9 +51,7 @@ describe('app', () => {
 
   const appArgs: AppArgs = {
     repository,
-    token,
-    commit,
-    pullRequest: {}
+    token
   };
 
   const defaultBranch = 'default-branch';
@@ -95,7 +93,12 @@ describe('app', () => {
     // No file is changed
     isFileChangedMock.mockReturnValue(false);
 
-    const exitCode = await app(appArgs);
+    const exitCode = await app({
+      ...appArgs,
+      // Commit the changes
+      commit
+    });
+
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -114,7 +117,14 @@ describe('app', () => {
     // The branch does not exist
     RepoKitMock.prototype.hasBranch.mockResolvedValue(false);
 
-    const exitCode = await app(appArgs);
+    const exitCode = await app({
+      ...appArgs,
+      // Commit the changes
+      commit,
+      // Create a pull request
+      pullRequest: {}
+    });
+
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -162,8 +172,17 @@ describe('app', () => {
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
 
-    // Use a custom branch, delete the branch
-    const exitCode = await app({ ...appArgs, branch, deleteBranch: true });
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch, delete the branch
+      branch,
+      deleteBranch: true,
+      // Commit the changes
+      commit,
+      // Create a pull request
+      pullRequest: {}
+    });
+
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -214,8 +233,16 @@ describe('app', () => {
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
 
-    // Use a custom branch (ref)
-    const exitCode = await app({ ...appArgs, branch: `refs/heads/${branch}` });
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch (ref)
+      branch: `refs/heads/${branch}`,
+      // Commit the changes
+      commit,
+      // Create a pull request
+      pullRequest: {}
+    });
+
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -263,8 +290,16 @@ describe('app', () => {
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
 
-    // Use a custom branch, do not create a pull request
-    const exitCode = await app({ ...appArgs, branch, pullRequest: undefined });
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch
+      branch,
+      // Commit the changes
+      commit,
+      // Do not create a pull request
+      pullRequest: undefined
+    });
+
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -315,9 +350,9 @@ describe('app', () => {
       ...appArgs,
       // Use a custom branch
       branch,
+      // Commit the changes, amend the commit
       commit: {
         ...commit,
-        // Amend the commit
         amend: true
       },
       // Do not create a pull request
@@ -364,14 +399,19 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances[0]?.createPullRequest).not.toBeCalled();
   });
 
-  test('flow #7: an exception is thrown', async () => {
+  test('flow #7: an exception is thrown when checking for changed files', async () => {
     const error = new Error('error-message');
 
     isFileChangedMock.mockImplementation(() => {
       throw error;
     });
 
-    const exitCode = await app(appArgs);
+    const exitCode = await app({
+      ...appArgs,
+      // Commit the changes
+      commit
+    });
+
     expect(consoleInfoMock).not.toBeCalled();
     expect(exitCode).toBe(1);
 
@@ -390,8 +430,16 @@ describe('app', () => {
     // The branch does not exist
     RepoKitMock.prototype.hasBranch.mockResolvedValue(false);
 
-    // Use a custom branch, specify pull request arguments
-    const exitCode = await app({ ...appArgs, branch, pullRequest });
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch
+      branch,
+      // Commit the changes
+      commit,
+      // Create a pull request with all arguments
+      pullRequest
+    });
+
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -440,8 +488,15 @@ describe('app', () => {
   });
 
   test('flow #9: wrong repository is used', async () => {
-    // A wrong repository is used
-    const exitCode = await app({ ...appArgs, repository: 'wrong' });
+    // All files are changed
+    isFileChangedMock.mockReturnValue(true);
+
+    const exitCode = await app({
+      ...appArgs,
+      // A wrong repository is used
+      repository: 'wrong'
+    });
+
     expect(consoleInfoMock).not.toBeCalled();
     expect(exitCode).toBe(1);
 
@@ -457,8 +512,15 @@ describe('app', () => {
   });
 
   test('flow #10: commit message is missing', async () => {
-    // The commit message is missing
-    const exitCode = await app({ ...appArgs, commit: { paths: commit.paths } });
+    // All files are changed
+    isFileChangedMock.mockReturnValue(true);
+
+    const exitCode = await app({
+      ...appArgs,
+      // Commit the changes without a commit message
+      commit: { paths: commit.paths }
+    });
+
     expect(consoleInfoMock).not.toBeCalled();
     expect(exitCode).toBe(1);
 
