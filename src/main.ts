@@ -12,7 +12,7 @@ const pullRequestArgFields = [
   'labels',
   'assignees',
   'reviewers',
-  'teamReviewers',
+  'team-reviewers',
   'milestone',
   'draft'
 ];

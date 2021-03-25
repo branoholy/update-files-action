@@ -446,6 +446,37 @@ describe('main', () => {
     ]);
   });
 
+  it('should run app with pull-request.team-reviewers arg and exit with 0', async () => {
+    mockEnv();
+    mockInputs({
+      token,
+      'pull-request.team-reviewers': pullRequest.teamReviewers
+    });
+
+    appMock.mockResolvedValue(0);
+
+    await main();
+
+    expect(consoleErrorMock).not.toBeCalled();
+    TestUtils.expectToBeCalled(processExitMock, [[0]]);
+
+    expectEnv();
+    expectInputs();
+    expectPullRequestInputs();
+
+    TestUtils.expectToBeCalled(appMock, [
+      [
+        {
+          repository,
+          token,
+          pullRequest: {
+            teamReviewers: pullRequest.teamReviewers
+          }
+        }
+      ]
+    ]);
+  });
+
   it('should run app with all args and exit with 0', async () => {
     mockEnv();
     mockInputs({
