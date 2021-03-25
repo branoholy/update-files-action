@@ -138,25 +138,37 @@ describe('main', () => {
   const mockInputs = (inputs: Inputs) => {
     const names: InputName[] = Object.keys(inputs) as (keyof Inputs)[];
 
-    ActionUtilsMock.getInputAsBoolean.mockImplementation((name) => {
+    ActionUtilsMock.getInputAsBoolean.mockImplementation((name, { required } = {}) => {
       if (isBooleanInput(name) && names.includes(name)) {
         return inputs[name];
       }
 
-      return undefined;
-    });
-
-    ActionUtilsMock.getInputAsInteger.mockImplementation((name) => {
-      if (isIntegerInput(name) && names.includes(name)) {
-        return inputs[name];
+      if (required) {
+        throw new Error(`Missing required input: ${name}`);
       }
 
       return undefined;
     });
 
-    ActionUtilsMock.getInputAsString.mockImplementation((name) => {
+    ActionUtilsMock.getInputAsInteger.mockImplementation((name, { required } = {}) => {
+      if (isIntegerInput(name) && names.includes(name)) {
+        return inputs[name];
+      }
+
+      if (required) {
+        throw new Error(`Missing required input: ${name}`);
+      }
+
+      return undefined;
+    });
+
+    ActionUtilsMock.getInputAsString.mockImplementation((name, { required } = {}) => {
       if (isStringInput(name) && names.includes(name)) {
         return inputs[name];
+      }
+
+      if (required) {
+        throw new Error(`Missing required input: ${name}`);
       }
 
       return undefined;
