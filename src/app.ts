@@ -117,8 +117,8 @@ export const app = async ({
       branch = branch.substr(branchRefPrefix.length);
     }
 
-    const changedPaths = commit ? findChangedFiles(commit.paths) : [];
-    if (commit && changedPaths.length === 0) {
+    const changedPaths = commit ? findChangedFiles(commit.paths) : null;
+    if (changedPaths?.length === 0) {
       return 0;
     }
 
@@ -126,7 +126,7 @@ export const app = async ({
 
     await createBranch(repoKit, branch, deleteBranch);
 
-    if (commit) {
+    if (commit && changedPaths) {
       await commitChangedFiles(repoKit, changedPaths, branch, commit);
     }
 

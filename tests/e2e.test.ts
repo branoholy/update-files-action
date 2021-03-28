@@ -76,7 +76,7 @@ describe('e2e tests', () => {
     ChildProcess.execSync(`rm -rf ${E2EConstants.shellMocksDirectory}/*`);
   });
 
-  test('flow #1: no file is changed', async () => {
+  test('flow #1: no file is changed, do not commit, do not create a pull request', async () => {
     // No file is changed
     ChildProcess.execSync(
       `echo -n content1 > ${E2EConstants.testFilesDirectory}/path1 && echo -n content2 > ${E2EConstants.testFilesDirectory}/path2`
@@ -85,6 +85,9 @@ describe('e2e tests', () => {
     // Commit the changes
     process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
     process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+
+    // Create a pull request
+    process.env['INPUT_PULL-REQUEST'] = 'true';
 
     await main();
 

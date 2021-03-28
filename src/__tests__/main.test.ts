@@ -338,25 +338,32 @@ describe('main', () => {
     ]);
   });
 
-  it('should print error and exit with 1 if commit.message arg is specified and commit.paths arg is missing', async () => {
-    mockEnv();
-    mockInputs({
-      token,
-      'commit.message': commit.message
-    });
+  it.each([
+    ['commit.message', commit.message],
+    ['commit.token', commit.token],
+    ['commit.amend', commit.amend]
+  ])(
+    'should print error and exit with 1 if %s arg is specified but commit.paths arg is missing',
+    async (name, value) => {
+      mockEnv();
+      mockInputs({
+        token,
+        [name]: value
+      });
 
-    appMock.mockResolvedValue(0);
+      appMock.mockResolvedValue(0);
 
-    await main();
+      await main();
 
-    expect(consoleErrorMock).toBeCalledWith('Missing required input: commit.paths');
-    TestUtils.expectToBeCalled(processExitMock, [[1]]);
+      expect(consoleErrorMock).toBeCalledWith('Missing required input: commit.paths');
+      TestUtils.expectToBeCalled(processExitMock, [[1]]);
 
-    expectEnv();
-    expectInputs(true);
+      expectEnv();
+      expectInputs(true);
 
-    expect(appMock).not.toBeCalled();
-  });
+      expect(appMock).not.toBeCalled();
+    }
+  );
 
   it('should run app with empty pullRequest and exit with 0 if pull-request arg is true', async () => {
     mockEnv();
@@ -415,11 +422,21 @@ describe('main', () => {
     ]);
   });
 
-  it('should run app with pull-request.title arg and exit with 0', async () => {
+  it.each([
+    ['pull-request.title', 'title', pullRequest.title],
+    ['pull-request.body', 'body', pullRequest.body],
+    ['pull-request.base', 'base', pullRequest.base],
+    ['pull-request.labels', 'labels', pullRequest.labels],
+    ['pull-request.assignees', 'assignees', pullRequest.assignees],
+    ['pull-request.reviewers', 'reviewers', pullRequest.reviewers],
+    ['pull-request.team-reviewers', 'teamReviewers', pullRequest.teamReviewers],
+    ['pull-request.milestone', 'milestone', pullRequest.milestone],
+    ['pull-request.draft', 'draft', pullRequest.draft]
+  ])('should run app with %s arg and exit with 0', async (name, field, value) => {
     mockEnv();
     mockInputs({
       token,
-      'pull-request.title': pullRequest.title
+      [name]: value
     });
 
     appMock.mockResolvedValue(0);
@@ -439,38 +456,7 @@ describe('main', () => {
           repository,
           token,
           pullRequest: {
-            title: pullRequest.title
-          }
-        }
-      ]
-    ]);
-  });
-
-  it('should run app with pull-request.team-reviewers arg and exit with 0', async () => {
-    mockEnv();
-    mockInputs({
-      token,
-      'pull-request.team-reviewers': pullRequest.teamReviewers
-    });
-
-    appMock.mockResolvedValue(0);
-
-    await main();
-
-    expect(consoleErrorMock).not.toBeCalled();
-    TestUtils.expectToBeCalled(processExitMock, [[0]]);
-
-    expectEnv();
-    expectInputs();
-    expectPullRequestInputs();
-
-    TestUtils.expectToBeCalled(appMock, [
-      [
-        {
-          repository,
-          token,
-          pullRequest: {
-            teamReviewers: pullRequest.teamReviewers
+            [field]: value
           }
         }
       ]
