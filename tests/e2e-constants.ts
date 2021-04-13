@@ -17,6 +17,7 @@ export const E2EConstants = {
 
   commitPaths: `${testFilesDirectory}/path1, ${testFilesDirectory}/path2`,
   commitMessage: 'commit-message',
+  commitToken: 'commit-token',
 
   pullRequestTitle: 'pull-request-title',
   pullRequestBody: 'pull-request-body',

@@ -1,3 +1,4 @@
+import Nock from 'nock';
 import OS from 'os';
 
 import { TestUtils } from '../src/utils/test-utils';
@@ -6,7 +7,7 @@ import { E2EMocks } from './e2e-mocks';
 import { GitHubMock } from './github-mock';
 import { GitHubRestParameters } from './github-rest-mocks';
 
-const branchIsCreated = (gitHubMock: GitHubMock, branch: string) => {
+const branchIsCreated = (gitHubMock: GitHubMock, token: string, branch: string) => {
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createRef, [
     [
       expect.any(String),
@@ -16,9 +17,18 @@ const branchIsCreated = (gitHubMock: GitHubMock, branch: string) => {
       })
     ]
   ]);
+
+  const gitCreateRefMock = gitHubMock.restMocks.git.createRef.mock.instances[0] as Nock.ReplyFnContext | undefined;
+  expect(gitCreateRefMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
 };
 
-const filesAreCommitted = (gitHubMock: GitHubMock, branch: string, amend = false) => {
+const filesAreCommitted = (
+  gitHubMock: GitHubMock,
+  token: string,
+  branch: string,
+  commitToken = token,
+  amend = false
+) => {
   const oldCommitSha = amend ? 'commit-1-sha' : 'commit-0-sha';
   const newCommitSha = amend ? 'commit-2-sha' : 'commit-1-sha';
 
@@ -38,6 +48,9 @@ const filesAreCommitted = (gitHubMock: GitHubMock, branch: string, amend = false
       })
     ]
   ]);
+
+  const gitCreateBlobMock = gitHubMock.restMocks.git.createBlob.mock.instances[0] as Nock.ReplyFnContext | undefined;
+  expect(gitCreateBlobMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
 
   expect(gitHubMock.restMocks.git.getRef).toBeCalledWith(
     expect.stringMatching(new RegExp(`/heads%2F${branch}$`)),
@@ -74,6 +87,11 @@ const filesAreCommitted = (gitHubMock: GitHubMock, branch: string, amend = false
     ]
   ]);
 
+  const gitCreateCommitMock = gitHubMock.restMocks.git.createCommit.mock.instances[0] as
+    | Nock.ReplyFnContext
+    | undefined;
+  expect(gitCreateCommitMock?.req.getHeader('authorization')).toStrictEqual([`token ${commitToken}`]);
+
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.updateRef, [
     [
       expect.stringMatching(new RegExp(`/heads%2F${branch}$`)),
@@ -84,13 +102,16 @@ const filesAreCommitted = (gitHubMock: GitHubMock, branch: string, amend = false
     ]
   ]);
 
+  const gitUpdateRefMock = gitHubMock.restMocks.git.updateRef.mock.instances[0] as Nock.ReplyFnContext | undefined;
+  expect(gitUpdateRefMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
+
   TestUtils.expectToBeCalled(E2EMocks.processStdoutWrite, [
     [OS.EOL],
     [`::set-output name=commit.sha::${newCommitSha}` + OS.EOL]
   ]);
 };
 
-const pullRequestIsCreated = (gitHubMock: GitHubMock, branch: string, full = false) => {
+const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branch: string, full = false) => {
   if (!full) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.repos.getBranch, [
       [expect.stringMatching(new RegExp(`/${branch}$`)), expect.anything()]
@@ -118,6 +139,9 @@ const pullRequestIsCreated = (gitHubMock: GitHubMock, branch: string, full = fal
       })
     ]
   ]);
+
+  const pullsCreateMock = gitHubMock.restMocks.pulls.create.mock.instances[0] as Nock.ReplyFnContext | undefined;
+  expect(pullsCreateMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
 
   if (full) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.pulls.requestReviewers, [
