@@ -84,7 +84,10 @@ const filesAreCommitted = (gitHubMock: GitHubMock, branch: string, amend = false
     ]
   ]);
 
-  TestUtils.expectToBeCalled(E2EMocks.processStdoutWrite, [[`::set-output name=commit.sha::${newCommitSha}` + OS.EOL]]);
+  TestUtils.expectToBeCalled(E2EMocks.processStdoutWrite, [
+    [OS.EOL],
+    [`::set-output name=commit.sha::${newCommitSha}` + OS.EOL]
+  ]);
 };
 
 const pullRequestIsCreated = (gitHubMock: GitHubMock, branch: string, full = false) => {
