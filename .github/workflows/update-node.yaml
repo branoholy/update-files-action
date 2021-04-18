@@ -31,9 +31,9 @@ jobs:
         uses: branoholy/update-files-action@develop
         with:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
-          paths: '.nvmrc, package.json, package-lock.json, .github/workflows/ci.yaml, .github/workflows/update-dist.yaml, .github/workflows/update-lock-file.yaml, .github/workflows/update-node.yaml'
           branch: deps-update-node
           delete-branch: true
+          commit.paths: '.nvmrc, package.json, package-lock.json, .github/workflows/ci.yaml, .github/workflows/update-dist.yaml, .github/workflows/update-lock-file.yaml, .github/workflows/update-node.yaml'
           commit.message: 'DEPS: Update Node.js'
           commit.token: ${{ secrets.GITHUB_TOKEN }}
           pull-request.body: Automatic update of Node.js versions.
