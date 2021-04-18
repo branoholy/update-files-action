@@ -30,10 +30,10 @@ describe('app', () => {
   const repository = `${owner}/${repositoryName}`;
   const token = 'token';
 
-  const paths = ['path1', 'path2'];
   const branch = 'branch';
 
   const commit: CommitArgs = {
+    paths: ['path1', 'path2'],
     message: 'commit-message'
   };
 
@@ -51,10 +51,7 @@ describe('app', () => {
 
   const appArgs: AppArgs = {
     repository,
-    token,
-    paths,
-    commit,
-    pullRequest: {}
+    token
   };
 
   const defaultBranch = 'default-branch';
@@ -92,11 +89,18 @@ describe('app', () => {
     RepoKitMock.prototype.createPullRequest.mockResolvedValue(createPullRequestResult);
   });
 
-  test('flow #1: no file is changed', async () => {
+  test('flow #01: no file is changed => do not connect to GitHub', async () => {
     // No file is changed
     isFileChangedMock.mockReturnValue(false);
 
-    const exitCode = await app(appArgs);
+    const exitCode = await app({
+      ...appArgs,
+      // Commit the changes
+      commit,
+      // Create a pull request
+      pullRequest: {}
+    });
+
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -108,14 +112,19 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances.length).toBe(0);
   });
 
-  test('flow #2: all files are changed, the branch does not exist, use defaults for the commit and the pull request', async () => {
+  test('flow #02: all files are changed, branch does not exist => create branch, commit', async () => {
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
     // The branch does not exist
     RepoKitMock.prototype.hasBranch.mockResolvedValue(false);
 
-    const exitCode = await app(appArgs);
+    const exitCode = await app({
+      ...appArgs,
+      // Commit the changes
+      commit
+    });
+
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -123,8 +132,7 @@ describe('app', () => {
       ['File "path1" is changed'],
       ['File "path2" is changed'],
       [`Branch "${branchDefaultArg}" has been created`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
-      [`Pull request has been created at ${createPullRequestResult.html_url}`]
+      [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -143,7 +151,7 @@ describe('app', () => {
       [
         {
           branch: branchDefaultArg,
-          paths,
+          paths: commit.paths,
           message: commit.message
         }
       ]
@@ -151,20 +159,24 @@ describe('app', () => {
 
     // The commit hash is sent to the output
     TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
-
-    // A pull request is created
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [[{ branch: branchDefaultArg }]]);
   });
 
-  test('flow #3: all files are changed, the branch exists, delete the branch', async () => {
+  test('flow #03: all files are changed, branch exists => delete branch, commit', async () => {
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
 
-    // Use a custom branch, delete the branch
-    const exitCode = await app({ ...appArgs, branch, deleteBranch: true });
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch, delete the branch
+      branch,
+      deleteBranch: true,
+      // Commit the changes
+      commit
+    });
+
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -175,8 +187,7 @@ describe('app', () => {
       [`Deleting branch "${branch}"...`],
       [`Branch "${branch}" has been deleted`],
       [`Branch "${branch}" has been created`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
-      [`Pull request has been created at ${createPullRequestResult.html_url}`]
+      [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -195,7 +206,7 @@ describe('app', () => {
       [
         {
           branch,
-          paths,
+          paths: commit.paths,
           message: commit.message
         }
       ]
@@ -203,69 +214,23 @@ describe('app', () => {
 
     // The commit hash is sent to the output
     TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
-
-    // A pull request is created
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [[{ branch }]]);
   });
 
-  test('flow #4: all files are changed, the branch (ref) exists, do not delete the branch', async () => {
+  test('flow #04: all files are changed, ref exists => do not delete branch, commit', async () => {
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
 
-    // Use a custom branch (ref)
-    const exitCode = await app({ ...appArgs, branch: `refs/heads/${branch}` });
-    expect(consoleErrorMock).not.toBeCalled();
-    expect(exitCode).toBe(0);
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch (ref)
+      branch: `refs/heads/${branch}`,
+      // Commit the changes
+      commit
+    });
 
-    TestUtils.expectToBeCalled(consoleInfoMock, [
-      ['File "path1" is changed'],
-      ['File "path2" is changed'],
-      [`Branch "${branch}" already exists`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
-      [`Pull request has been created at ${createPullRequestResult.html_url}`]
-    ]);
-
-    TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
-    TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
-
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch]]);
-
-    // The branch is not deleted
-    expect(RepoKitMock.mock.instances[0]?.deleteBranch).not.toBeCalled();
-
-    // The branch is not created
-    expect(RepoKitMock.mock.instances[0]?.createBranch).not.toBeCalled();
-
-    // All files are committed
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
-      [
-        {
-          branch,
-          paths,
-          message: commit.message
-        }
-      ]
-    ]);
-
-    // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
-
-    // A pull request is created
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [[{ branch }]]);
-  });
-
-  test('flow #5: all files are changed, the branch exists, do not delete the branch, do not create a pull request', async () => {
-    // All files are changed
-    isFileChangedMock.mockReturnValue(true);
-
-    // The branch exists
-    RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
-
-    // Use a custom branch, do not create a pull request
-    const exitCode = await app({ ...appArgs, branch, pullRequest: undefined });
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -292,7 +257,98 @@ describe('app', () => {
       [
         {
           branch,
-          paths,
+          paths: commit.paths,
+          message: commit.message
+        }
+      ]
+    ]);
+
+    // The commit hash is sent to the output
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+  });
+
+  test('flow #05: all files are changed, branch exists => do not delete branch, do not commit', async () => {
+    // All files are changed
+    isFileChangedMock.mockReturnValue(true);
+
+    // The branch exists
+    RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
+
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch
+      branch,
+      // Do not commit
+      commit: undefined
+    });
+
+    expect(consoleErrorMock).not.toBeCalled();
+    expect(exitCode).toBe(0);
+
+    TestUtils.expectToBeCalled(consoleInfoMock, [[`Branch "${branch}" already exists`]]);
+
+    expect(isFileChangedMock).not.toBeCalled();
+    TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
+
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch]]);
+
+    // The branch is not deleted
+    expect(RepoKitMock.mock.instances[0]?.deleteBranch).not.toBeCalled();
+
+    // The branch is not created
+    expect(RepoKitMock.mock.instances[0]?.createBranch).not.toBeCalled();
+
+    // No file is committed
+    expect(RepoKitMock.mock.instances[0]?.commitFiles).not.toBeCalled();
+
+    // The commit hash is not sent to the output
+    expect(actionsCoreSetOutputMock).not.toBeCalled();
+  });
+
+  test('flow #06: all files are changed, branch exists => do not delete branch, commit, do not create pull request', async () => {
+    // All files are changed
+    isFileChangedMock.mockReturnValue(true);
+
+    // The branch exists
+    RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
+
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch
+      branch,
+      // Commit the changes
+      commit,
+      // Do not create a pull request
+      pullRequest: undefined
+    });
+
+    expect(consoleErrorMock).not.toBeCalled();
+    expect(exitCode).toBe(0);
+
+    TestUtils.expectToBeCalled(consoleInfoMock, [
+      ['File "path1" is changed'],
+      ['File "path2" is changed'],
+      [`Branch "${branch}" already exists`],
+      [`Changed files have been committed to ${commitFilesResult.sha}`]
+    ]);
+
+    TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
+    TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
+
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch]]);
+
+    // The branch is not deleted
+    expect(RepoKitMock.mock.instances[0]?.deleteBranch).not.toBeCalled();
+
+    // The branch is not created
+    expect(RepoKitMock.mock.instances[0]?.createBranch).not.toBeCalled();
+
+    // All files are committed
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
+      [
+        {
+          branch,
+          paths: commit.paths,
           message: commit.message
         }
       ]
@@ -305,7 +361,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances[0]?.createPullRequest).not.toBeCalled();
   });
 
-  test('flow #6: all files are changed, the branch exists, do not delete the branch, amend the commit, do not create a pull request', async () => {
+  test('flow #07: all files are changed, branch exists => do not delete branch, amend commit, do not create pull request', async () => {
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
@@ -316,9 +372,9 @@ describe('app', () => {
       ...appArgs,
       // Use a custom branch
       branch,
+      // Commit the changes, amend the commit
       commit: {
         ...commit,
-        // Amend the commit
         amend: true
       },
       // Do not create a pull request
@@ -351,7 +407,7 @@ describe('app', () => {
       [
         {
           branch,
-          paths,
+          paths: commit.paths,
           message: commit.message,
           amend: true
         }
@@ -365,34 +421,128 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances[0]?.createPullRequest).not.toBeCalled();
   });
 
-  test('flow #7: an exception is thrown', async () => {
-    const error = new Error('error-message');
+  test('flow #08: all files are changed, branch exists => do not delete branch, do not commit, do not create pull request', async () => {
+    // All files are changed
+    isFileChangedMock.mockReturnValue(true);
 
-    isFileChangedMock.mockImplementation(() => {
-      throw error;
+    // The branch exists
+    RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
+
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch
+      branch,
+      // Do not commit
+      commit: undefined,
+      // Do not create a pull request
+      pullRequest: undefined
     });
 
-    const exitCode = await app(appArgs);
-    expect(consoleInfoMock).not.toBeCalled();
-    expect(exitCode).toBe(1);
+    expect(consoleErrorMock).not.toBeCalled();
+    expect(exitCode).toBe(0);
 
-    TestUtils.expectToBeCalled(consoleErrorMock, [[error]]);
+    TestUtils.expectToBeCalled(consoleInfoMock, [[`Branch "${branch}" already exists`]]);
 
-    TestUtils.expectToBeCalled(isFileChangedMock, [['path1']]);
+    expect(isFileChangedMock).not.toBeCalled();
+    TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
-    // No request to GitHub is made
-    expect(RepoKitMock.mock.instances.length).toBe(0);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch]]);
+
+    // The branch is not deleted
+    expect(RepoKitMock.mock.instances[0]?.deleteBranch).not.toBeCalled();
+
+    // The branch is not created
+    expect(RepoKitMock.mock.instances[0]?.createBranch).not.toBeCalled();
+
+    // No file is committed
+    expect(RepoKitMock.mock.instances[0]?.commitFiles).not.toBeCalled();
+
+    // The commit hash is not sent to the output
+    expect(actionsCoreSetOutputMock).not.toBeCalled();
+
+    // A pull request is not created
+    expect(RepoKitMock.mock.instances[0]?.createPullRequest).not.toBeCalled();
   });
 
-  test('flow #8: all files are changed, the branch does not exist, use all custom arguments for the pull request', async () => {
+  test('flow #09: all files are changed, branch exists => do not delete branch, commit, create pull request', async () => {
+    // All files are changed
+    isFileChangedMock.mockReturnValue(true);
+
+    // The branch exists
+    RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
+
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch
+      branch,
+      // Commit the changes
+      commit,
+      // Create a pull request
+      pullRequest: {}
+    });
+
+    expect(consoleErrorMock).not.toBeCalled();
+    expect(exitCode).toBe(0);
+
+    TestUtils.expectToBeCalled(consoleInfoMock, [
+      ['File "path1" is changed'],
+      ['File "path2" is changed'],
+      [`Branch "${branch}" already exists`],
+      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Pull request has been created at ${createPullRequestResult.html_url}`]
+    ]);
+
+    TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
+    TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
+
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch]]);
+
+    // The branch is not deleted
+    expect(RepoKitMock.mock.instances[0]?.deleteBranch).not.toBeCalled();
+
+    // The branch is not created
+    expect(RepoKitMock.mock.instances[0]?.createBranch).not.toBeCalled();
+
+    // All files are committed
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
+      [
+        {
+          branch,
+          paths: commit.paths,
+          message: commit.message
+        }
+      ]
+    ]);
+
+    // The commit hash is sent to the output
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+
+    // A pull request is created
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [[{ branch }]]);
+  });
+
+  test('flow #10: all files are changed, branch does not exist => create branch, commit with token, create pull request with all args', async () => {
+    const commitToken = 'commit-token';
+
     // All files are changed
     isFileChangedMock.mockReturnValue(true);
 
     // The branch does not exist
     RepoKitMock.prototype.hasBranch.mockResolvedValue(false);
 
-    // Use a custom branch, specify pull request arguments
-    const exitCode = await app({ ...appArgs, branch, pullRequest });
+    const exitCode = await app({
+      ...appArgs,
+      // Use a custom branch
+      branch,
+      // Commit the changes with a custom token
+      commit: {
+        ...commit,
+        token: commitToken
+      },
+      // Create a pull request with all arguments
+      pullRequest
+    });
+
     expect(consoleErrorMock).not.toBeCalled();
     expect(exitCode).toBe(0);
 
@@ -420,8 +570,9 @@ describe('app', () => {
       [
         {
           branch,
-          paths,
-          message: commit.message
+          paths: commit.paths,
+          message: commit.message,
+          token: commitToken
         }
       ]
     ]);
@@ -440,9 +591,40 @@ describe('app', () => {
     ]);
   });
 
-  test('flow #9: wrong repository is used', async () => {
-    // A wrong repository is used
-    const exitCode = await app({ ...appArgs, repository: 'wrong' });
+  test('flow #11: exception is thrown when checking for changed files => print error, do not connect to GitHub, exit 1', async () => {
+    const error = new Error('error-message');
+
+    isFileChangedMock.mockImplementation(() => {
+      throw error;
+    });
+
+    const exitCode = await app({
+      ...appArgs,
+      // Commit the changes
+      commit
+    });
+
+    expect(consoleInfoMock).not.toBeCalled();
+    expect(exitCode).toBe(1);
+
+    TestUtils.expectToBeCalled(consoleErrorMock, [[error]]);
+
+    TestUtils.expectToBeCalled(isFileChangedMock, [['path1']]);
+
+    // No request to GitHub is made
+    expect(RepoKitMock.mock.instances.length).toBe(0);
+  });
+
+  test('flow #12: wrong repository is used => print error, do not connect to GitHub, exit 1', async () => {
+    // All files are changed
+    isFileChangedMock.mockReturnValue(true);
+
+    const exitCode = await app({
+      ...appArgs,
+      // A wrong repository is used
+      repository: 'wrong'
+    });
+
     expect(consoleInfoMock).not.toBeCalled();
     expect(exitCode).toBe(1);
 
@@ -457,9 +639,16 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances.length).toBe(0);
   });
 
-  test('flow #10: commit message is missing', async () => {
-    // The commit message is missing
-    const exitCode = await app({ ...appArgs, commit: {} });
+  test('flow #13: commit paths are specified, commit message is missing => print error, do not connect to GitHub, exit 1', async () => {
+    // All files are changed
+    isFileChangedMock.mockReturnValue(true);
+
+    const exitCode = await app({
+      ...appArgs,
+      // Commit the changes without a commit message
+      commit: { paths: commit.paths }
+    });
+
     expect(consoleInfoMock).not.toBeCalled();
     expect(exitCode).toBe(1);
 

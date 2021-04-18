@@ -5,6 +5,7 @@
  */
 module.exports = {
   mutate: ['src/**/*.ts', '!src/**/__tests__/**'],
+  checkers: ['typescript'],
   testRunner: 'jest',
   jest: {
     configFile: './jest-unit.config.js',

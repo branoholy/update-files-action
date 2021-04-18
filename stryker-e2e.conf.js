@@ -5,6 +5,7 @@
  */
 module.exports = {
   mutate: ['src/**/*.ts', '!src/**/__tests__/**', '!src/utils/test-utils.ts'],
+  checkers: ['typescript'],
   testRunner: 'jest',
   jest: {
     configFile: './jest-e2e.config.js',

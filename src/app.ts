@@ -68,6 +68,7 @@ const createPullRequest = async (repoKit: RepoKit, branch: string, pullRequestAr
 };
 
 export interface CommitArgs {
+  readonly paths: string[];
   readonly message?: string;
   readonly token?: string;
   readonly amend?: boolean;
@@ -88,17 +89,15 @@ export interface PullRequestArgs {
 export interface AppArgs {
   readonly repository: string;
   readonly token: string;
-  readonly paths: string[];
   readonly branch?: string;
   readonly deleteBranch?: boolean;
-  readonly commit: CommitArgs;
+  readonly commit?: CommitArgs;
   readonly pullRequest?: PullRequestArgs;
 }
 
 export const app = async ({
   repository,
   token,
-  paths,
   branch = 'update-files',
   deleteBranch = false,
   commit,
@@ -110,7 +109,7 @@ export const app = async ({
       throw new Error(`Repository "${repository}" does not have the valid format (owner/repositoryName)`);
     }
 
-    if (!commit.message && !commit.amend) {
+    if (commit && !commit.message && !commit.amend) {
       throw new Error('Commit message is missing, please specify the "commit.message" input');
     }
 
@@ -118,15 +117,18 @@ export const app = async ({
       branch = branch.substr(branchRefPrefix.length);
     }
 
-    const changedPaths = findChangedFiles(paths);
-    if (changedPaths.length === 0) {
+    const changedPaths = commit ? findChangedFiles(commit.paths) : null;
+    if (changedPaths?.length === 0) {
       return 0;
     }
 
     const repoKit = new RepoKit(owner, repositoryName, token);
 
     await createBranch(repoKit, branch, deleteBranch);
-    await commitChangedFiles(repoKit, changedPaths, branch, commit);
+
+    if (commit && changedPaths) {
+      await commitChangedFiles(repoKit, changedPaths, branch, commit);
+    }
 
     if (pullRequest) {
       await createPullRequest(repoKit, branch, pullRequest);

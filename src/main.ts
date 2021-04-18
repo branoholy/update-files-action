@@ -3,8 +3,32 @@ import * as envalid from 'envalid';
 import { app, CommitArgs, PullRequestArgs } from './app';
 import { ActionUtils } from './utils/action-utils';
 
+const commitArgFields = ['paths', 'message', 'token', 'amend'];
+
+const pullRequestArgFields = [
+  'title',
+  'body',
+  'base',
+  'labels',
+  'assignees',
+  'reviewers',
+  'team-reviewers',
+  'milestone',
+  'draft'
+];
+
+const hasCommitArgs = () => commitArgFields.some((field) => ActionUtils.hasInput(`commit.${field}`));
+const hasPullRequestArgs = () => pullRequestArgFields.some((field) => ActionUtils.hasInput(`pull-request.${field}`));
+
 const getCommitArgs = () => {
+  const commit = ActionUtils.getInputAsBoolean('commit') ?? hasCommitArgs();
+
+  if (!commit) {
+    return undefined;
+  }
+
   const commitArgs: CommitArgs = {
+    paths: ActionUtils.getInputAsStrings('commit.paths', { required: true }),
     message: ActionUtils.getInputAsString('commit.message'),
     token: ActionUtils.getInputAsString('commit.token'),
     amend: ActionUtils.getInputAsBoolean('commit.amend')
@@ -14,7 +38,7 @@ const getCommitArgs = () => {
 };
 
 const getPullRequestArgs = () => {
-  const pullRequest = ActionUtils.getInputAsBoolean('pull-request') ?? true;
+  const pullRequest = ActionUtils.getInputAsBoolean('pull-request') ?? hasPullRequestArgs();
 
   if (!pullRequest) {
     return undefined;
@@ -44,7 +68,6 @@ export const main = async () => {
     const exitCode = await app({
       repository: requiredEnv.GITHUB_REPOSITORY,
       token: ActionUtils.getInputAsString('token', { required: true }),
-      paths: ActionUtils.getInputAsStrings('paths', { required: true }),
       branch: ActionUtils.getInputAsString('branch'),
       deleteBranch: ActionUtils.getInputAsBoolean('delete-branch'),
       commit: getCommitArgs(),

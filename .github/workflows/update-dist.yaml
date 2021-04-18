@@ -31,9 +31,9 @@ jobs:
         uses: branoholy/update-files-action@develop
         with:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
-          paths: 'dist/index.js, dist/index.js.LICENSE.txt'
           branch: build-update-dist
           delete-branch: true
+          commit.paths: 'dist/index.js, dist/index.js.LICENSE.txt'
           commit.message: 'BUILD: Update dist'
           commit.token: ${{ secrets.GITHUB_TOKEN }}
           pull-request.body: Automatic update of `dist/index.js`.

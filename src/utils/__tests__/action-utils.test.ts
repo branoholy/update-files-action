@@ -373,4 +373,20 @@ describe('ActionUtils', () => {
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: true });
     });
   });
+
+  describe('hasInput', () => {
+    it('should return true if the input is defined', () => {
+      actionsCoreGetInputMock.mockReturnValue('value');
+
+      expect(ActionUtils.hasInput(inputName)).toBe(true);
+      expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
+    });
+
+    it('should return false if the input is not defined', () => {
+      actionsCoreGetInputMock.mockReturnValue('');
+
+      expect(ActionUtils.hasInput(inputName)).toBe(false);
+      expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
+    });
+  });
 });
