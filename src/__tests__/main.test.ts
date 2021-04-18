@@ -195,11 +195,11 @@ describe('main', () => {
     });
   };
 
-  const expectInputs = (skipPullRequest = false) => {
+  const expectInputs = (expectPullRequest = true) => {
     expect(ActionUtilsMock.getInputAsBoolean).toBeCalledWith('delete-branch');
     expect(ActionUtilsMock.getInputAsBoolean).toBeCalledWith('commit');
 
-    if (!skipPullRequest) {
+    if (expectPullRequest) {
       expect(ActionUtilsMock.getInputAsBoolean).toBeCalledWith('pull-request');
     }
 
@@ -274,7 +274,7 @@ describe('main', () => {
     TestUtils.expectToBeCalled(processExitMock, [[1]]);
 
     expectEnv();
-    expectInputs(true);
+    expectInputs(false);
 
     expect(appMock).not.toBeCalled();
   });
@@ -359,7 +359,7 @@ describe('main', () => {
       TestUtils.expectToBeCalled(processExitMock, [[1]]);
 
       expectEnv();
-      expectInputs(true);
+      expectInputs(false);
 
       expect(appMock).not.toBeCalled();
     }
