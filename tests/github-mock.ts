@@ -81,6 +81,8 @@ export class GitHubMock {
     };
 
     this.refs[refName] = commitSha;
+
+    return commitSha;
   }
 
   private createCommitSha() {

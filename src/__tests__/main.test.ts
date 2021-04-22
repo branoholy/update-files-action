@@ -1,6 +1,6 @@
 import * as envalid from 'envalid';
 
-import { app, CommitArgs, PullRequestArgs } from '../app';
+import { app, BranchArgs, CommitArgs, PullRequestArgs } from '../app';
 import { main } from '../main';
 import { ActionUtils } from '../utils/action-utils';
 import { TestUtils } from '../utils/test-utils';
@@ -29,7 +29,10 @@ const ActionUtilsMock = {
 describe('main', () => {
   const repository = 'owner/repository-name';
   const token = 'token';
-  const branch = 'branch';
+
+  const branch: BranchArgs = {
+    name: 'branch'
+  };
 
   const commit: CommitArgs = {
     paths: ['path1', 'path2'],
@@ -70,7 +73,13 @@ describe('main', () => {
       ]
     ]);
 
-  const booleanInputNames = ['delete-branch', 'commit', 'commit.amend', 'pull-request', 'pull-request.draft'] as const;
+  const booleanInputNames = [
+    'branch.recreate',
+    'commit',
+    'commit.amend',
+    'pull-request',
+    'pull-request.draft'
+  ] as const;
   type BooleanInputName = typeof booleanInputNames[number];
 
   const integerInputNames = ['pull-request.milestone'] as const;
@@ -78,7 +87,8 @@ describe('main', () => {
 
   const stringInputNames = [
     'token',
-    'branch',
+    'branch.name',
+    'branch.base',
     'commit.message',
     'commit.token',
     'pull-request.title',
@@ -114,8 +124,10 @@ describe('main', () => {
 
   interface Inputs {
     token: string;
-    branch?: string;
-    'delete-branch'?: boolean;
+
+    'branch.name': string;
+    'branch.base'?: string;
+    'branch.recreate'?: boolean;
 
     commit?: boolean;
     'commit.paths'?: string[];
@@ -196,7 +208,7 @@ describe('main', () => {
   };
 
   const expectInputs = (expectPullRequest = true) => {
-    expect(ActionUtilsMock.getInputAsBoolean).toBeCalledWith('delete-branch');
+    expect(ActionUtilsMock.getInputAsBoolean).toBeCalledWith('branch.recreate');
     expect(ActionUtilsMock.getInputAsBoolean).toBeCalledWith('commit');
 
     if (expectPullRequest) {
@@ -204,7 +216,8 @@ describe('main', () => {
     }
 
     expect(ActionUtilsMock.getInputAsString).toBeCalledWith('token', { required: true });
-    expect(ActionUtilsMock.getInputAsString).toBeCalledWith('branch');
+    expect(ActionUtilsMock.getInputAsString).toBeCalledWith('branch.name', { required: true });
+    expect(ActionUtilsMock.getInputAsString).toBeCalledWith('branch.base');
   };
 
   const expectCommitInputs = () => {
@@ -237,7 +250,7 @@ describe('main', () => {
 
   it('should run app with required args and exit with 0', async () => {
     mockEnv();
-    mockInputs({ token });
+    mockInputs({ token, 'branch.name': branch.name });
 
     appMock.mockResolvedValue(0);
 
@@ -253,7 +266,8 @@ describe('main', () => {
       [
         {
           repository,
-          token
+          token,
+          branch
         }
       ]
     ]);
@@ -263,6 +277,7 @@ describe('main', () => {
     mockEnv();
     mockInputs({
       token,
+      'branch.name': branch.name,
       commit: true
     });
 
@@ -283,6 +298,7 @@ describe('main', () => {
     mockEnv();
     mockInputs({
       token,
+      'branch.name': branch.name,
       commit: false,
       'commit.paths': commit.paths
     });
@@ -301,7 +317,8 @@ describe('main', () => {
       [
         {
           repository,
-          token
+          token,
+          branch
         }
       ]
     ]);
@@ -311,6 +328,7 @@ describe('main', () => {
     mockEnv();
     mockInputs({
       token,
+      'branch.name': branch.name,
       'commit.paths': commit.paths
     });
 
@@ -330,6 +348,7 @@ describe('main', () => {
         {
           repository,
           token,
+          branch,
           commit: {
             paths: commit.paths
           }
@@ -348,6 +367,7 @@ describe('main', () => {
       mockEnv();
       mockInputs({
         token,
+        'branch.name': branch.name,
         [name]: value
       });
 
@@ -369,6 +389,7 @@ describe('main', () => {
     mockEnv();
     mockInputs({
       token,
+      'branch.name': branch.name,
       'pull-request': true
     });
 
@@ -387,6 +408,7 @@ describe('main', () => {
       [
         {
           repository,
+          branch,
           token,
           pullRequest: {}
         }
@@ -398,6 +420,7 @@ describe('main', () => {
     mockEnv();
     mockInputs({
       token,
+      'branch.name': branch.name,
       'pull-request': false,
       'pull-request.title': pullRequest.title
     });
@@ -416,7 +439,8 @@ describe('main', () => {
       [
         {
           repository,
-          token
+          token,
+          branch
         }
       ]
     ]);
@@ -436,6 +460,7 @@ describe('main', () => {
     mockEnv();
     mockInputs({
       token,
+      'branch.name': branch.name,
       [name]: value
     });
 
@@ -455,6 +480,7 @@ describe('main', () => {
         {
           repository,
           token,
+          branch,
           pullRequest: {
             [field]: value
           }
@@ -467,8 +493,9 @@ describe('main', () => {
     mockEnv();
     mockInputs({
       token,
-      branch,
-      'delete-branch': true,
+      'branch.name': branch.name,
+      'branch.base': 'base-branch',
+      'branch.recreate': true,
 
       commit: true,
       'commit.paths': commit.paths,
@@ -505,8 +532,11 @@ describe('main', () => {
         {
           repository,
           token,
-          branch,
-          deleteBranch: true,
+          branch: {
+            ...branch,
+            base: 'base-branch',
+            recreate: true
+          },
           commit,
           pullRequest
         }
@@ -538,7 +568,10 @@ describe('main', () => {
     const errorMessage = 'error-message';
 
     mockEnv();
-    mockInputs({ token });
+    mockInputs({
+      token,
+      'branch.name': branch.name
+    });
 
     appMock.mockImplementation(() => {
       throw new Error(errorMessage);
@@ -555,7 +588,8 @@ describe('main', () => {
       [
         {
           repository,
-          token
+          token,
+          branch
         }
       ]
     ]);

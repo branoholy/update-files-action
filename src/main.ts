@@ -1,6 +1,6 @@
 import * as envalid from 'envalid';
 
-import { app, CommitArgs, PullRequestArgs } from './app';
+import { app, BranchArgs, CommitArgs, PullRequestArgs } from './app';
 import { ActionUtils } from './utils/action-utils';
 
 const commitArgFields = ['paths', 'message', 'token', 'amend'];
@@ -19,6 +19,16 @@ const pullRequestArgFields = [
 
 const hasCommitArgs = () => commitArgFields.some((field) => ActionUtils.hasInput(`commit.${field}`));
 const hasPullRequestArgs = () => pullRequestArgFields.some((field) => ActionUtils.hasInput(`pull-request.${field}`));
+
+const getBranchArgs = () => {
+  const branchArgs: BranchArgs = {
+    name: ActionUtils.getInputAsString('branch.name', { required: true }),
+    base: ActionUtils.getInputAsString('branch.base'),
+    recreate: ActionUtils.getInputAsBoolean('branch.recreate')
+  };
+
+  return branchArgs;
+};
 
 const getCommitArgs = () => {
   const commit = ActionUtils.getInputAsBoolean('commit') ?? hasCommitArgs();
@@ -68,8 +78,7 @@ export const main = async () => {
     const exitCode = await app({
       repository: requiredEnv.GITHUB_REPOSITORY,
       token: ActionUtils.getInputAsString('token', { required: true }),
-      branch: ActionUtils.getInputAsString('branch'),
-      deleteBranch: ActionUtils.getInputAsBoolean('delete-branch'),
+      branch: getBranchArgs(),
       commit: getCommitArgs(),
       pullRequest: getPullRequestArgs()
     });

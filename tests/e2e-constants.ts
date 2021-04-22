@@ -8,8 +8,6 @@ export const E2EConstants = {
   shellMocksDirectory: 'temp-e2e-shell-mocks',
   commands: `echo cmd1 > ${testFilesDirectory}/path1 && echo cmd2 > ${testFilesDirectory}/path2`,
 
-  branchDefaultArg: 'update-files',
-
   repository: `${owner}/${repositoryName}`,
   token: 'token',
 

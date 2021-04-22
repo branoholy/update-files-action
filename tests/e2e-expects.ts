@@ -7,13 +7,13 @@ import { E2EMocks } from './e2e-mocks';
 import { GitHubMock } from './github-mock';
 import { GitHubRestParameters } from './github-rest-mocks';
 
-const branchIsCreated = (gitHubMock: GitHubMock, token: string, branch: string) => {
+const branchIsCreated = (gitHubMock: GitHubMock, token: string, branch: string, baseSha = 'commit-0-sha') => {
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createRef, [
     [
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'git', 'createRef'>>>({
         ref: `refs/heads/${branch}`,
-        sha: 'commit-0-sha'
+        sha: baseSha
       })
     ]
   ]);
@@ -27,10 +27,11 @@ const filesAreCommitted = (
   token: string,
   branch: string,
   commitToken = token,
-  amend = false
+  amend = false,
+  baseCommitSha = amend ? 'commit-1-sha' : 'commit-0-sha'
 ) => {
-  const oldCommitSha = amend ? 'commit-1-sha' : 'commit-0-sha';
-  const newCommitSha = amend ? 'commit-2-sha' : 'commit-1-sha';
+  const [, baseCommitId = '-1'] = baseCommitSha.split('-');
+  const newCommitSha = `commit-${parseInt(baseCommitId, 10) + 1}-sha`;
 
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createBlob, [
     [
@@ -61,7 +62,7 @@ const filesAreCommitted = (
     [
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'git', 'createTree'>>>({
-        base_tree: oldCommitSha,
+        base_tree: baseCommitSha,
         tree: [
           { mode: '100644', path: `${E2EConstants.testFilesDirectory}/path1`, sha: 'blob-sha', type: 'blob' },
           { mode: '100644', path: `${E2EConstants.testFilesDirectory}/path2`, sha: 'blob-sha', type: 'blob' }
@@ -72,7 +73,7 @@ const filesAreCommitted = (
 
   if (amend) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.git.getCommit, [
-      [expect.stringMatching(new RegExp(`/${oldCommitSha}`)), expect.anything()]
+      [expect.stringMatching(new RegExp(`/${baseCommitSha}`)), expect.anything()]
     ]);
   }
 
@@ -80,7 +81,7 @@ const filesAreCommitted = (
     [
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'git', 'createCommit'>>>({
-        parents: ['commit-0-sha'],
+        parents: [amend ? 'commit-0-sha' : baseCommitSha],
         tree: 'tree-sha',
         message: E2EConstants.commitMessage
       })
