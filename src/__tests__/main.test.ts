@@ -250,7 +250,10 @@ describe('main', () => {
 
   it('should run app with required args and exit with 0', async () => {
     mockEnv();
-    mockInputs({ token, 'branch.name': branch.name });
+    mockInputs({
+      token,
+      'branch.name': branch.name
+    });
 
     appMock.mockResolvedValue(0);
 
@@ -490,11 +493,13 @@ describe('main', () => {
   });
 
   it('should run app with all args and exit with 0', async () => {
+    const baseBranchName = 'base-branch';
+
     mockEnv();
     mockInputs({
       token,
       'branch.name': branch.name,
-      'branch.base': 'base-branch',
+      'branch.base': baseBranchName,
       'branch.recreate': true,
 
       commit: true,
@@ -534,7 +539,7 @@ describe('main', () => {
           token,
           branch: {
             ...branch,
-            base: 'base-branch',
+            base: baseBranchName,
             recreate: true
           },
           commit,

@@ -20,41 +20,35 @@ const pullRequestArgFields = [
 const hasCommitArgs = () => commitArgFields.some((field) => ActionUtils.hasInput(`commit.${field}`));
 const hasPullRequestArgs = () => pullRequestArgFields.some((field) => ActionUtils.hasInput(`pull-request.${field}`));
 
-const getBranchArgs = () => {
-  const branchArgs: BranchArgs = {
-    name: ActionUtils.getInputAsString('branch.name', { required: true }),
-    base: ActionUtils.getInputAsString('branch.base'),
-    recreate: ActionUtils.getInputAsBoolean('branch.recreate')
-  };
+const getBranchArgs = (): BranchArgs => ({
+  name: ActionUtils.getInputAsString('branch.name', { required: true }),
+  base: ActionUtils.getInputAsString('branch.base'),
+  recreate: ActionUtils.getInputAsBoolean('branch.recreate')
+});
 
-  return branchArgs;
-};
-
-const getCommitArgs = () => {
+const getCommitArgs = (): CommitArgs | undefined => {
   const commit = ActionUtils.getInputAsBoolean('commit') ?? hasCommitArgs();
 
   if (!commit) {
     return undefined;
   }
 
-  const commitArgs: CommitArgs = {
+  return {
     paths: ActionUtils.getInputAsStrings('commit.paths', { required: true }),
     message: ActionUtils.getInputAsString('commit.message'),
     token: ActionUtils.getInputAsString('commit.token'),
     amend: ActionUtils.getInputAsBoolean('commit.amend')
   };
-
-  return commitArgs;
 };
 
-const getPullRequestArgs = () => {
+const getPullRequestArgs = (): PullRequestArgs | undefined => {
   const pullRequest = ActionUtils.getInputAsBoolean('pull-request') ?? hasPullRequestArgs();
 
   if (!pullRequest) {
     return undefined;
   }
 
-  const pullRequestArgs: PullRequestArgs = {
+  return {
     title: ActionUtils.getInputAsString('pull-request.title'),
     body: ActionUtils.getInputAsString('pull-request.body'),
     base: ActionUtils.getInputAsString('pull-request.base'),
@@ -65,8 +59,6 @@ const getPullRequestArgs = () => {
     milestone: ActionUtils.getInputAsInteger('pull-request.milestone'),
     draft: ActionUtils.getInputAsBoolean('pull-request.draft')
   };
-
-  return pullRequestArgs;
 };
 
 export const main = async () => {
