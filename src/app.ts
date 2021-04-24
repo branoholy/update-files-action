@@ -109,7 +109,13 @@ export interface AppArgs {
   readonly pullRequest?: PullRequestArgs;
 }
 
-export const app = async ({ repository, token, branch, commit, pullRequest }: AppArgs) => {
+export const app = async ({
+  repository,
+  token,
+  branch: { name: branchName, ...restBranch },
+  commit,
+  pullRequest
+}: AppArgs) => {
   try {
     const [owner, repositoryName] = repository.split('/');
     if (!owner || !repositoryName) {
@@ -120,11 +126,8 @@ export const app = async ({ repository, token, branch, commit, pullRequest }: Ap
       throw new Error('Commit message is missing, please specify the "commit.message" input');
     }
 
-    if (branch.name.startsWith(branchRefPrefix)) {
-      branch = {
-        ...branch,
-        name: branch.name.substr(branchRefPrefix.length)
-      };
+    if (branchName.startsWith(branchRefPrefix)) {
+      branchName = branchName.substr(branchRefPrefix.length);
     }
 
     const changedPaths = commit ? findChangedFiles(commit.paths) : null;
@@ -134,14 +137,14 @@ export const app = async ({ repository, token, branch, commit, pullRequest }: Ap
 
     const repoKit = new RepoKit(owner, repositoryName, token);
 
-    await createBranch(repoKit, branch);
+    await createBranch(repoKit, { name: branchName, ...restBranch });
 
     if (commit && changedPaths) {
-      await commitFiles(repoKit, changedPaths, branch.name, commit);
+      await commitFiles(repoKit, changedPaths, branchName, commit);
     }
 
     if (pullRequest) {
-      await createPullRequest(repoKit, branch.name, pullRequest);
+      await createPullRequest(repoKit, branchName, pullRequest);
     }
   } catch (error) {
     console.error(error);
