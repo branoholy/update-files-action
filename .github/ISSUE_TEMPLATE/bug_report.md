@@ -39,8 +39,9 @@ jobs:
         uses: branoholy/update-files-action
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          paths: package-lock.json
-          delete-branch: true
+          branch.name: update-lock-file
+          branch.recreate: true
+          commit.paths: package-lock.json
           commit.message: Update lock file
 ```
 
