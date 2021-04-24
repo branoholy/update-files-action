@@ -517,7 +517,25 @@ describe('e2e tests', () => {
     expect(gitHubMock.restMocks.any).not.toBeCalled();
   });
 
-  test('flow #15: repository is missing => print error, do not connect to GitHub, exit 1', async () => {
+  test('flow #15: branch is missing => print error, do not connect to GitHub, exit 1', async () => {
+    // All files are changed
+    ChildProcess.execSync(E2EConstants.commands);
+
+    // Branch is missing
+    delete process.env['INPUT_BRANCH.NAME'];
+
+    await main();
+
+    expect(E2EMocks.consoleInfo).not.toBeCalled();
+    TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
+
+    TestUtils.expectToBeCalled(E2EMocks.consoleError, [['Input required and not supplied: branch.name']]);
+
+    // No request to GitHub is made
+    expect(gitHubMock.restMocks.any).not.toBeCalled();
+  });
+
+  test('flow #16: repository is missing => print error, do not connect to GitHub, exit 1', async () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
