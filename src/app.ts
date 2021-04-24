@@ -31,7 +31,7 @@ export interface BranchArgs {
 const getBaseBranchSha = async (repoKit: RepoKit, baseBranch?: string) => {
   const {
     object: { sha }
-  } = await (baseBranch ? repoKit.getBranch(baseBranch) : repoKit.getDefaultBranch());
+  } = await repoKit.getBranch(baseBranch ?? (await repoKit.getDefaultBranchName()));
 
   return sha;
 };

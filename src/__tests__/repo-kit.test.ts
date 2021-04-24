@@ -221,33 +221,8 @@ describe('RepoKit', () => {
     it('should throw an error if the request has status 301', async () => {
       octokitMock.repos.get.mockResolvedValue((response301 as unknown) as Awaited<ReturnType<Octokit['repos']['get']>>);
 
-      await expect(repoKit.getDefaultBranch()).rejects.toMatchObject({ message });
+      await expect(repoKit.getDefaultBranchName()).rejects.toMatchObject({ message });
       expect(octokitMock.repos.get).toBeCalledWith(repositoryInfo);
-    });
-  });
-
-  describe('getDefaultBranch', () => {
-    const name = 'default-branch';
-    const message = 'Fetch for the default branch failed with the status code 301';
-
-    it('should return the default branch', async () => {
-      const getDefaultBranchName = jest.spyOn(repoKit, 'getDefaultBranchName').mockResolvedValue(name);
-      const getBranchMock = jest.spyOn(repoKit, 'getBranch').mockResolvedValue({ name, ...ref });
-
-      expect(await repoKit.getDefaultBranch()).toEqual({ name, ...ref });
-      expect(getDefaultBranchName).toBeCalled();
-      expect(getBranchMock).toBeCalledWith(name);
-    });
-
-    it('should throw an error if the request has status 301', async () => {
-      const getDefaultBranchName = jest.spyOn(repoKit, 'getDefaultBranchName').mockImplementation(() => {
-        throw new Error(message);
-      });
-      const getBranchMock = jest.spyOn(repoKit, 'getBranch');
-
-      await expect(repoKit.getDefaultBranch()).rejects.toMatchObject({ message });
-      expect(getDefaultBranchName).toBeCalled();
-      expect(getBranchMock).not.toBeCalled();
     });
   });
 

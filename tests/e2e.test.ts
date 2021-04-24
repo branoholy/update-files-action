@@ -169,14 +169,14 @@ describe('e2e tests', () => {
     );
   });
 
-  test('flow #04: all files are changed, branch exists => delete branch, commit', async () => {
+  test('flow #04: all files are changed, branch exists => recreate branch, commit', async () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
     // The branch exists
     gitHubMock.createBranch(E2EConstants.branch);
 
-    // Delete the branch
+    // Recreate the branch
     process.env['INPUT_BRANCH.RECREATE'] = 'true';
 
     // Commit the changes

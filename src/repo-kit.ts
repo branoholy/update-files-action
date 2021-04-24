@@ -86,10 +86,6 @@ export class RepoKit {
     return response.data.default_branch;
   }
 
-  async getDefaultBranch() {
-    return this.getBranch(await this.getDefaultBranchName());
-  }
-
   private async createBlobs(paths: string[]) {
     const encoding = 'base64';
     const type = 'blob' as const;
