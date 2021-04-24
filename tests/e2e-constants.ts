@@ -11,7 +11,7 @@ export const E2EConstants = {
   repository: `${owner}/${repositoryName}`,
   token: 'token',
 
-  branch: 'branch',
+  branchName: 'branch',
 
   commitPaths: `${testFilesDirectory}/path1, ${testFilesDirectory}/path2`,
   commitMessage: 'commit-message',
@@ -27,5 +27,5 @@ export const E2EConstants = {
   pullRequestMilestone: '42',
   pullRequestDraft: 'true',
 
-  defaultBranch: 'default-branch'
+  defaultBranchName: 'default-branch'
 };

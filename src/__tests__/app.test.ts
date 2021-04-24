@@ -55,11 +55,11 @@ describe('app', () => {
     branch
   };
 
-  const defaultBranch = 'default-branch';
+  const defaultBranchName = 'default-branch';
   const defaultBranchSha = 'default-branch-sha';
 
   const getDefaultBranchResult: Awaited<ReturnType<RepoKit['getBranch']>> = {
-    name: defaultBranch,
+    name: defaultBranchName,
     node_id: 'node_id',
     object: { sha: defaultBranchSha, type: 'type', url: 'url' },
     ref: 'default-branch-ref',
@@ -78,7 +78,7 @@ describe('app', () => {
     jest.resetAllMocks();
 
     // Default branch name
-    RepoKitMock.prototype.getDefaultBranchName.mockResolvedValue(defaultBranch);
+    RepoKitMock.prototype.getDefaultBranchName.mockResolvedValue(defaultBranchName);
 
     // Commit files
     RepoKitMock.prototype.commitFiles.mockResolvedValue(commitFilesResult);
@@ -140,7 +140,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch.name]]);
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.getBranch, [[defaultBranch]]);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.getBranch, [[defaultBranchName]]);
 
     // The branch is not deleted
     expect(RepoKitMock.mock.instances[0]?.deleteBranch).not.toBeCalled();
@@ -152,7 +152,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branch: branch.name,
+          branchName: branch.name,
           paths: commit.paths,
           message: commit.message
         }
@@ -164,7 +164,7 @@ describe('app', () => {
   });
 
   test('flow #03: all files are changed, branch does not exist => create branch, use non-default base, commit', async () => {
-    const baseBranch = 'base-branch';
+    const baseBranchName = 'base-branch';
     const baseBranchSha = 'base-branch-sha';
 
     // All files are changed
@@ -175,7 +175,7 @@ describe('app', () => {
 
     // Use a non-default base branch
     RepoKitMock.prototype.getBranch.mockResolvedValue({
-      name: baseBranch,
+      name: baseBranchName,
       node_id: 'node_id',
       object: { sha: baseBranchSha, type: 'type', url: 'url' },
       ref: 'base-branch-ref',
@@ -187,7 +187,7 @@ describe('app', () => {
       // Use non-default base branch
       branch: {
         ...branch,
-        base: baseBranch
+        base: baseBranchName
       },
       // Commit the changes
       commit
@@ -207,7 +207,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch.name]]);
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.getBranch, [[baseBranch]]);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.getBranch, [[baseBranchName]]);
 
     // The branch is not deleted
     expect(RepoKitMock.mock.instances[0]?.deleteBranch).not.toBeCalled();
@@ -219,7 +219,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branch: branch.name,
+          branchName: branch.name,
           paths: commit.paths,
           message: commit.message
         }
@@ -268,7 +268,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch.name]]);
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.getBranch, [[defaultBranch]]);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.getBranch, [[defaultBranchName]]);
 
     // The branch is deleted
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.deleteBranch, [[branch.name]]);
@@ -280,7 +280,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branch: branch.name,
+          branchName: branch.name,
           paths: commit.paths,
           message: commit.message
         }
@@ -333,7 +333,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branch: branch.name,
+          branchName: branch.name,
           paths: commit.paths,
           message: commit.message
         }
@@ -420,7 +420,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branch: branch.name,
+          branchName: branch.name,
           paths: commit.paths,
           message: commit.message
         }
@@ -477,7 +477,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branch: branch.name,
+          branchName: branch.name,
           paths: commit.paths,
           message: commit.message,
           amend: true
@@ -574,7 +574,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branch: branch.name,
+          branchName: branch.name,
           paths: commit.paths,
           message: commit.message
         }
@@ -585,7 +585,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
 
     // A pull request is created
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [[{ branch: branch.name }]]);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [[{ branchName: branch.name }]]);
   });
 
   test('flow #11: all files are changed, branch does not exist => create branch, commit with token, create pull request with all args', async () => {
@@ -626,7 +626,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch.name]]);
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.getBranch, [[defaultBranch]]);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.getBranch, [[defaultBranchName]]);
 
     // The branch is not deleted
     expect(RepoKitMock.mock.instances[0]?.deleteBranch).not.toBeCalled();
@@ -638,7 +638,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branch: branch.name,
+          branchName: branch.name,
           paths: commit.paths,
           message: commit.message,
           token: commitToken
@@ -653,8 +653,9 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [
       [
         {
-          branch: branch.name,
-          ...pullRequest
+          ...pullRequest,
+          branchName: branch.name,
+          baseBranchName: pullRequest.base
         }
       ]
     ]);

@@ -7,13 +7,13 @@ import { E2EMocks } from './e2e-mocks';
 import { GitHubMock } from './github-mock';
 import { GitHubRestParameters } from './github-rest-mocks';
 
-const branchIsCreated = (gitHubMock: GitHubMock, token: string, branch: string, baseSha = 'commit-0-sha') => {
+const branchIsCreated = (gitHubMock: GitHubMock, token: string, branchName: string, baseBranchSha = 'commit-0-sha') => {
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createRef, [
     [
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'git', 'createRef'>>>({
-        ref: `refs/heads/${branch}`,
-        sha: baseSha
+        ref: `refs/heads/${branchName}`,
+        sha: baseBranchSha
       })
     ]
   ]);
@@ -25,7 +25,7 @@ const branchIsCreated = (gitHubMock: GitHubMock, token: string, branch: string, 
 const filesAreCommitted = (
   gitHubMock: GitHubMock,
   token: string,
-  branch: string,
+  branchName: string,
   commitToken = token,
   amend = false,
   baseCommitSha = amend ? 'commit-1-sha' : 'commit-0-sha'
@@ -54,7 +54,7 @@ const filesAreCommitted = (
   expect(gitCreateBlobMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
 
   expect(gitHubMock.restMocks.git.getRef).toBeCalledWith(
-    expect.stringMatching(new RegExp(`/heads%2F${branch}$`)),
+    expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)),
     expect.anything()
   );
 
@@ -95,7 +95,7 @@ const filesAreCommitted = (
 
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.updateRef, [
     [
-      expect.stringMatching(new RegExp(`/heads%2F${branch}$`)),
+      expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)),
       expect.objectContaining<Partial<GitHubRestParameters<'git', 'updateRef'>>>({
         sha: newCommitSha,
         force: amend
@@ -112,10 +112,10 @@ const filesAreCommitted = (
   ]);
 };
 
-const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branch: string, full = false) => {
+const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branchName: string, full = false) => {
   if (!full) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.repos.getBranch, [
-      [expect.stringMatching(new RegExp(`/${branch}$`)), expect.anything()]
+      [expect.stringMatching(new RegExp(`/${branchName}$`)), expect.anything()]
     ]);
   }
 
@@ -128,14 +128,14 @@ const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branch: str
       }
     : {
         title: E2EConstants.commitMessage,
-        base: E2EConstants.defaultBranch
+        base: E2EConstants.defaultBranchName
       };
 
   TestUtils.expectToBeCalled(gitHubMock.restMocks.pulls.create, [
     [
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'pulls', 'create'>>>({
-        head: branch,
+        head: branchName,
         ...pullsCreateArgs
       })
     ]

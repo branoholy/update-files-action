@@ -28,24 +28,27 @@ export interface BranchArgs {
   readonly recreate?: boolean;
 }
 
-const getBaseBranchSha = async (repoKit: RepoKit, baseBranch?: string) => {
+const getBaseBranchSha = async (repoKit: RepoKit, baseBranchName?: string) => {
   const {
     object: { sha }
-  } = await repoKit.getBranch(baseBranch ?? (await repoKit.getDefaultBranchName()));
+  } = await repoKit.getBranch(baseBranchName ?? (await repoKit.getDefaultBranchName()));
 
   return sha;
 };
 
-const createBranch = async (repoKit: RepoKit, { name: branch, base: baseBranch, recreate = false }: BranchArgs) => {
+const createBranch = async (
+  repoKit: RepoKit,
+  { name: branchName, base: baseBranchName, recreate = false }: BranchArgs
+) => {
   // Delete the branch
-  if (await repoKit.hasBranch(branch)) {
-    console.info(`Branch "${branch}" already exists`);
+  if (await repoKit.hasBranch(branchName)) {
+    console.info(`Branch "${branchName}" already exists`);
 
     if (recreate) {
       // Delete the branch if it exists and the recreate option is set
-      console.info(`Deleting branch "${branch}"...`);
-      await repoKit.deleteBranch(branch);
-      console.info(`Branch "${branch}" has been deleted`);
+      console.info(`Deleting branch "${branchName}"...`);
+      await repoKit.deleteBranch(branchName);
+      console.info(`Branch "${branchName}" has been deleted`);
     } else {
       // Keep the original branch if it exists and the recreate option is not set
       return;
@@ -53,9 +56,9 @@ const createBranch = async (repoKit: RepoKit, { name: branch, base: baseBranch, 
   }
 
   // Create the branch
-  const baseBranchSha = await getBaseBranchSha(repoKit, baseBranch);
-  await repoKit.createBranch(branch, baseBranchSha);
-  console.info(`Branch "${branch}" has been created`);
+  const baseBranchSha = await getBaseBranchSha(repoKit, baseBranchName);
+  await repoKit.createBranch(branchName, baseBranchSha);
+  console.info(`Branch "${branchName}" has been created`);
 };
 
 export interface CommitArgs {
@@ -65,11 +68,11 @@ export interface CommitArgs {
   readonly amend?: boolean;
 }
 
-const commitFiles = async (repoKit: RepoKit, paths: string[], branch: string, commitArgs: CommitArgs) => {
+const commitFiles = async (repoKit: RepoKit, paths: string[], branchName: string, commitArgs: CommitArgs) => {
   const commit = await repoKit.commitFiles({
     ...commitArgs,
     paths,
-    branch
+    branchName
   });
 
   ActionsCore.setOutput('commit.sha', commit.sha);
@@ -88,10 +91,11 @@ export interface PullRequestArgs {
   readonly draft?: boolean;
 }
 
-const createPullRequest = async (repoKit: RepoKit, branch: string, pullRequestArgs: PullRequestArgs) => {
+const createPullRequest = async (repoKit: RepoKit, branchName: string, pullRequestArgs: PullRequestArgs) => {
   const pullRequest = await repoKit.createPullRequest({
     ...pullRequestArgs,
-    branch
+    branchName,
+    baseBranchName: pullRequestArgs.base
   });
 
   console.info(`Pull request has been created at ${pullRequest.html_url}`);

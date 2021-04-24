@@ -54,22 +54,22 @@ export class GitHubMock {
     }
   };
 
-  public constructor(private repository: string, private defaultBranch: string) {
-    this.commit(defaultBranch);
+  public constructor(private repository: string, private defaultBranchName: string) {
+    this.commit(defaultBranchName);
     this.mockAll();
   }
 
-  public createBranch(branch: string, sha = this.refs[GitHubMockUtils.createBranchRefName(this.defaultBranch)]) {
+  public createBranch(name: string, sha = this.refs[GitHubMockUtils.createBranchRefName(this.defaultBranchName)]) {
     if (!sha || !(sha in this.commits)) {
       throw new Error('Commit SHA not found');
     }
 
-    this.refs[GitHubMockUtils.createBranchRefName(branch)] = sha;
+    this.refs[GitHubMockUtils.createBranchRefName(name)] = sha;
   }
 
-  public commit(branch = this.defaultBranch) {
+  public commit(branchName = this.defaultBranchName) {
     const commitSha = this.createCommitSha();
-    const refName = GitHubMockUtils.createBranchRefName(branch);
+    const refName = GitHubMockUtils.createBranchRefName(branchName);
 
     const parentSha = this.refs[refName];
     const parents = parentSha ? [{ sha: parentSha, html_url: 'html_url', url: 'url' }] : [];
@@ -334,18 +334,18 @@ export class GitHubMock {
       .optionally()
       .times(Infinity)
       .reply(200, {
-        default_branch: this.defaultBranch
+        default_branch: this.defaultBranchName
       } as GitHubRestResponseData<'repos', 'get'>);
   }
 
   private mockReposGetBranch() {
     this.restMocks.repos.getBranch.mockImplementation((uri) => {
-      const branch = GitHubMockUtils.getLastPartFromPath(uri);
-      if (!branch) {
+      const branchName = GitHubMockUtils.getLastPartFromPath(uri);
+      if (!branchName) {
         return [500];
       }
 
-      const refName = GitHubMockUtils.createBranchRefName(branch);
+      const refName = GitHubMockUtils.createBranchRefName(branchName);
       const commitSha = this.refs[refName];
       if (!commitSha) {
         return [404];

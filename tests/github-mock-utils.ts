@@ -1,4 +1,4 @@
-const createBranchRefName = (branch: string) => `refs/heads/${branch}`;
+const createBranchRefName = (branchName: string) => `refs/heads/${branchName}`;
 
 const createCommitMessage = (sha: string) => `message-${sha}`;
 

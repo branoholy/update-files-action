@@ -229,7 +229,7 @@ describe('RepoKit', () => {
   describe('commitFiles', () => {
     const paths = ['path1', 'path2'];
     const commitMessage = 'commit-message';
-    const branch = 'branch';
+    const branchName = 'branch';
 
     const blobs = paths.map((path) => ({ sha: `blob-${path}-sha`, url: '' }));
 
@@ -270,7 +270,7 @@ describe('RepoKit', () => {
         encoding: 'base64'
       });
 
-      expect(getBranchMock).toBeCalledWith(branch);
+      expect(getBranchMock).toBeCalledWith(branchName);
 
       expect(octokitMock.git.createTree).toBeCalledWith({
         ...repositoryInfo,
@@ -306,11 +306,11 @@ describe('RepoKit', () => {
         data: commit
       });
 
-      getBranchMock = jest.spyOn(repoKit, 'getBranch').mockResolvedValue({ name: branch, ...ref });
+      getBranchMock = jest.spyOn(repoKit, 'getBranch').mockResolvedValue({ name: branchName, ...ref });
     });
 
     it('should call all necessary methods in the correct order', async () => {
-      expect(await repoKit.commitFiles({ paths, message: commitMessage, branch })).toBe(commit);
+      expect(await repoKit.commitFiles({ paths, message: commitMessage, branchName })).toBe(commit);
 
       expectCommitMethods();
 
@@ -324,7 +324,7 @@ describe('RepoKit', () => {
 
       expect(octokitMock.git.updateRef).toBeCalledWith({
         ...repositoryInfo,
-        ref: `heads/${branch}`,
+        ref: `heads/${branchName}`,
         sha: commit.sha,
         force: false
       });
@@ -333,9 +333,9 @@ describe('RepoKit', () => {
     it('should call all necessary methods in the correct order and use a custom token when it is specified', async () => {
       const commitToken = 'commit-token';
 
-      expect(await repoKit.commitFiles({ paths, message: commitMessage, branch, token: commitToken })).toStrictEqual(
-        commit
-      );
+      expect(
+        await repoKit.commitFiles({ paths, message: commitMessage, branchName, token: commitToken })
+      ).toStrictEqual(commit);
 
       expectCommitMethods();
 
@@ -352,14 +352,14 @@ describe('RepoKit', () => {
 
       expect(octokitMock.git.updateRef).toBeCalledWith({
         ...repositoryInfo,
-        ref: `heads/${branch}`,
+        ref: `heads/${branchName}`,
         sha: commit.sha,
         force: false
       });
     });
 
     it('should throw an error if the commit message is missing', async () => {
-      await expect(repoKit.commitFiles({ paths, branch })).rejects.toMatchObject({
+      await expect(repoKit.commitFiles({ paths, branchName })).rejects.toMatchObject({
         message: 'Commit message is empty'
       });
 
@@ -379,7 +379,7 @@ describe('RepoKit', () => {
         }
       });
 
-      expect(await repoKit.commitFiles({ paths, message: commitMessage, branch, amend: true })).toBe(commit);
+      expect(await repoKit.commitFiles({ paths, message: commitMessage, branchName, amend: true })).toBe(commit);
 
       expectCommitMethods();
 
@@ -397,7 +397,7 @@ describe('RepoKit', () => {
 
       expect(octokitMock.git.updateRef).toBeCalledWith({
         ...repositoryInfo,
-        ref: `heads/${branch}`,
+        ref: `heads/${branchName}`,
         sha: commit.sha,
         force: true
       });
@@ -413,7 +413,7 @@ describe('RepoKit', () => {
         }
       });
 
-      expect(await repoKit.commitFiles({ paths, branch, amend: true })).toBe(commit);
+      expect(await repoKit.commitFiles({ paths, branchName, amend: true })).toBe(commit);
 
       expectCommitMethods();
 
@@ -431,7 +431,7 @@ describe('RepoKit', () => {
 
       expect(octokitMock.git.updateRef).toBeCalledWith({
         ...repositoryInfo,
-        ref: `heads/${branch}`,
+        ref: `heads/${branchName}`,
         sha: commit.sha,
         force: true
       });
@@ -439,8 +439,8 @@ describe('RepoKit', () => {
   });
 
   describe('createPullRequest', () => {
-    const branch = 'branch';
-    const baseBranch = 'baseBranch';
+    const branchName = 'branch-name';
+    const baseBranchName = 'base-branch-name';
     const title = 'title';
     const body = 'body';
     const labels = ['label'];
@@ -462,8 +462,8 @@ describe('RepoKit', () => {
     it('should call all necessary methods in the correct order', async () => {
       expect(
         await repoKit.createPullRequest({
-          branch,
-          base: baseBranch,
+          branchName,
+          baseBranchName,
           title,
           body,
           labels,
@@ -477,8 +477,8 @@ describe('RepoKit', () => {
 
       expect(octokitMock.pulls.create).toBeCalledWith({
         ...repositoryInfo,
-        base: baseBranch,
-        head: branch,
+        base: baseBranchName,
+        head: branchName,
         title,
         body,
         draft
@@ -501,17 +501,17 @@ describe('RepoKit', () => {
     });
 
     it('should use the default branch when base is not defined', async () => {
-      const defaultBranch = 'defaultBranch';
-      const getDefaultBranchName = jest.spyOn(repoKit, 'getDefaultBranchName').mockResolvedValue(defaultBranch);
+      const defaultBranchName = 'default-branch-name';
+      const getDefaultBranchName = jest.spyOn(repoKit, 'getDefaultBranchName').mockResolvedValue(defaultBranchName);
 
-      await repoKit.createPullRequest({ branch, title });
+      await repoKit.createPullRequest({ branchName, title });
 
       expect(getDefaultBranchName).toBeCalled();
 
       expect(octokitMock.pulls.create).toBeCalledWith({
         ...repositoryInfo,
-        base: defaultBranch,
-        head: branch,
+        base: defaultBranchName,
+        head: branchName,
         title
       });
     });
@@ -532,56 +532,56 @@ describe('RepoKit', () => {
 
       expect(
         await repoKit.createPullRequest({
-          branch,
-          base: baseBranch
+          branchName: branchName,
+          baseBranchName: baseBranchName
         })
       ).toBe(pullRequest);
 
       expect(octokitMock.repos.getBranch).toBeCalledWith({
         ...repositoryInfo,
-        branch
+        branch: branchName
       });
 
       expect(octokitMock.pulls.create).toBeCalledWith({
         ...repositoryInfo,
-        base: baseBranch,
-        head: branch,
+        base: baseBranchName,
+        head: branchName,
         title: message
       });
     });
 
     it('should not call requestReviewers when reviewers and team reviewers are not defined', async () => {
-      await repoKit.createPullRequest({ branch, base: baseBranch, title });
+      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title });
       expect(octokitMock.pulls.requestReviewers).not.toBeCalled();
     });
 
     it('should call requestReviewers when reviewers are defined', async () => {
-      await repoKit.createPullRequest({ branch, base: baseBranch, title, reviewers });
+      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title, reviewers });
       expect(octokitMock.pulls.requestReviewers).toBeCalled();
     });
 
     it('should call requestReviewers when team reviewers are defined', async () => {
-      await repoKit.createPullRequest({ branch, base: baseBranch, title, teamReviewers });
+      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title, teamReviewers });
       expect(octokitMock.pulls.requestReviewers).toBeCalled();
     });
 
     it('should not call update when labels and assignees and milestone are not defined', async () => {
-      await repoKit.createPullRequest({ branch, base: baseBranch, title });
+      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title });
       expect(octokitMock.issues.update).not.toBeCalled();
     });
 
     it('should call update when labels are defined', async () => {
-      await repoKit.createPullRequest({ branch, base: baseBranch, title, labels });
+      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title, labels });
       expect(octokitMock.issues.update).toBeCalled();
     });
 
     it('should call update when assignees are defined', async () => {
-      await repoKit.createPullRequest({ branch, base: baseBranch, title, assignees });
+      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title, assignees });
       expect(octokitMock.issues.update).toBeCalled();
     });
 
     it('should call update when milestone is defined', async () => {
-      await repoKit.createPullRequest({ branch, base: baseBranch, title, milestone });
+      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title, milestone });
       expect(octokitMock.issues.update).toBeCalled();
     });
   });

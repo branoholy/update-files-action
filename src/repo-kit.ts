@@ -5,14 +5,14 @@ import { readFileSync } from 'fs';
 export interface CommitFilesArgs {
   readonly paths: string[];
   readonly message?: string;
-  readonly branch: string;
+  readonly branchName: string;
   readonly token?: string;
   readonly amend?: boolean;
 }
 
 export interface CreatePullRequestArgs {
-  readonly branch: string;
-  readonly base?: string;
+  readonly branchName: string;
+  readonly baseBranchName?: string;
   readonly title?: string;
   readonly body?: string;
   readonly labels?: string[];
@@ -147,12 +147,12 @@ export class RepoKit {
     }
   }
 
-  async commitFiles({ paths, message, branch, token, amend = false }: CommitFilesArgs) {
+  async commitFiles({ paths, message, branchName, token, amend = false }: CommitFilesArgs) {
     const treeBlobs = await this.createBlobs(paths);
 
     const {
       object: { sha: branchSha }
-    } = await this.getBranch(branch);
+    } = await this.getBranch(branchName);
 
     const {
       data: { sha: treeSha }
@@ -166,7 +166,7 @@ export class RepoKit {
 
     await this.octokit.git.updateRef({
       ...this.getRepositoryInfo(),
-      ref: `heads/${branch}`,
+      ref: `heads/${branchName}`,
       sha: commit.sha,
       force: amend
     });
@@ -174,7 +174,7 @@ export class RepoKit {
     return commit;
   }
 
-  private async createPullRequestTitle(branch: string, title: string | undefined) {
+  private async createPullRequestTitle(branchName: string, title: string | undefined) {
     if (title) {
       return title;
     }
@@ -183,15 +183,15 @@ export class RepoKit {
       data: { commit }
     } = await this.octokit.repos.getBranch({
       ...this.getRepositoryInfo(),
-      branch
+      branch: branchName
     });
 
     return commit.commit.message;
   }
 
   async createPullRequest({
-    branch,
-    base,
+    branchName,
+    baseBranchName,
     title,
     body,
     labels,
@@ -203,9 +203,9 @@ export class RepoKit {
   }: CreatePullRequestArgs) {
     const { data } = await this.octokit.pulls.create({
       ...this.getRepositoryInfo(),
-      base: base || (await this.getDefaultBranchName()),
-      head: branch,
-      title: await this.createPullRequestTitle(branch, title),
+      base: baseBranchName || (await this.getDefaultBranchName()),
+      head: branchName,
+      title: await this.createPullRequestTitle(branchName, title),
       body,
       draft
     });
