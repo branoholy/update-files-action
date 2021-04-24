@@ -136,7 +136,7 @@ describe('e2e tests', () => {
 
     // Use non-default base branch
     gitHubMock.createBranch(baseBranchName);
-    const baseBranchSha = gitHubMock.commit(baseBranchName);
+    gitHubMock.commit(baseBranchName);
     process.env['INPUT_BRANCH.BASE'] = baseBranchName;
 
     // Commit the changes
@@ -158,15 +158,8 @@ describe('e2e tests', () => {
     // The branch is not deleted
     expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
 
-    E2EExpects.branchIsCreated(gitHubMock, E2EConstants.token, E2EConstants.branchName, baseBranchSha);
-    E2EExpects.filesAreCommitted(
-      gitHubMock,
-      E2EConstants.token,
-      E2EConstants.branchName,
-      undefined,
-      undefined,
-      baseBranchSha
-    );
+    E2EExpects.branchIsCreated(gitHubMock, E2EConstants.token, E2EConstants.branchName, baseBranchName);
+    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName);
   });
 
   test('flow #04: all files are changed, branch exists => recreate branch, commit', async () => {
@@ -457,13 +450,7 @@ describe('e2e tests', () => {
     expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
 
     E2EExpects.branchIsCreated(gitHubMock, E2EConstants.token, E2EConstants.branchName);
-    E2EExpects.filesAreCommitted(
-      gitHubMock,
-      E2EConstants.token,
-      E2EConstants.branchName,
-      E2EConstants.commitToken,
-      false
-    );
+    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName, E2EConstants.commitToken);
     E2EExpects.pullRequestIsCreated(gitHubMock, E2EConstants.token, E2EConstants.branchName, true);
   });
 
@@ -530,7 +517,7 @@ describe('e2e tests', () => {
     expect(gitHubMock.restMocks.any).not.toBeCalled();
   });
 
-  test('flow #14: repository is missing => print error, do not connect to GitHub, exit 1', async () => {
+  test('flow #15: repository is missing => print error, do not connect to GitHub, exit 1', async () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 

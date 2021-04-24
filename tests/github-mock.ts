@@ -54,9 +54,18 @@ export class GitHubMock {
     }
   };
 
-  public constructor(private repository: string, private defaultBranchName: string) {
+  public constructor(private repository: string, public readonly defaultBranchName: string) {
     this.commit(defaultBranchName);
     this.mockAll();
+  }
+
+  public getBranchSha(name: string) {
+    const sha = this.refs[GitHubMockUtils.createBranchRefName(name)];
+    if (!sha) {
+      throw new Error('Branch not found');
+    }
+
+    return sha;
   }
 
   public createBranch(name: string, sha = this.refs[GitHubMockUtils.createBranchRefName(this.defaultBranchName)]) {
@@ -81,8 +90,6 @@ export class GitHubMock {
     };
 
     this.refs[refName] = commitSha;
-
-    return commitSha;
   }
 
   private createCommitSha() {

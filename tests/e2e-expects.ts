@@ -5,15 +5,21 @@ import { TestUtils } from '../src/utils/test-utils';
 import { E2EConstants } from './e2e-constants';
 import { E2EMocks } from './e2e-mocks';
 import { GitHubMock } from './github-mock';
+import { GitHubMockUtils } from './github-mock-utils';
 import { GitHubRestParameters } from './github-rest-mocks';
 
-const branchIsCreated = (gitHubMock: GitHubMock, token: string, branchName: string, baseBranchSha = 'commit-0-sha') => {
+const branchIsCreated = (
+  gitHubMock: GitHubMock,
+  token: string,
+  branchName: string,
+  baseBranchName = gitHubMock.defaultBranchName
+) => {
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createRef, [
     [
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'git', 'createRef'>>>({
         ref: `refs/heads/${branchName}`,
-        sha: baseBranchSha
+        sha: gitHubMock.getBranchSha(baseBranchName)
       })
     ]
   ]);
@@ -27,11 +33,10 @@ const filesAreCommitted = (
   token: string,
   branchName: string,
   commitToken = token,
-  amend = false,
-  baseCommitSha = amend ? 'commit-1-sha' : 'commit-0-sha'
+  amend = false
 ) => {
-  const [, baseCommitId = '-1'] = baseCommitSha.split('-');
-  const newCommitSha = `commit-${parseInt(baseCommitId, 10) + 1}-sha`;
+  const newCommitSha = gitHubMock.getBranchSha(branchName);
+  const oldCommitSha = GitHubMockUtils.createCommitSha(GitHubMockUtils.getCommitId(newCommitSha) - 1);
 
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createBlob, [
     [
@@ -62,7 +67,7 @@ const filesAreCommitted = (
     [
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'git', 'createTree'>>>({
-        base_tree: baseCommitSha,
+        base_tree: oldCommitSha,
         tree: [
           { mode: '100644', path: `${E2EConstants.testFilesDirectory}/path1`, sha: 'blob-sha', type: 'blob' },
           { mode: '100644', path: `${E2EConstants.testFilesDirectory}/path2`, sha: 'blob-sha', type: 'blob' }
@@ -73,15 +78,19 @@ const filesAreCommitted = (
 
   if (amend) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.git.getCommit, [
-      [expect.stringMatching(new RegExp(`/${baseCommitSha}`)), expect.anything()]
+      [expect.stringMatching(new RegExp(`/${oldCommitSha}`)), expect.anything()]
     ]);
   }
+
+  const parentCommitSha = amend
+    ? GitHubMockUtils.createCommitSha(GitHubMockUtils.getCommitId(oldCommitSha) - 1)
+    : oldCommitSha;
 
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createCommit, [
     [
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'git', 'createCommit'>>>({
-        parents: [amend ? 'commit-0-sha' : baseCommitSha],
+        parents: [parentCommitSha],
         tree: 'tree-sha',
         message: E2EConstants.commitMessage
       })
