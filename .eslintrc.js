@@ -20,6 +20,7 @@ module.exports = {
   ],
   plugins: ['import', 'simple-import-sort', 'jest'],
   rules: {
+    'object-shorthand': 'error',
     'sort-imports': 'off',
 
     'import/no-default-export': 'error',

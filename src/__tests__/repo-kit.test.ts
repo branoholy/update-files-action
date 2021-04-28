@@ -532,8 +532,8 @@ describe('RepoKit', () => {
 
       expect(
         await repoKit.createPullRequest({
-          branchName: branchName,
-          baseBranchName: baseBranchName
+          branchName,
+          baseBranchName
         })
       ).toBe(pullRequest);
 
@@ -551,37 +551,37 @@ describe('RepoKit', () => {
     });
 
     it('should not call requestReviewers when reviewers and team reviewers are not defined', async () => {
-      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title });
+      await repoKit.createPullRequest({ branchName, baseBranchName, title });
       expect(octokitMock.pulls.requestReviewers).not.toBeCalled();
     });
 
     it('should call requestReviewers when reviewers are defined', async () => {
-      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title, reviewers });
+      await repoKit.createPullRequest({ branchName, baseBranchName, title, reviewers });
       expect(octokitMock.pulls.requestReviewers).toBeCalled();
     });
 
     it('should call requestReviewers when team reviewers are defined', async () => {
-      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title, teamReviewers });
+      await repoKit.createPullRequest({ branchName, baseBranchName, title, teamReviewers });
       expect(octokitMock.pulls.requestReviewers).toBeCalled();
     });
 
     it('should not call update when labels and assignees and milestone are not defined', async () => {
-      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title });
+      await repoKit.createPullRequest({ branchName, baseBranchName, title });
       expect(octokitMock.issues.update).not.toBeCalled();
     });
 
     it('should call update when labels are defined', async () => {
-      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title, labels });
+      await repoKit.createPullRequest({ branchName, baseBranchName, title, labels });
       expect(octokitMock.issues.update).toBeCalled();
     });
 
     it('should call update when assignees are defined', async () => {
-      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title, assignees });
+      await repoKit.createPullRequest({ branchName, baseBranchName, title, assignees });
       expect(octokitMock.issues.update).toBeCalled();
     });
 
     it('should call update when milestone is defined', async () => {
-      await repoKit.createPullRequest({ branchName: branchName, baseBranchName: baseBranchName, title, milestone });
+      await repoKit.createPullRequest({ branchName, baseBranchName, title, milestone });
       expect(octokitMock.issues.update).toBeCalled();
     });
   });
