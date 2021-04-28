@@ -4,14 +4,15 @@ inputs:
   token:
     description: A token for committing the updated files and creating the pull request.
     required: true
-  branch:
-    description: A custom branch name.
+  branch.name:
+    description: A branch name for committing the changed files and creating the pull request.
+    required: true
+  branch.base:
+    description: 'A custom base branch name. Default: default branch.'
     required: false
-    default: 'update-files'
-  delete-branch:
-    description: A flag for deleting the branch if it exists.
+  branch.recreate:
+    description: 'A flag for recreating the branch if it exists. Default: `false`.'
     required: false
-    default: 'false'
   commit:
     description: 'A flag to enable/disable committing the changes. Default: `true` if any `commit.*` input is specified, otherwise `false`.'
     required: false

@@ -22,49 +22,43 @@ const findChangedFiles = (paths: string[]) => {
   return changedPaths;
 };
 
-const createBranch = async (repoKit: RepoKit, branch: string, deleteBranch: boolean) => {
-  // Delete the branch
-  if (await repoKit.hasBranch(branch)) {
-    console.info(`Branch "${branch}" already exists`);
+export interface BranchArgs {
+  readonly name: string;
+  readonly base?: string;
+  readonly recreate?: boolean;
+}
 
-    if (deleteBranch) {
-      // Delete the branch if it exists and the 'delete-branch' option is set
-      console.info(`Deleting branch "${branch}"...`);
-      await repoKit.deleteBranch(branch);
-      console.info(`Branch "${branch}" has been deleted`);
+const getBaseBranchSha = async (repoKit: RepoKit, baseBranchName?: string) => {
+  const {
+    object: { sha }
+  } = await repoKit.getBranch(baseBranchName ?? (await repoKit.getDefaultBranchName()));
+
+  return sha;
+};
+
+const createBranch = async (
+  repoKit: RepoKit,
+  { name: branchName, base: baseBranchName, recreate = false }: BranchArgs
+) => {
+  // Delete the branch
+  if (await repoKit.hasBranch(branchName)) {
+    console.info(`Branch "${branchName}" already exists`);
+
+    if (recreate) {
+      // Delete the branch if it exists and the recreate option is set
+      console.info(`Deleting branch "${branchName}"...`);
+      await repoKit.deleteBranch(branchName);
+      console.info(`Branch "${branchName}" has been deleted`);
     } else {
-      // Keep the original branch if it exists and the 'delete-branch' option is not set
+      // Keep the original branch if it exists and the recreate option is not set
       return;
     }
   }
 
   // Create the branch
-  const {
-    object: { sha: defaultBranchSha }
-  } = await repoKit.getDefaultBranch();
-
-  await repoKit.createBranch(branch, defaultBranchSha);
-  console.info(`Branch "${branch}" has been created`);
-};
-
-const commitChangedFiles = async (repoKit: RepoKit, paths: string[], branch: string, commitArgs: CommitArgs) => {
-  const commit = await repoKit.commitFiles({
-    ...commitArgs,
-    paths,
-    branch
-  });
-
-  ActionsCore.setOutput('commit.sha', commit.sha);
-  console.info(`Changed files have been committed to ${commit.sha}`);
-};
-
-const createPullRequest = async (repoKit: RepoKit, branch: string, pullRequestArgs: PullRequestArgs) => {
-  const pullRequest = await repoKit.createPullRequest({
-    ...pullRequestArgs,
-    branch
-  });
-
-  console.info(`Pull request has been created at ${pullRequest.html_url}`);
+  const baseBranchSha = await getBaseBranchSha(repoKit, baseBranchName);
+  await repoKit.createBranch(branchName, baseBranchSha);
+  console.info(`Branch "${branchName}" has been created`);
 };
 
 export interface CommitArgs {
@@ -73,6 +67,17 @@ export interface CommitArgs {
   readonly token?: string;
   readonly amend?: boolean;
 }
+
+const commitFiles = async (repoKit: RepoKit, paths: string[], branchName: string, commitArgs: CommitArgs) => {
+  const commit = await repoKit.commitFiles({
+    ...commitArgs,
+    paths,
+    branchName
+  });
+
+  ActionsCore.setOutput('commit.sha', commit.sha);
+  console.info(`Changed files have been committed to ${commit.sha}`);
+};
 
 export interface PullRequestArgs {
   readonly title?: string;
@@ -86,11 +91,20 @@ export interface PullRequestArgs {
   readonly draft?: boolean;
 }
 
+const createPullRequest = async (repoKit: RepoKit, branchName: string, pullRequestArgs: PullRequestArgs) => {
+  const pullRequest = await repoKit.createPullRequest({
+    ...pullRequestArgs,
+    branchName,
+    baseBranchName: pullRequestArgs.base
+  });
+
+  console.info(`Pull request has been created at ${pullRequest.html_url}`);
+};
+
 export interface AppArgs {
   readonly repository: string;
   readonly token: string;
-  readonly branch?: string;
-  readonly deleteBranch?: boolean;
+  readonly branch: BranchArgs;
   readonly commit?: CommitArgs;
   readonly pullRequest?: PullRequestArgs;
 }
@@ -98,8 +112,7 @@ export interface AppArgs {
 export const app = async ({
   repository,
   token,
-  branch = 'update-files',
-  deleteBranch = false,
+  branch: { name: branchName, ...restBranch },
   commit,
   pullRequest
 }: AppArgs) => {
@@ -113,8 +126,8 @@ export const app = async ({
       throw new Error('Commit message is missing, please specify the "commit.message" input');
     }
 
-    if (branch.startsWith(branchRefPrefix)) {
-      branch = branch.substr(branchRefPrefix.length);
+    if (branchName.startsWith(branchRefPrefix)) {
+      branchName = branchName.substr(branchRefPrefix.length);
     }
 
     const changedPaths = commit ? findChangedFiles(commit.paths) : null;
@@ -124,14 +137,14 @@ export const app = async ({
 
     const repoKit = new RepoKit(owner, repositoryName, token);
 
-    await createBranch(repoKit, branch, deleteBranch);
+    await createBranch(repoKit, { name: branchName, ...restBranch });
 
     if (commit && changedPaths) {
-      await commitChangedFiles(repoKit, changedPaths, branch, commit);
+      await commitFiles(repoKit, changedPaths, branchName, commit);
     }
 
     if (pullRequest) {
-      await createPullRequest(repoKit, branch, pullRequest);
+      await createPullRequest(repoKit, branchName, pullRequest);
     }
   } catch (error) {
     console.error(error);

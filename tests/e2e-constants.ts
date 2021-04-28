@@ -8,12 +8,10 @@ export const E2EConstants = {
   shellMocksDirectory: 'temp-e2e-shell-mocks',
   commands: `echo cmd1 > ${testFilesDirectory}/path1 && echo cmd2 > ${testFilesDirectory}/path2`,
 
-  branchDefaultArg: 'update-files',
-
   repository: `${owner}/${repositoryName}`,
   token: 'token',
 
-  branch: 'branch',
+  branchName: 'branch',
 
   commitPaths: `${testFilesDirectory}/path1, ${testFilesDirectory}/path2`,
   commitMessage: 'commit-message',
@@ -29,5 +27,5 @@ export const E2EConstants = {
   pullRequestMilestone: '42',
   pullRequestDraft: 'true',
 
-  defaultBranch: 'default-branch'
+  defaultBranchName: 'default-branch'
 };
