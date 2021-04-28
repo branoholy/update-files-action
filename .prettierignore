@@ -15,5 +15,8 @@ dist/
 hooks/*
 !hooks/*.ts
 
+# Jest
+coverage/
+
 # Lock file
 package-lock.json
