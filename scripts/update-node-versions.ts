@@ -7,9 +7,10 @@ interface NodeDist {
   readonly version: string;
 }
 
-const createTypeValidator = <T>(validator: (value: Partial<Record<keyof T, unknown>>) => boolean) => (
-  value: unknown
-): value is T => typeof value === 'object' && value !== null && validator(value);
+const createTypeValidator =
+  <T>(validator: (value: Partial<Record<keyof T, unknown>>) => boolean) =>
+  (value: unknown): value is T =>
+    typeof value === 'object' && value !== null && validator(value);
 
 const isNodeDist = createTypeValidator<NodeDist>((value) => typeof value.version === 'string');
 
@@ -110,23 +111,21 @@ const updateWorkflowYaml = (path: string, version: string) => {
   return true;
 };
 
-const createUpdateFile = (version: string) => (
-  path: string,
-  updateFunction: (path: string, version: string) => boolean
-) => {
-  process.stdout.write(`Updating ${path} ... `);
+const createUpdateFile =
+  (version: string) => (path: string, updateFunction: (path: string, version: string) => boolean) => {
+    process.stdout.write(`Updating ${path} ... `);
 
-  try {
-    if (updateFunction(path, version)) {
-      console.info('✅ Done');
-    } else {
-      console.info('✅ Not required');
+    try {
+      if (updateFunction(path, version)) {
+        console.info('✅ Done');
+      } else {
+        console.info('✅ Not required');
+      }
+    } catch (error) {
+      console.error('❌ Failed');
+      throw error;
     }
-  } catch (error) {
-    console.error('❌ Failed');
-    throw error;
-  }
-};
+  };
 
 const main = async () => {
   try {

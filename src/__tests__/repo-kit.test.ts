@@ -219,7 +219,7 @@ describe('RepoKit', () => {
     });
 
     it('should throw an error if the request has status 301', async () => {
-      octokitMock.repos.get.mockResolvedValue((response301 as unknown) as Awaited<ReturnType<Octokit['repos']['get']>>);
+      octokitMock.repos.get.mockResolvedValue(response301 as unknown as Awaited<ReturnType<Octokit['repos']['get']>>);
 
       await expect(repoKit.getDefaultBranchName()).rejects.toMatchObject({ message });
       expect(octokitMock.repos.get).toBeCalledWith(repositoryInfo);
