@@ -58,7 +58,7 @@ describe('main', () => {
       _parse: jest.fn()
     });
 
-    envalidMock.cleanEnv.mockReturnValue(({ GITHUB_REPOSITORY: repository } as unknown) as ReturnType<
+    envalidMock.cleanEnv.mockReturnValue({ GITHUB_REPOSITORY: repository } as unknown as ReturnType<
       typeof envalid.cleanEnv
     >);
   };
