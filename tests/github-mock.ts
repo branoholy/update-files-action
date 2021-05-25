@@ -30,27 +30,27 @@ export class GitHubMock {
   public readonly restMocks: GitHubRestMocks = {
     any: jest.fn(),
     git: {
-      createBlob: createGitHubRestMock<'git', 'createBlob'>(),
+      createBlob: createGitHubRestMock<'git/create-blob'>(),
 
-      getCommit: createGitHubRestMock<'git', 'getCommit'>(),
-      createCommit: createGitHubRestMock<'git', 'createCommit'>(),
+      getCommit: createGitHubRestMock<'git/get-commit'>(),
+      createCommit: createGitHubRestMock<'git/create-commit'>(),
 
-      getRef: createGitHubRestMock<'git', 'getRef'>(),
-      createRef: createGitHubRestMock<'git', 'createRef'>(),
-      updateRef: createGitHubRestMock<'git', 'updateRef'>(),
-      deleteRef: createGitHubRestMock<'git', 'deleteRef'>(),
+      getRef: createGitHubRestMock<'git/get-ref'>(),
+      createRef: createGitHubRestMock<'git/create-ref'>(),
+      updateRef: createGitHubRestMock<'git/update-ref'>(),
+      deleteRef: createGitHubRestMock<'git/delete-ref'>(),
 
-      createTree: createGitHubRestMock<'git', 'createTree'>()
+      createTree: createGitHubRestMock<'git/create-tree'>()
     },
     issues: {
-      update: createGitHubRestMock<'issues', 'update'>()
+      update: createGitHubRestMock<'issues/update'>()
     },
     pulls: {
-      create: createGitHubRestMock<'pulls', 'create'>(),
-      requestReviewers: createGitHubRestMock<'pulls', 'requestReviewers'>()
+      create: createGitHubRestMock<'pulls/create'>(),
+      requestReviewers: createGitHubRestMock<'pulls/request-reviewers'>()
     },
     repos: {
-      getBranch: createGitHubRestMock<'repos', 'getBranch'>()
+      getBranch: createGitHubRestMock<'repos/get-branch'>()
     }
   };
 
@@ -121,7 +121,7 @@ export class GitHubMock {
   }
 
   private mockGitCreateBlob() {
-    this.restMocks.git.createBlob.mockReturnValue([200, { sha: 'blob-sha', url: 'url' }]);
+    this.restMocks.git.createBlob.mockReturnValue([201, { sha: 'blob-sha', url: 'url' }]);
 
     this.api
       .post(`/repos/${this.repository}/git/blobs`)
@@ -135,7 +135,7 @@ export class GitHubMock {
     this.restMocks.git.getCommit.mockImplementation((uri) => {
       const sha = GitHubMockUtils.getLastPartFromPath(uri);
       if (!sha) {
-        return [500];
+        return [404];
       }
 
       const commit = this.commits[sha];
@@ -143,7 +143,7 @@ export class GitHubMock {
         return [404];
       }
 
-      return [200, commit as GitHubRestResponseData<'git', 'getCommit'>];
+      return [200, commit as GitHubRestResponseData<'git/get-commit', 200>];
     });
 
     this.api
@@ -176,12 +176,12 @@ export class GitHubMock {
       }
 
       return [
-        200,
+        201,
         {
           sha,
           message,
           parents
-        } as GitHubRestResponseData<'git', 'createCommit'>
+        } as GitHubRestResponseData<'git/create-commit', 201>
       ];
     });
 
@@ -197,7 +197,7 @@ export class GitHubMock {
     this.restMocks.git.getRef.mockImplementation((uri) => {
       const refName = GitHubMockUtils.getRefNameFromPath(uri);
       if (!refName) {
-        return [500];
+        return [404];
       }
 
       const commitSha = this.refs[refName];
@@ -212,7 +212,7 @@ export class GitHubMock {
           object: { sha: commitSha, type: 'type', url: 'url' },
           ref: refName, // TODO Is this correct?
           url: 'url'
-        } as GitHubRestResponseData<'git', 'getRef'>
+        } as GitHubRestResponseData<'git/get-ref', 200>
       ];
     });
 
@@ -228,7 +228,7 @@ export class GitHubMock {
     this.restMocks.git.createRef.mockImplementation((_uri, { ref, sha }) => {
       this.refs[ref] = sha;
 
-      return [200];
+      return [201];
     });
 
     this.api
@@ -241,11 +241,11 @@ export class GitHubMock {
     this.restMocks.git.updateRef.mockImplementation((uri, { sha /*force*/ }) => {
       const refName = GitHubMockUtils.getRefNameFromPath(uri);
       if (!refName) {
-        return [500];
+        return [422];
       }
 
       if (!(refName in this.refs)) {
-        return [404];
+        return [422];
       }
 
       this.refs[refName] = sha;
@@ -264,15 +264,15 @@ export class GitHubMock {
     this.restMocks.git.deleteRef.mockImplementation((uri) => {
       const refName = GitHubMockUtils.getRefNameFromPath(uri);
       if (!refName) {
-        return [500];
+        return [422];
       }
 
       if (!(refName in this.refs)) {
-        return [404];
+        return [422];
       }
 
       delete this.refs[refName];
-      return [200];
+      return [204];
     });
 
     this.api
@@ -285,7 +285,7 @@ export class GitHubMock {
 
   private mockGitCreateTree() {
     this.restMocks.git.createTree.mockReturnValue([
-      200,
+      201,
       {
         sha: 'tree-sha',
         tree: [],
@@ -312,11 +312,11 @@ export class GitHubMock {
 
   private mockPullsCreate() {
     this.restMocks.pulls.create.mockReturnValue([
-      200,
+      201,
       {
         number: 42,
         html_url: 'html_url'
-      } as GitHubRestResponseData<'pulls', 'create'>
+      } as GitHubRestResponseData<'pulls/create', 201>
     ]);
 
     this.api
@@ -342,14 +342,14 @@ export class GitHubMock {
       .times(Infinity)
       .reply(200, {
         default_branch: this.defaultBranchName
-      } as GitHubRestResponseData<'repos', 'get'>);
+      } as GitHubRestResponseData<'repos/get', 200>);
   }
 
   private mockReposGetBranch() {
     this.restMocks.repos.getBranch.mockImplementation((uri) => {
       const branchName = GitHubMockUtils.getLastPartFromPath(uri);
       if (!branchName) {
-        return [500];
+        return [404];
       }
 
       const refName = GitHubMockUtils.createBranchRefName(branchName);
@@ -360,14 +360,14 @@ export class GitHubMock {
 
       const commit = this.commits[commitSha];
       if (!commit) {
-        return [500];
+        return [404];
       }
 
       return [
         200,
         {
           commit: { commit: { message: commit.message } }
-        } as GitHubRestResponseData<'repos', 'getBranch'>
+        } as GitHubRestResponseData<'repos/get-branch', 200>
       ];
     });
 
