@@ -17,7 +17,7 @@ const branchIsCreated = (
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createRef, [
     [
       expect.any(String),
-      expect.objectContaining<Partial<GitHubRestParameters<'git', 'createRef'>>>({
+      expect.objectContaining<Partial<GitHubRestParameters<'git/create-ref'>>>({
         ref: `refs/heads/${branchName}`,
         sha: gitHubMock.getBranchSha(baseBranchName)
       })
@@ -41,14 +41,14 @@ const filesAreCommitted = (
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createBlob, [
     [
       expect.any(String),
-      expect.objectContaining<Partial<GitHubRestParameters<'git', 'createBlob'>>>({
+      expect.objectContaining<Partial<GitHubRestParameters<'git/create-blob'>>>({
         content: 'Y21kMQo=',
         encoding: 'base64'
       })
     ],
     [
       expect.any(String),
-      expect.objectContaining<Partial<GitHubRestParameters<'git', 'createBlob'>>>({
+      expect.objectContaining<Partial<GitHubRestParameters<'git/create-blob'>>>({
         content: 'Y21kMgo=',
         encoding: 'base64'
       })
@@ -66,7 +66,7 @@ const filesAreCommitted = (
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createTree, [
     [
       expect.any(String),
-      expect.objectContaining<Partial<GitHubRestParameters<'git', 'createTree'>>>({
+      expect.objectContaining<Partial<GitHubRestParameters<'git/create-tree'>>>({
         base_tree: oldCommitSha,
         tree: [
           { mode: '100644', path: `${E2EConstants.testFilesDirectory}/path1`, sha: 'blob-sha', type: 'blob' },
@@ -89,7 +89,7 @@ const filesAreCommitted = (
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createCommit, [
     [
       expect.any(String),
-      expect.objectContaining<Partial<GitHubRestParameters<'git', 'createCommit'>>>({
+      expect.objectContaining<Partial<GitHubRestParameters<'git/create-commit'>>>({
         parents: [parentCommitSha],
         tree: 'tree-sha',
         message: E2EConstants.commitMessage
@@ -105,7 +105,7 @@ const filesAreCommitted = (
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.updateRef, [
     [
       expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)),
-      expect.objectContaining<Partial<GitHubRestParameters<'git', 'updateRef'>>>({
+      expect.objectContaining<Partial<GitHubRestParameters<'git/update-ref'>>>({
         sha: newCommitSha,
         force: amend
       })
@@ -143,7 +143,7 @@ const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branchName:
   TestUtils.expectToBeCalled(gitHubMock.restMocks.pulls.create, [
     [
       expect.any(String),
-      expect.objectContaining<Partial<GitHubRestParameters<'pulls', 'create'>>>({
+      expect.objectContaining<Partial<GitHubRestParameters<'pulls/create'>>>({
         head: branchName,
         ...pullsCreateArgs
       })
@@ -157,7 +157,7 @@ const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branchName:
     TestUtils.expectToBeCalled(gitHubMock.restMocks.pulls.requestReviewers, [
       [
         expect.stringMatching(new RegExp(`/42/requested_reviewers$`)),
-        expect.objectContaining<Partial<GitHubRestParameters<'pulls', 'requestReviewers'>>>({
+        expect.objectContaining<Partial<GitHubRestParameters<'pulls/request-reviewers'>>>({
           reviewers: E2EConstants.pullRequestReviewers.split(',').map((reviewer) => reviewer.trim()),
           team_reviewers: E2EConstants.pullRequestTeamReviewers.split(',').map((teamReviewer) => teamReviewer.trim())
         })
@@ -167,9 +167,11 @@ const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branchName:
     TestUtils.expectToBeCalled(gitHubMock.restMocks.issues.update, [
       [
         expect.stringMatching(new RegExp(`/42$`)),
-        expect.objectContaining<Partial<GitHubRestParameters<'issues', 'update'>>>({
+        expect.objectContaining<Partial<GitHubRestParameters<'issues/update'>>>({
+          // @ts-ignore Type 'string[]' is not assignable to type '...'.
           labels: E2EConstants.pullRequestLabels.split(',').map((label) => label.trim()),
           assignees: E2EConstants.pullRequestAssignees.split(',').map((assignee) => assignee.trim()),
+          // @ts-ignore Type 'number' is not assignable to type '((string | number) & { [key: string]: any; }) | null | undefined'.
           milestone: parseInt(E2EConstants.pullRequestMilestone, 10)
         })
       ]

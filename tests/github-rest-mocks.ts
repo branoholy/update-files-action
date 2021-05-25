@@ -1,61 +1,47 @@
-import { RestEndpointMethodTypes } from '@octokit/rest';
+import { operations } from '@octokit/openapi-types';
 
-export type GitHubRestParameters<
-  NamespaceT extends keyof RestEndpointMethodTypes,
-  MethodT extends keyof RestEndpointMethodTypes[NamespaceT]
-> =
-  // @ts-ignore Type '"parameters"' cannot be used to index type 'RestEndpointMethodTypes[NamespaceT][MethodT]'.
-  RestEndpointMethodTypes[NamespaceT][MethodT]['parameters'];
+export type GitHubRestParameters<OperationT extends keyof operations> =
+  // @ts-ignore Type '"requestBody"' cannot be used to index type 'operations[OperationT]'.
+  operations[OperationT]['requestBody']['content']['application/json'] & operations[OperationT]['parameters']['path'];
 
 export type GitHubRestResponseData<
-  NamespaceT extends keyof RestEndpointMethodTypes,
-  MethodT extends keyof RestEndpointMethodTypes[NamespaceT]
+  OperationT extends keyof operations,
+  HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
 > =
-  // @ts-ignore Type '"response"' cannot be used to index type 'RestEndpointMethodTypes[NamespaceT][MethodT]'.
-  // @ts-ignore Type '"data"' cannot be used to index type 'RestEndpointMethodTypes[NamespaceT][MethodT]["response"]'.
-  RestEndpointMethodTypes[NamespaceT][MethodT]['response']['data'];
+  // @ts-ignore Type 'HttpCodeT' cannot be used to index type 'operations[OperationT]["responses"]'.
+  operations[OperationT]['responses'][HttpCodeT]['content']['application/json'];
+
+type GitHubRestMock<
+  OperationT extends keyof operations,
+  HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
+> = jest.Mock<[HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?], [string, GitHubRestParameters<OperationT>]>;
 
 export type GitHubRestMocks = {
   readonly any: jest.Mock;
   readonly git: {
-    readonly [MethodT in
-      | 'createBlob'
-      | 'getCommit'
-      | 'createCommit'
-      | 'getRef'
-      | 'createRef'
-      | 'updateRef'
-      | 'deleteRef'
-      | 'createTree']: jest.Mock<
-      [number, GitHubRestResponseData<'git', MethodT>?],
-      [string, GitHubRestParameters<'git', MethodT>]
-    >;
+    readonly createBlob: GitHubRestMock<'git/create-blob'>;
+    readonly getCommit: GitHubRestMock<'git/get-commit'>;
+    readonly createCommit: GitHubRestMock<'git/create-commit'>;
+    readonly getRef: GitHubRestMock<'git/get-ref'>;
+    readonly createRef: GitHubRestMock<'git/create-ref'>;
+    readonly updateRef: GitHubRestMock<'git/update-ref'>;
+    readonly deleteRef: GitHubRestMock<'git/delete-ref'>;
+    readonly createTree: GitHubRestMock<'git/create-tree'>;
   };
   readonly issues: {
-    readonly [MethodT in 'update']: jest.Mock<
-      [number, GitHubRestResponseData<'issues', MethodT>?],
-      [string, GitHubRestParameters<'issues', MethodT>]
-    >;
+    readonly update: GitHubRestMock<'issues/update'>;
   };
   readonly pulls: {
-    readonly [MethodT in 'create' | 'requestReviewers']: jest.Mock<
-      [number, GitHubRestResponseData<'pulls', MethodT>?],
-      [string, GitHubRestParameters<'pulls', MethodT>]
-    >;
+    readonly create: GitHubRestMock<'pulls/create'>;
+    readonly requestReviewers: GitHubRestMock<'pulls/request-reviewers'>;
   };
   readonly repos: {
-    readonly [MethodT in 'getBranch']: jest.Mock<
-      [number, GitHubRestResponseData<'repos', MethodT>?],
-      [string, GitHubRestParameters<'repos', MethodT>]
-    >;
+    readonly getBranch: GitHubRestMock<'repos/get-branch'>;
   };
 };
 
 export const createGitHubRestMock = <
-  NamespaceT extends keyof RestEndpointMethodTypes,
-  MethodT extends keyof RestEndpointMethodTypes[NamespaceT]
+  OperationT extends keyof operations,
+  HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
 >() =>
-  jest.fn<
-    [number, GitHubRestResponseData<NamespaceT, MethodT>?],
-    [string, GitHubRestParameters<NamespaceT, MethodT>]
-  >();
+  jest.fn<[HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?], [string, GitHubRestParameters<OperationT>]>();
