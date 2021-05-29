@@ -39,7 +39,7 @@ jobs:
           node-version: 16.2.0
       - name: Cache or restore dependencies
         id: cache-dependencies
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         with:
           path: node_modules
           key: ${{ runner.OS }}-node_modules-${{ hashFiles('**/package-lock.json') }}
@@ -60,7 +60,7 @@ jobs:
           node-version: 16.2.0
       - name: Cache or restore dependencies
         id: cache-dependencies
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         with:
           path: node_modules
           key: ${{ runner.OS }}-node_modules-${{ hashFiles('**/package-lock.json') }}
@@ -82,7 +82,7 @@ jobs:
           node-version: 16.2.0
       - name: Cache or restore dependencies
         id: cache-dependencies
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         with:
           path: node_modules
           key: ${{ runner.OS }}-node_modules-${{ hashFiles('**/package-lock.json') }}
@@ -108,7 +108,7 @@ jobs:
           node-version: 16.2.0
       - name: Cache or restore dependencies
         id: cache-dependencies
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         with:
           path: node_modules
           key: ${{ runner.OS }}-node_modules-${{ hashFiles('**/package-lock.json') }}
@@ -134,7 +134,7 @@ jobs:
           node-version: 16.2.0
       - name: Cache or restore dependencies
         id: cache-dependencies
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         with:
           path: node_modules
           key: ${{ runner.OS }}-node_modules-${{ hashFiles('**/package-lock.json') }}
@@ -156,7 +156,7 @@ jobs:
           node-version: 16.2.0
       - name: Cache or restore dependencies
         id: cache-dependencies
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         with:
           path: node_modules
           key: ${{ runner.OS }}-node_modules-${{ hashFiles('**/package-lock.json') }}
@@ -178,7 +178,7 @@ jobs:
           node-version: 16.2.0
       - name: Cache or restore dependencies
         id: cache-dependencies
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         with:
           path: node_modules
           key: ${{ runner.OS }}-node_modules-${{ hashFiles('**/package-lock.json') }}
