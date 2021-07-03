@@ -1,4 +1,4 @@
-import { operations } from '@octokit/openapi-types';
+import type { operations } from '@octokit/openapi-types';
 
 export type GitHubRestParameters<OperationT extends keyof operations> =
   // @ts-ignore Type '"requestBody"' cannot be used to index type 'operations[OperationT]'.

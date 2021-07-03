@@ -25,6 +25,9 @@
 # nock-
 #   nock (e2e-tests)
 #
+# octokit-openapi-types-
+#   @octokit/openapi-types (e2e-tests)
+#
 # octokit-rest-
 #   @octokit/rest (e2e-tests)
 #
@@ -79,6 +82,7 @@ jobs:
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-eslint-') ||
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-jest-') ||
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-nock-') ||
+        startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-openapi-types-') ||
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-rest-') ||
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-prettier-') ||
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-types-') ||
