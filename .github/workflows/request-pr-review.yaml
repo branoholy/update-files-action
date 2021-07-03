@@ -16,6 +16,7 @@ jobs:
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-eslint-') ||
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-jest-') ||
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-nock-') ||
+        startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-openapi-types-') ||
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-rest-') ||
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-prettier-') ||
         startsWith(github.head_ref, 'dependabot-npm_and_yarn-types-') ||
