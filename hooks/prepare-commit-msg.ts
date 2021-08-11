@@ -1,7 +1,12 @@
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 
-const branchPrefixes = ['bugfix-', 'deps-', 'docs-', 'feature-', 'refactor-', 'release-', 'repo-'];
+// @ts-expect-error Could not find a declaration file for module '../commitlint.config'.
+import commitLintConfig from '../commitlint.config';
+import { StringUtils } from '../scripts/utils/string-utils';
+
+const [, , scopes] = commitLintConfig.rules['scope-enum'] as [number, string, string[]];
+const [, , types] = commitLintConfig.rules['type-enum'] as [number, string, string[]];
 
 const isRebasing = () => {
   try {
@@ -12,35 +17,75 @@ const isRebasing = () => {
   }
 };
 
-const main = ([commitMessagePath]: string[]) => {
-  if (!commitMessagePath) {
-    console.error('Error: Missing commit message path.');
-    return 0;
+const getBranchName = () => execSync('git symbolic-ref --short HEAD').toString().trim();
+
+const isValidType = (type?: string): type is string => !!type && types.includes(type);
+
+const isValidScope = (scope?: string): scope is string => !!scope && scopes.includes(scope);
+
+interface BranchNameParts {
+  type: string;
+  scope?: string;
+}
+
+const parseBranchName = (name: string): BranchNameParts => {
+  const [rawType, rawScope] = name.split('-');
+
+  if (!isValidType(rawType)) {
+    throw new Error('Invalid commit type in branch name');
   }
 
+  const type = rawType.toLowerCase();
+  const scope = isValidScope(rawScope) ? rawScope.toLowerCase() : undefined;
+
+  return {
+    type,
+    scope
+  };
+};
+
+const createPrefix = (type: string, scope?: string) => `${type}${scope ? `(${scope})` : ''}`;
+
+const stringifyCommitMessage = ({ type, scope }: BranchNameParts, message: string) => {
+  const [subject, ...comments] = message.split('\n#');
+
+  let commitMessage = createPrefix(type, scope) + ': ';
+
+  if (subject) {
+    commitMessage += StringUtils.capitalize(subject);
+  }
+
+  if (comments.length > 0) {
+    commitMessage += '\n\n#' + comments.join('\n#');
+  }
+
+  return commitMessage;
+};
+
+const main = ([commitMessagePath]: string[]) => {
   if (isRebasing()) {
-    console.info('Info: No commit message prefix while rebasing.');
     return 0;
   }
 
   try {
-    const branchName = execSync('git symbolic-ref --short HEAD').toString().trim();
+    if (!commitMessagePath) {
+      throw new Error('Missing commit message path.');
+    }
 
-    if (branchPrefixes.some((branchPrefix) => branchName.startsWith(branchPrefix))) {
-      const [rawIssueType, rawIssueNumber] = branchName.split('-');
-      const issueType = rawIssueType?.toUpperCase();
-      const issueNumber = Number(rawIssueNumber);
+    const branchName = getBranchName();
+    const { type, scope } = parseBranchName(branchName);
+    const commitMessage = readFileSync(commitMessagePath).toString();
 
-      const commitMessagePrefix = Number.isInteger(issueNumber) ? `${issueType} #${issueNumber}: ` : `${issueType}: `;
-      const commitMessage = readFileSync(commitMessagePath).toString();
-
-      if (!commitMessage.startsWith(commitMessagePrefix)) {
-        writeFileSync(commitMessagePath, `${commitMessagePrefix}${commitMessage}`);
-      }
+    if (!commitMessage.startsWith(createPrefix(type, scope))) {
+      const nextCommitMessage = stringifyCommitMessage({ type, scope }, commitMessage);
+      writeFileSync(commitMessagePath, nextCommitMessage);
     }
   } catch (error) {
-    console.error('Error: Cannot create commit message prefix.');
-    console.error(error);
+    console.warn('Warning: Cannot create commit message prefix');
+
+    if (error instanceof Error) {
+      console.warn(error.message);
+    }
   }
 
   return 0;

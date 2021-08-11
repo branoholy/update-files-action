@@ -3,30 +3,69 @@ name: CI
 on: push
 
 jobs:
-  send-initial-ci-status:
-    name: Send initial CI status
+  check-suitability:
+    name: Check suitability
     runs-on: ubuntu-latest
-    env:
-      BRANOHOLY_BOT_TOKEN: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
     steps:
-      - name: Send initial CI status
-        if: env.BRANOHOLY_BOT_TOKEN != null
-        run: >-
-          curl -L -X POST
-          -H 'Content-Type: application/json'
-          -H 'Authorization: token ${{ secrets.BRANOHOLY_BOT_TOKEN }}'
-          -d '{
-            "state": "pending",
-            "context": "CI / Status summary",
-            "description": "In progress"
-          }'
-          'https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}'
+      - name: Get pull request info
+        id: get-pr-info
+        uses: octokit/graphql-action@v2.2.20
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          query: |
+            query getPullRequestInfo($owner: String!, $repo: String!, $oid: GitObjectID!, $search: String!) {
+              repository(owner: $owner, name: $repo) {
+                object(oid: $oid) {
+                  ... on Commit {
+                    associatedPullRequests(first: 1) {
+                      nodes {
+                        number
+                        author {
+                          login
+                        }
+                        mergeCommit {
+                          oid
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              search(query: $search, type: ISSUE, first: 1) {
+                nodes {
+                  ... on PullRequest {
+                    number
+                  }
+                }
+              }
+            }
+          owner: ${{ github.event.repository.owner.login }}
+          repo: ${{ github.event.repository.name }}
+          oid: ${{ github.sha }}
+          search: 'is:pr is:open no:assignee author:app/dependabot sort:created-asc repo:${{ github.repository }}'
+      - name: Print pull request info
+        env:
+          number: ${{ fromJSON(steps.get-pr-info.outputs.data).repository.object.associatedPullRequests.nodes[0].number }}
+          author: ${{ fromJSON(steps.get-pr-info.outputs.data).repository.object.associatedPullRequests.nodes[0].author.login }}
+          merge-commit: ${{ fromJSON(steps.get-pr-info.outputs.data).repository.object.associatedPullRequests.nodes[0].mergeCommit != null }}
+          dependabot-pr-number: ${{ fromJSON(steps.get-pr-info.outputs.data).search.nodes[0].number }}
+        run: |
+          echo 'number: ${{ env.number }}';
+          echo 'author: ${{ env.author }}';
+          echo 'merge-commit: ${{ env.merge-commit }}';
+          echo 'dependabot-pr-number: ${{ env.dependabot-pr-number }}';
+          echo 'number=${{ env.number }}' >> $GITHUB_ENV;
+          echo 'author=${{ env.author }}' >> $GITHUB_ENV;
+          echo 'merge-commit=${{ env.merge-commit }}' >> $GITHUB_ENV;
+          echo 'dependabot-pr-number=${{ env.dependabot-pr-number }}' >> $GITHUB_ENV;
+      - name: Cancel workflow
+        if: env.merge-commit == 'false' && env.author == 'dependabot' && env.number != env.dependabot-pr-number
+        run: exit 1
 
   install:
     name: Install dependencies
     runs-on: ubuntu-latest
-    if: always()
-    needs: send-initial-ci-status
+    needs: check-suitability
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
@@ -165,7 +204,7 @@ jobs:
         env:
           CI: true
 
-  check-node-versions:
+  node-versions-check:
     name: Check Node.js versions
     runs-on: ubuntu-latest
     needs: install
@@ -184,29 +223,3 @@ jobs:
           key: ${{ runner.OS }}-node_modules-${{ hashFiles('**/package-lock.json') }}
       - name: Check Node.js versions
         run: npm run node-versions-check
-
-  send-ci-status-summary:
-    name: Send CI status summary
-    runs-on: ubuntu-latest
-    env:
-      BRANOHOLY_BOT_TOKEN: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
-    needs:
-      - build
-      - e2e-tests
-      - unit-tests
-      - type-check
-      - lint
-      - check-node-versions
-    steps:
-      - name: Send CI status summary
-        if: env.BRANOHOLY_BOT_TOKEN != null
-        run: >-
-          curl -L -X POST
-          -H 'Content-Type: application/json'
-          -H 'Authorization: token ${{ secrets.BRANOHOLY_BOT_TOKEN }}'
-          -d '{
-            "state": "success",
-            "context": "CI / Status summary",
-            "description": "All checks passed"
-          }'
-          'https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}'

@@ -1,0 +1,211 @@
+name: Automate PR
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  automate-pr:
+    name: Automate PR
+    runs-on: ubuntu-latest
+    env:
+      PR_TITLE: ${{ github.event.pull_request.title }}
+
+    steps:
+      - name: Assign author
+        if: github.event.action == 'opened' && github.event.pull_request.user.type == 'User'
+        uses: octokit/graphql-action@v2.2.20
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          query: |
+            mutation addAssigneesToAssignable($id: ID!, $assignee: ID!) {
+              addAssigneesToAssignable(input: {assignableId: $id, assigneeIds: [$assignee]}) {
+                clientMutationId
+              }
+            }
+          id: ${{ github.event.pull_request.node_id }}
+          assignee: ${{ github.event.pull_request.user.node_id }}
+
+      - name: Add labels
+        if: github.event.action == 'opened' || github.event.action == 'edited'
+        uses: actions/github-script@v4.0.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const types = ['chore', 'deps', 'docs', 'feat', 'fix', 'perf', 'refactor', 'release', 'revert', 'style', 'test'];
+            const scopes = ['actions', 'dev', 'lock', 'prod', 'security'];
+
+            const {title} = context.payload.pull_request;
+
+            const type = types.find(type => title.startsWith(`${type}:`) || title.startsWith(`${type}!:`) || title.startsWith(`${type}(`));
+            const scope = scopes.find(scope => title.includes(`(${scope}):`) || title.includes(`(${scope})!:`));
+
+            const typeLabel = type ? `type: ${type}` : undefined;
+            const scopeLabel = scope ? `scope: ${scope}` : undefined;
+
+            const labels = [typeLabel, scopeLabel].filter(Boolean);
+
+            if (labels.length > 0) {
+              github.issues.addLabels({
+                issue_number: context.payload.pull_request.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels
+              });
+            }
+
+      - name: Approve
+        if: >-
+          (
+            github.event.action == 'opened' ||
+            github.event.action == 'synchronize' ||
+            github.event.action == 'reopened'
+          ) &&
+          (
+            github.event.pull_request.user.login == 'branoholy' ||
+            (
+              github.event.pull_request.user.login == 'branoholy-bot' &&
+              !startsWith(github.head_ref, 'release-')
+            ) ||
+            (
+              github.event.pull_request.user.login == 'dependabot[bot]' &&
+              (
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-actions-core-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-babel-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-btoa-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-envalid-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-eslint-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-jest-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-nock-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-openapi-types-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-rest-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-prettier-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-types-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-typescript-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-webpack-') ||
+                startsWith(github.head_ref, 'dependabot-github_actions-actions-cache-') ||
+                startsWith(github.head_ref, 'dependabot-github_actions-actions-checkout-') ||
+                startsWith(github.head_ref, 'dependabot-github_actions-octokit-request-action-') ||
+                startsWith(github.head_ref, 'dependabot-github_actions-actions-setup-node-')
+              )
+            )
+          )
+        uses: octokit/graphql-action@v2.2.20
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          query: |
+            mutation addPullRequestReview($id: ID!) {
+              addPullRequestReview(input: {pullRequestId: $id, event: APPROVE}) {
+                clientMutationId
+              }
+            }
+          id: ${{ github.event.pull_request.node_id }}
+
+      - name: Get user for review
+        id: get-user-id
+        uses: octokit/graphql-action@v2.2.20
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          query: |
+            query getUserId($login: String!) {
+              user(login: $login) {
+                id
+              }
+            }
+          login: branoholy
+      - name: Request review
+        if: >-
+          (
+            github.event.action == 'opened' ||
+            github.event.action == 'synchronize' ||
+            github.event.action == 'reopened'
+          ) &&
+          (
+            (
+              github.event.pull_request.user.login == 'branoholy-bot' &&
+              startsWith(github.head_ref, 'release-')
+            ) ||
+            (
+              github.event.pull_request.user.login == 'dependabot[bot]' &&
+              !(
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-actions-core-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-babel-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-btoa-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-envalid-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-eslint-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-jest-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-nock-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-openapi-types-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-rest-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-prettier-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-types-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-typescript-') ||
+                startsWith(github.head_ref, 'dependabot-npm_and_yarn-webpack-') ||
+                startsWith(github.head_ref, 'dependabot-github_actions-actions-cache-') ||
+                startsWith(github.head_ref, 'dependabot-github_actions-actions-checkout-') ||
+                startsWith(github.head_ref, 'dependabot-github_actions-octokit-request-action-') ||
+                startsWith(github.head_ref, 'dependabot-github_actions-actions-setup-node-')
+              )
+            )
+          )
+        uses: octokit/graphql-action@v2.2.20
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          query: |
+            mutation requestReviews($id: ID!, $user: ID!) {
+              requestReviews(input: {pullRequestId: $id, userIds: [$user]}) {
+                clientMutationId
+              }
+            }
+          id: ${{ github.event.pull_request.node_id }}
+          user: ${{ fromJSON(steps.get-user-id.outputs.data).user.id }}
+
+      - name: Update title
+        if: >-
+          (
+            github.event.action == 'opened' ||
+            github.event.action == 'synchronize' ||
+            github.event.action == 'reopened'
+          ) &&
+          github.event.pull_request.user.login == 'dependabot[bot]'
+        uses: actions/github-script@v4.0.2
+        with:
+          github-token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
+          script: |
+            const {title} = context.payload.pull_request;
+            const formattedTitle = title.replace(': bump', ': Bump');
+
+            if (formattedTitle !== title) {
+              core.exportVariable('PR_TITLE', formattedTitle);
+
+              github.issues.update({
+                issue_number: context.payload.pull_request.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: formattedTitle
+              });
+            }
+
+      - name: Auto-merge
+        if: >-
+          (
+            github.event.action == 'opened' ||
+            github.event.action == 'synchronize' ||
+            github.event.action == 'reopened'
+          ) &&
+          (
+            github.event.pull_request.user.login == 'dependabot[bot]' ||
+            github.event.pull_request.user.login == 'github-actions[bot]' ||
+            github.event.pull_request.user.login == 'branoholy-bot'
+          )
+        uses: octokit/graphql-action@v2.2.20
+        with:
+          token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
+          query: |
+            mutation enablePullRequestAutoMerge($id: ID!, $message: String!) {
+              enablePullRequestAutoMerge(input: {pullRequestId: $id, commitHeadline: $message, commitBody: "", mergeMethod: SQUASH}) {
+                clientMutationId
+              }
+            }
+          id: ${{ github.event.pull_request.node_id }}
+          message: '"${{ env.PR_TITLE }} (#${{ github.event.pull_request.number }})"'
