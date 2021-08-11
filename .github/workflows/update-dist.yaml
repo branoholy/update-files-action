@@ -28,12 +28,13 @@ jobs:
       - name: Update the dist folder
         run: 'npm run build:dist'
       - name: Create a pull request with the updated files
-        uses: branoholy/update-files-action@develop
+        uses: branoholy/update-files-action@main
         with:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
           branch.name: build-update-dist
           branch.recreate: true
           commit.paths: 'dist/index.js, dist/index.js.LICENSE.txt'
-          commit.message: 'BUILD: Update dist'
+          commit.message: 'chore: Update dist'
           commit.token: ${{ secrets.GITHUB_TOKEN }}
           pull-request.body: Automatic update of `dist/index.js`.
+          pull-request.labels: 'type: chore'

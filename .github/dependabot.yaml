@@ -10,7 +10,10 @@ updates:
     open-pull-requests-limit: 10
     versioning-strategy: increase
     commit-message:
-      prefix: DEPS
+      prefix: deps(prod)
+      prefix-development: deps(dev)
+    labels:
+      - 'type: deps'
 
   - package-ecosystem: github-actions
     directory: /
@@ -21,7 +24,7 @@ updates:
       separator: '-'
     open-pull-requests-limit: 10
     commit-message:
-      prefix: DEPS
+      prefix: deps(actions)
     labels:
-      - dependencies
-      - github actions
+      - 'type: deps'
+      - 'scope: actions'
