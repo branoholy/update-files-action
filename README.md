@@ -36,6 +36,7 @@ with:
   branch.name: branch-name
   branch.base: develop
   branch.recreate: false
+  commit: true
   commit.paths: 'path/to/file/a.txt, path/to/file/b.txt, path/to/file/c.txt'
   commit.message: Commit message
   commit.token: ${{ secrets.ANOTHER_TOKEN }}
