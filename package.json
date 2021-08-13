@@ -58,7 +58,7 @@
     "@stryker-mutator/typescript-checker": "4.5.1",
     "@types/btoa": "1.2.3",
     "@types/diff": "5.0.1",
-    "@types/jest": "27.0.0",
+    "@types/jest": "27.0.1",
     "@types/node": "16.6.0",
     "@types/node-fetch": "2.5.12",
     "@typescript-eslint/eslint-plugin": "4.29.1",
