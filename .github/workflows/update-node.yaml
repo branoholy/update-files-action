@@ -34,7 +34,7 @@ jobs:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
           branch.name: deps-update-node
           branch.recreate: true
-          commit.paths: '.nvmrc, package.json, package-lock.json, .github/workflows/auto-merge-pr.yaml, .github/workflows/ci.yaml, .github/workflows/create-release.yaml, .github/workflows/lint-merge-commit.yaml, .github/workflows/lint-pr-title.yaml, .github/workflows/release-version.yaml, .github/workflows/update-lock-file.yaml, .github/workflows/update-node.yaml'
+          commit.paths: '.nvmrc, package.json, package-lock.json, .github/workflows/ci.yaml, .github/workflows/create-release.yaml, .github/workflows/lint-merge-commit.yaml, .github/workflows/lint-pr-title.yaml, .github/workflows/release-version.yaml, .github/workflows/update-dist.yaml, .github/workflows/update-lock-file.yaml, .github/workflows/update-node.yaml'
           commit.message: 'deps(dev): Update Node.js to ${{ steps.update-node-versions.outputs.version }}'
           commit.token: ${{ secrets.GITHUB_TOKEN }}
           pull-request.body: Automatic update of Node.js to version ${{ steps.update-node-versions.outputs.version }}.
