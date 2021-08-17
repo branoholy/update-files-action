@@ -43,7 +43,7 @@
     "@actions/core": "1.4.0",
     "@octokit/rest": "18.9.1",
     "btoa": "1.2.1",
-    "envalid": "7.2.0"
+    "envalid": "7.2.1"
   },
   "devDependencies": {
     "@babel/cli": "7.14.8",
