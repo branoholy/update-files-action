@@ -28,7 +28,7 @@ jobs:
 
       - name: Add labels
         if: github.event.action == 'opened' || github.event.action == 'edited'
-        uses: actions/github-script@v4.0.2
+        uses: actions/github-script@v4.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -168,7 +168,7 @@ jobs:
             github.event.action == 'reopened'
           ) &&
           github.event.pull_request.user.login == 'dependabot[bot]'
-        uses: actions/github-script@v4.0.2
+        uses: actions/github-script@v4.1.0
         with:
           github-token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
           script: |
