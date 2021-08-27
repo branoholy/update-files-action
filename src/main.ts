@@ -77,7 +77,10 @@ export const main = async () => {
 
     process.exit(exitCode);
   } catch (error) {
-    console.error(error.message);
+    if (error instanceof Error) {
+      console.error(error.message);
+    }
+
     process.exit(1);
   }
 };
