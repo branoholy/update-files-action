@@ -2,9 +2,9 @@ import { StringUtils } from '../string-utils';
 
 describe('StringUtils', () => {
   describe('parseList', () => {
-    // Typing check for (undefined) => undefined.
-    it('should return undefined if the input is undefined', () => {
-      expect<undefined>(StringUtils.parseList(undefined)).toBeUndefined();
+    // Typing check for (null) => null.
+    it('should return null if the input is null', () => {
+      expect<null>(StringUtils.parseList(null)).toBeNull();
     });
 
     // Typing check for (string) => string[].
@@ -12,12 +12,12 @@ describe('StringUtils', () => {
       expect<string[]>(StringUtils.parseList('')).toStrictEqual(['']);
     });
 
-    // Typing check for (string | undefined) => string[] | undefined.
+    // Typing check for (string | null) => string[] | null.
     it('should return an array with two empty strings if the input is a comma', () => {
-      let output = StringUtils.parseList(',' as string | undefined);
+      let output = StringUtils.parseList(',' as string | null);
       expect(output).toStrictEqual(['', '']);
 
-      output = undefined;
+      output = null;
       output = [''];
     });
 

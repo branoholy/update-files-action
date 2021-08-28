@@ -2,6 +2,14 @@ import { Octokit } from '@octokit/rest';
 import btoa from 'btoa';
 import { readFileSync } from 'fs';
 
+interface CreateCommitArgs {
+  branchSha: string;
+  treeSha: string;
+  message?: string;
+  token?: string;
+  amend: boolean;
+}
+
 export interface CommitFilesArgs {
   readonly paths: string[];
   readonly message?: string;
@@ -108,13 +116,7 @@ export class RepoKit {
     return blobs;
   }
 
-  private async createCommit(
-    branchSha: string,
-    treeSha: string,
-    message: string | undefined,
-    token: string | undefined,
-    amend: boolean
-  ) {
+  private async createCommit({ branchSha, treeSha, message, token, amend }: CreateCommitArgs) {
     const commitOctokit = token ? new Octokit({ auth: token }) : this.octokit;
 
     if (amend) {
@@ -147,7 +149,7 @@ export class RepoKit {
     }
   }
 
-  async commitFiles({ paths, message, branchName, token, amend = false }: CommitFilesArgs) {
+  async commitFiles({ paths, branchName, amend = false, ...restCommitArgs }: CommitFilesArgs) {
     const treeBlobs = await this.createBlobs(paths);
 
     const {
@@ -162,7 +164,7 @@ export class RepoKit {
       base_tree: branchSha
     });
 
-    const commit = await this.createCommit(branchSha, treeSha, message, token, amend);
+    const commit = await this.createCommit({ branchSha, treeSha, amend, ...restCommitArgs });
 
     await this.octokit.git.updateRef({
       ...this.getRepositoryInfo(),
@@ -174,11 +176,7 @@ export class RepoKit {
     return commit;
   }
 
-  private async createPullRequestTitle(branchName: string, title: string | undefined) {
-    if (title) {
-      return title;
-    }
-
+  private async getBranchCommitMessage(branchName: string) {
     const {
       data: { commit }
     } = await this.octokit.repos.getBranch({
@@ -205,17 +203,17 @@ export class RepoKit {
       ...this.getRepositoryInfo(),
       base: baseBranchName || (await this.getDefaultBranchName()),
       head: branchName,
-      title: await this.createPullRequestTitle(branchName, title),
-      body,
-      draft
+      title: title || (await this.getBranchCommitMessage(branchName)),
+      ...(body ? { body } : {}),
+      ...(draft ? { draft } : {})
     });
 
     if (reviewers || teamReviewers) {
       await this.octokit.pulls.requestReviewers({
         ...this.getRepositoryInfo(),
         pull_number: data.number,
-        reviewers,
-        team_reviewers: teamReviewers
+        ...(reviewers ? { reviewers } : {}),
+        ...(teamReviewers ? { team_reviewers: teamReviewers } : {})
       });
     }
 
@@ -223,9 +221,9 @@ export class RepoKit {
       await this.octokit.issues.update({
         ...this.getRepositoryInfo(),
         issue_number: data.number,
-        labels,
-        assignees,
-        milestone
+        ...(labels ? { labels } : {}),
+        ...(assignees ? { assignees } : {}),
+        ...(milestone ? { milestone } : {})
       });
     }
 

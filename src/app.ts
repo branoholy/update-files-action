@@ -28,14 +28,6 @@ export interface BranchArgs {
   readonly recreate?: boolean;
 }
 
-const getBaseBranchSha = async (repoKit: RepoKit, baseBranchName?: string) => {
-  const {
-    object: { sha }
-  } = await repoKit.getBranch(baseBranchName ?? (await repoKit.getDefaultBranchName()));
-
-  return sha;
-};
-
 const createBranch = async (
   repoKit: RepoKit,
   { name: branchName, base: baseBranchName, recreate = false }: BranchArgs
@@ -56,7 +48,10 @@ const createBranch = async (
   }
 
   // Create the branch
-  const baseBranchSha = await getBaseBranchSha(repoKit, baseBranchName);
+  const {
+    object: { sha: baseBranchSha }
+  } = await repoKit.getBranch(baseBranchName ?? (await repoKit.getDefaultBranchName()));
+
   await repoKit.createBranch(branchName, baseBranchSha);
   console.info(`Branch "${branchName}" has been created`);
 };
@@ -94,8 +89,8 @@ export interface PullRequestArgs {
 const createPullRequest = async (repoKit: RepoKit, branchName: string, pullRequestArgs: PullRequestArgs) => {
   const pullRequest = await repoKit.createPullRequest({
     ...pullRequestArgs,
-    branchName,
-    baseBranchName: pullRequestArgs.base
+    ...(pullRequestArgs.base ? { baseBranchName: pullRequestArgs.base } : {}),
+    branchName
   });
 
   console.info(`Pull request has been created at ${pullRequest.html_url}`);

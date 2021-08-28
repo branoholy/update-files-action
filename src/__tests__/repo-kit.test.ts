@@ -289,7 +289,7 @@ describe('RepoKit', () => {
 
       paths.forEach((_path, index) => {
         const blob = blobs[index];
-        if (blob === undefined) {
+        if (!blob) {
           throw new Error(`Error: Missing blob data for index ${index}.`);
         }
 

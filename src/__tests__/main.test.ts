@@ -152,50 +152,50 @@ describe('main', () => {
 
     ActionUtilsMock.getInputAsBoolean.mockImplementation((name, { required } = {}) => {
       if (isBooleanInput(name) && names.includes(name)) {
-        return inputs[name];
+        return inputs[name] ?? null;
       }
 
       if (required) {
         throw new Error(`Missing required input: ${name}`);
       }
 
-      return undefined;
+      return null;
     });
 
     ActionUtilsMock.getInputAsInteger.mockImplementation((name, { required } = {}) => {
       if (isIntegerInput(name) && names.includes(name)) {
-        return inputs[name];
+        return inputs[name] ?? null;
       }
 
       if (required) {
         throw new Error(`Missing required input: ${name}`);
       }
 
-      return undefined;
+      return null;
     });
 
     ActionUtilsMock.getInputAsString.mockImplementation((name, { required } = {}) => {
       if (isStringInput(name) && names.includes(name)) {
-        return inputs[name];
+        return inputs[name] ?? null;
       }
 
       if (required) {
         throw new Error(`Missing required input: ${name}`);
       }
 
-      return undefined;
+      return null;
     });
 
     ActionUtilsMock.getInputAsStrings.mockImplementation((name, { required } = {}) => {
       if (isStringsInput(name) && names.includes(name)) {
-        return inputs[name];
+        return inputs[name] ?? null;
       }
 
       if (required) {
         throw new Error(`Missing required input: ${name}`);
       }
 
-      return undefined;
+      return null;
     });
 
     ActionUtilsMock.hasInput.mockImplementation((name) => {
@@ -425,7 +425,7 @@ describe('main', () => {
       token,
       'branch.name': branch.name,
       'pull-request': false,
-      'pull-request.title': pullRequest.title
+      ...(pullRequest.title ? { 'pull-request.title': pullRequest.title } : {})
     });
 
     appMock.mockResolvedValue(0);
@@ -504,20 +504,20 @@ describe('main', () => {
 
       commit: true,
       'commit.paths': commit.paths,
-      'commit.message': commit.message,
-      'commit.token': commit.token,
-      'commit.amend': commit.amend,
+      ...(commit.message ? { 'commit.message': commit.message } : {}),
+      ...(commit.token ? { 'commit.token': commit.token } : {}),
+      ...(commit.amend ? { 'commit.amend': commit.amend } : {}),
 
       'pull-request': true,
-      'pull-request.title': pullRequest.title,
-      'pull-request.body': pullRequest.body,
-      'pull-request.base': pullRequest.base,
-      'pull-request.labels': pullRequest.labels,
-      'pull-request.assignees': pullRequest.assignees,
-      'pull-request.reviewers': pullRequest.reviewers,
-      'pull-request.team-reviewers': pullRequest.teamReviewers,
-      'pull-request.milestone': pullRequest.milestone,
-      'pull-request.draft': pullRequest.draft
+      ...(pullRequest.title ? { 'pull-request.title': pullRequest.title } : {}),
+      ...(pullRequest.body ? { 'pull-request.body': pullRequest.body } : {}),
+      ...(pullRequest.base ? { 'pull-request.base': pullRequest.base } : {}),
+      ...(pullRequest.labels ? { 'pull-request.labels': pullRequest.labels } : {}),
+      ...(pullRequest.assignees ? { 'pull-request.assignees': pullRequest.assignees } : {}),
+      ...(pullRequest.reviewers ? { 'pull-request.reviewers': pullRequest.reviewers } : {}),
+      ...(pullRequest.teamReviewers ? { 'pull-request.team-reviewers': pullRequest.teamReviewers } : {}),
+      ...(pullRequest.milestone ? { 'pull-request.milestone': pullRequest.milestone } : {}),
+      ...(pullRequest.draft ? { 'pull-request.draft': pullRequest.draft } : {})
     });
 
     appMock.mockResolvedValue(0);

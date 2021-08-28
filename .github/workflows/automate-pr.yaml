@@ -40,8 +40,8 @@ jobs:
             const type = types.find(type => title.startsWith(`${type}:`) || title.startsWith(`${type}!:`) || title.startsWith(`${type}(`));
             const scope = scopes.find(scope => title.includes(`(${scope}):`) || title.includes(`(${scope})!:`));
 
-            const typeLabel = type ? `type: ${type}` : undefined;
-            const scopeLabel = scope ? `scope: ${scope}` : undefined;
+            const typeLabel = type ? `type: ${type}` : null;
+            const scopeLabel = scope ? `scope: ${scope}` : null;
 
             const labels = [typeLabel, scopeLabel].filter(Boolean);
 

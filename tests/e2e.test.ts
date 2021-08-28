@@ -48,8 +48,8 @@ describe('e2e tests', () => {
     Nock.restore();
 
     ChildProcess.execSync(`git reset HEAD ${E2EConstants.testFilesDirectory}`);
-    FileSystem.rmdirSync(E2EConstants.testFilesDirectory, { recursive: true });
-    FileSystem.rmdirSync(E2EConstants.shellMocksDirectory);
+    FileSystem.rmSync(E2EConstants.testFilesDirectory, { recursive: true });
+    FileSystem.rmSync(E2EConstants.shellMocksDirectory, { recursive: true });
   });
 
   beforeEach(() => {
@@ -337,7 +337,7 @@ describe('e2e tests', () => {
     // The branch is not created
     expect(gitHubMock.restMocks.git.createRef).not.toBeCalled();
 
-    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName, undefined, true);
+    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName, E2EConstants.token, true);
 
     // A pull request is not created
     expect(gitHubMock.restMocks.pulls.create).not.toBeCalled();

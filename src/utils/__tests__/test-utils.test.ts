@@ -28,7 +28,7 @@ describe('TestUtils', () => {
 
       expect(ClsMock).toBe(Cls);
       expect(ClsMockWithType).toBe(Cls);
-      expect(getNumMock).toBe(undefined);
+      expect(getNumMock).toBeUndefined();
     });
   });
 

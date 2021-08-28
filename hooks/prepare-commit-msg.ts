@@ -19,24 +19,24 @@ const isRebasing = () => {
 
 const getBranchName = () => execSync('git symbolic-ref --short HEAD').toString().trim();
 
-const isValidType = (type?: string): type is string => !!type && types.includes(type);
+const isValidType = (type: string) => types.includes(type);
 
-const isValidScope = (scope?: string): scope is string => !!scope && scopes.includes(scope);
+const isValidScope = (scope: string) => scopes.includes(scope);
 
 interface BranchNameParts {
   type: string;
-  scope?: string;
+  scope: string | null;
 }
 
 const parseBranchName = (name: string): BranchNameParts => {
   const [rawType, rawScope] = name.split('-');
 
-  if (!isValidType(rawType)) {
+  if (!rawType || !isValidType(rawType)) {
     throw new Error('Invalid commit type in branch name');
   }
 
   const type = rawType.toLowerCase();
-  const scope = isValidScope(rawScope) ? rawScope.toLowerCase() : undefined;
+  const scope = rawScope && isValidScope(rawScope) ? rawScope.toLowerCase() : null;
 
   return {
     type,
@@ -44,7 +44,7 @@ const parseBranchName = (name: string): BranchNameParts => {
   };
 };
 
-const createPrefix = (type: string, scope?: string) => `${type}${scope ? `(${scope})` : ''}`;
+const createPrefix = (type: string, scope?: string | null) => `${type}${scope ? `(${scope})` : ''}`;
 
 const stringifyCommitMessage = ({ type, scope }: BranchNameParts, message: string) => {
   const [subject, ...comments] = message.split('\n#');
