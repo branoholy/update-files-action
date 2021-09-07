@@ -12,6 +12,7 @@ module.exports = (api) => {
       [
         '@babel/preset-env',
         {
+          exclude: ['@babel/plugin-proposal-dynamic-import'],
           targets: {
             node: callerName === 'babel-loader' ? '12' : 'current'
           },

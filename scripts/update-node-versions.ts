@@ -1,5 +1,4 @@
 import * as ActionsCore from '@actions/core';
-import fetch from 'node-fetch';
 
 import { NvmrcStorage } from './node-version-storages/nvmrc';
 import { PackageJsonStorage } from './node-version-storages/package-json';
@@ -15,8 +14,9 @@ interface NodeRelease {
 const isNodeRelease = TypeUtils.createTypeValidator<NodeRelease>((value) => typeof value.version === 'string');
 
 const fetchLatestNodeRelease = async () => {
+  const { default: fetch } = await import('node-fetch');
   const response = await fetch(nodeReleasesUrl);
-  const data: unknown = await response.json();
+  const data = await response.json();
 
   if (Array.isArray(data) && isNodeRelease(data[0])) {
     return data[0];
