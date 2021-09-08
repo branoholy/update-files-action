@@ -4,6 +4,7 @@ import { execSync } from 'child_process';
 import { app, AppArgs, BranchArgs, CommitArgs, PullRequestArgs } from '../app';
 import { RepoKit } from '../repo-kit';
 import { FileUtils } from '../utils/file-utils';
+import { dp } from '../utils/js-utils';
 import { TestUtils } from '../utils/test-utils';
 import { Awaited } from '../utils/type-utils';
 
@@ -646,7 +647,7 @@ describe('app', () => {
       [
         {
           ...pullRequest,
-          ...(pullRequest.base ? { baseBranchName: pullRequest.base } : {}),
+          ...dp({ baseBranchName: pullRequest.base }),
           branchName: branch.name
         }
       ]

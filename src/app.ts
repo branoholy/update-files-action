@@ -2,6 +2,7 @@ import * as ActionsCore from '@actions/core';
 
 import { RepoKit } from './repo-kit';
 import { FileUtils } from './utils/file-utils';
+import { dp } from './utils/js-utils';
 
 const branchRefPrefix = 'refs/heads/';
 
@@ -89,7 +90,7 @@ export interface PullRequestArgs {
 const createPullRequest = async (repoKit: RepoKit, branchName: string, pullRequestArgs: PullRequestArgs) => {
   const pullRequest = await repoKit.createPullRequest({
     ...pullRequestArgs,
-    ...(pullRequestArgs.base ? { baseBranchName: pullRequestArgs.base } : {}),
+    ...dp({ baseBranchName: pullRequestArgs.base }),
     branchName
   });
 

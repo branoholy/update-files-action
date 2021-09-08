@@ -2,6 +2,7 @@ import * as envalid from 'envalid';
 
 import { app, BranchArgs, CommitArgs, PullRequestArgs } from './app';
 import { ActionUtils } from './utils/action-utils';
+import { dp } from './utils/js-utils';
 
 const commitArgFields = ['paths', 'message', 'token', 'amend'];
 
@@ -27,8 +28,8 @@ const getBranchArgs = (): BranchArgs => {
 
   return {
     name,
-    ...(base === null ? {} : { base }),
-    ...(recreate === null ? {} : { recreate })
+    ...dp({ base }, null),
+    ...dp({ recreate }, null)
   };
 };
 
@@ -46,9 +47,9 @@ const getCommitArgs = (): CommitArgs | null => {
 
   return {
     paths,
-    ...(message === null ? {} : { message }),
-    ...(token === null ? {} : { token }),
-    ...(amend === null ? {} : { amend })
+    ...dp({ message }, null),
+    ...dp({ token }, null),
+    ...dp({ amend }, null)
   };
 };
 
@@ -70,15 +71,15 @@ const getPullRequestArgs = (): PullRequestArgs | null => {
   const draft = ActionUtils.getInputAsBoolean('pull-request.draft');
 
   return {
-    ...(title === null ? {} : { title }),
-    ...(body === null ? {} : { body }),
-    ...(base === null ? {} : { base }),
-    ...(labels === null ? {} : { labels }),
-    ...(assignees === null ? {} : { assignees }),
-    ...(reviewers === null ? {} : { reviewers }),
-    ...(teamReviewers === null ? {} : { teamReviewers }),
-    ...(milestone === null ? {} : { milestone }),
-    ...(draft === null ? {} : { draft })
+    ...dp({ title }, null),
+    ...dp({ body }, null),
+    ...dp({ base }, null),
+    ...dp({ labels }, null),
+    ...dp({ assignees }, null),
+    ...dp({ reviewers }, null),
+    ...dp({ teamReviewers }, null),
+    ...dp({ milestone }, null),
+    ...dp({ draft }, null)
   };
 };
 
@@ -97,8 +98,8 @@ export const main = async () => {
       repository: requiredEnv.GITHUB_REPOSITORY,
       token,
       branch,
-      ...(commit === null ? {} : { commit }),
-      ...(pullRequest === null ? {} : { pullRequest })
+      ...dp({ commit }, null),
+      ...dp({ pullRequest }, null)
     });
 
     process.exit(exitCode);

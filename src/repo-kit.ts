@@ -2,6 +2,8 @@ import { Octokit } from '@octokit/rest';
 import btoa from 'btoa';
 import { readFileSync } from 'fs';
 
+import { dp } from './utils/js-utils';
+
 interface CreateCommitArgs {
   branchSha: string;
   treeSha: string;
@@ -204,16 +206,16 @@ export class RepoKit {
       base: baseBranchName || (await this.getDefaultBranchName()),
       head: branchName,
       title: title || (await this.getBranchCommitMessage(branchName)),
-      ...(body ? { body } : {}),
-      ...(draft ? { draft } : {})
+      ...dp({ body }),
+      ...dp({ draft })
     });
 
     if (reviewers || teamReviewers) {
       await this.octokit.pulls.requestReviewers({
         ...this.getRepositoryInfo(),
         pull_number: data.number,
-        ...(reviewers ? { reviewers } : {}),
-        ...(teamReviewers ? { team_reviewers: teamReviewers } : {})
+        ...dp({ reviewers }),
+        ...dp({ team_reviewers: teamReviewers })
       });
     }
 
@@ -221,9 +223,9 @@ export class RepoKit {
       await this.octokit.issues.update({
         ...this.getRepositoryInfo(),
         issue_number: data.number,
-        ...(labels ? { labels } : {}),
-        ...(assignees ? { assignees } : {}),
-        ...(milestone ? { milestone } : {})
+        ...dp({ labels }),
+        ...dp({ assignees }),
+        ...dp({ milestone })
       });
     }
 
