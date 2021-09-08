@@ -1,9 +1,8 @@
 import * as envalid from 'envalid';
 
-import { app, BranchArgs, CommitArgs, PullRequestArgs } from '../app';
+import { app } from '../app';
 import { main } from '../main';
 import { ActionUtils } from '../utils/action-utils';
-import { dp } from '../utils/js-utils';
 import { TestUtils } from '../utils/test-utils';
 
 const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation();
@@ -31,18 +30,18 @@ describe('main', () => {
   const repository = 'owner/repository-name';
   const token = 'token';
 
-  const branch: BranchArgs = {
+  const branch = {
     name: 'branch'
   };
 
-  const commit: CommitArgs = {
+  const commit = {
     paths: ['path1', 'path2'],
     message: 'commit-message',
     token: 'commit-token',
     amend: true
   };
 
-  const pullRequest: PullRequestArgs = {
+  const pullRequest = {
     title: 'pull-request-title',
     body: 'pull-request-body',
     base: 'custom-base-branch',
@@ -426,7 +425,7 @@ describe('main', () => {
       token,
       'branch.name': branch.name,
       'pull-request': false,
-      ...dp({ 'pull-request.title': pullRequest.title })
+      'pull-request.title': pullRequest.title
     });
 
     appMock.mockResolvedValue(0);
@@ -505,20 +504,20 @@ describe('main', () => {
 
       commit: true,
       'commit.paths': commit.paths,
-      ...dp({ 'commit.message': commit.message }),
-      ...dp({ 'commit.token': commit.token }),
-      ...dp({ 'commit.amend': commit.amend }),
+      'commit.message': commit.message,
+      'commit.token': commit.token,
+      'commit.amend': commit.amend,
 
       'pull-request': true,
-      ...dp({ 'pull-request.title': pullRequest.title }),
-      ...dp({ 'pull-request.body': pullRequest.body }),
-      ...dp({ 'pull-request.base': pullRequest.base }),
-      ...dp({ 'pull-request.labels': pullRequest.labels }),
-      ...dp({ 'pull-request.assignees': pullRequest.assignees }),
-      ...dp({ 'pull-request.reviewers': pullRequest.reviewers }),
-      ...dp({ 'pull-request.team-reviewers': pullRequest.teamReviewers }),
-      ...dp({ 'pull-request.milestone': pullRequest.milestone }),
-      ...dp({ 'pull-request.draft': pullRequest.draft })
+      'pull-request.title': pullRequest.title,
+      'pull-request.body': pullRequest.body,
+      'pull-request.base': pullRequest.base,
+      'pull-request.labels': pullRequest.labels,
+      'pull-request.assignees': pullRequest.assignees,
+      'pull-request.reviewers': pullRequest.reviewers,
+      'pull-request.team-reviewers': pullRequest.teamReviewers,
+      'pull-request.milestone': pullRequest.milestone,
+      'pull-request.draft': pullRequest.draft
     });
 
     appMock.mockResolvedValue(0);

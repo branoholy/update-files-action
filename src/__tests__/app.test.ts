@@ -1,10 +1,9 @@
 import * as ActionsCore from '@actions/core';
 import { execSync } from 'child_process';
 
-import { app, AppArgs, BranchArgs, CommitArgs, PullRequestArgs } from '../app';
+import { app, AppArgs, BranchArgs } from '../app';
 import { RepoKit } from '../repo-kit';
 import { FileUtils } from '../utils/file-utils';
-import { dp } from '../utils/js-utils';
 import { TestUtils } from '../utils/test-utils';
 import { Awaited } from '../utils/type-utils';
 
@@ -33,12 +32,12 @@ describe('app', () => {
     name: 'branch'
   };
 
-  const commit: CommitArgs = {
+  const commit = {
     paths: ['path1', 'path2'],
     message: 'commit-message'
   };
 
-  const pullRequest: PullRequestArgs = {
+  const pullRequest = {
     title: 'pull-request-title',
     body: 'pull-request-body',
     base: 'custom-base-branch',
@@ -647,7 +646,7 @@ describe('app', () => {
       [
         {
           ...pullRequest,
-          ...dp({ baseBranchName: pullRequest.base }),
+          baseBranchName: pullRequest.base,
           branchName: branch.name
         }
       ]

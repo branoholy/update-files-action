@@ -5,11 +5,11 @@ import { readFileSync } from 'fs';
 import { dp } from './utils/js-utils';
 
 interface CreateCommitArgs {
-  branchSha: string;
-  treeSha: string;
-  message?: string;
-  token?: string;
-  amend: boolean;
+  readonly branchSha: string;
+  readonly treeSha: string;
+  readonly message?: string;
+  readonly token?: string;
+  readonly amend: boolean;
 }
 
 export interface CommitFilesArgs {
