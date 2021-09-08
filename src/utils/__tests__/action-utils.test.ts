@@ -125,9 +125,9 @@ describe('ActionUtils', () => {
         throw new Error();
       });
 
-      const getUndefinedRequiredInput = () => ActionUtils.getInputAsBoolean(inputName, { required: true });
+      const getNonDefinedRequiredInput = () => ActionUtils.getInputAsBoolean(inputName, { required: true });
 
-      expect(getUndefinedRequiredInput).toThrowError();
+      expect(getNonDefinedRequiredInput).toThrowError();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: true });
     });
   });
@@ -206,9 +206,9 @@ describe('ActionUtils', () => {
         throw new Error();
       });
 
-      const getUndefinedRequiredInput = () => ActionUtils.getInputAsInteger(inputName, { required: true });
+      const getNonDefinedRequiredInput = () => ActionUtils.getInputAsInteger(inputName, { required: true });
 
-      expect(getUndefinedRequiredInput).toThrowError();
+      expect(getNonDefinedRequiredInput).toThrowError();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: true });
     });
   });
@@ -286,9 +286,9 @@ describe('ActionUtils', () => {
         throw new Error();
       });
 
-      const getUndefinedRequiredInput = () => ActionUtils.getInputAsString(inputName, { required: true });
+      const getNonDefinedRequiredInput = () => ActionUtils.getInputAsString(inputName, { required: true });
 
-      expect(getUndefinedRequiredInput).toThrowError();
+      expect(getNonDefinedRequiredInput).toThrowError();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: true });
     });
   });
@@ -367,9 +367,9 @@ describe('ActionUtils', () => {
         throw new Error();
       });
 
-      const getUndefinedRequiredInput = () => ActionUtils.getInputAsStrings(inputName, { required: true });
+      const getNonDefinedRequiredInput = () => ActionUtils.getInputAsStrings(inputName, { required: true });
 
-      expect(getUndefinedRequiredInput).toThrowError();
+      expect(getNonDefinedRequiredInput).toThrowError();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: true });
     });
   });
