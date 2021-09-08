@@ -246,10 +246,10 @@ describe('RepoKit', () => {
       tree: { sha: 'tree-sha', url: '' },
       url: 'url',
       verification: {
-        // @ts-ignore Wrong typing in @octokit/rest for payload
+        // @ts-expect-error Wrong typing in @octokit/rest for payload
         payload: null as string,
         reason: 'unsigned',
-        // @ts-ignore Wrong typing in @octokit/rest for signature
+        // @ts-expect-error Wrong typing in @octokit/rest for signature
         signature: null as string,
         verified: false
       }
