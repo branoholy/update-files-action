@@ -1,14 +1,14 @@
 import type { operations } from '@octokit/openapi-types';
 
 export type GitHubRestParameters<OperationT extends keyof operations> =
-  // @ts-ignore Type '"requestBody"' cannot be used to index type 'operations[OperationT]'.
+  // @ts-expect-error Type '"requestBody"' cannot be used to index type 'operations[OperationT]'.
   operations[OperationT]['requestBody']['content']['application/json'] & operations[OperationT]['parameters']['path'];
 
 export type GitHubRestResponseData<
   OperationT extends keyof operations,
   HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
 > =
-  // @ts-ignore Type 'HttpCodeT' cannot be used to index type 'operations[OperationT]["responses"]'.
+  // @ts-expect-error Type 'HttpCodeT' cannot be used to index type 'operations[OperationT]["responses"]'.
   operations[OperationT]['responses'][HttpCodeT]['content']['application/json'];
 
 type GitHubRestMock<

@@ -22,7 +22,7 @@ const fetchLatestNodeRelease = async () => {
     return data[0];
   }
 
-  return undefined;
+  return null;
 };
 
 const fetchLatestNodeVersion = async () => {
@@ -33,7 +33,7 @@ const fetchLatestNodeVersion = async () => {
     return version.startsWith('v') ? version.substr(1) : version;
   }
 
-  return undefined;
+  return null;
 };
 
 const main = async () => {

@@ -1,7 +1,7 @@
 import * as ActionsCore from '@actions/core';
 import { execSync } from 'child_process';
 
-import { app, AppArgs, BranchArgs, CommitArgs, PullRequestArgs } from '../app';
+import { app, AppArgs, BranchArgs } from '../app';
 import { RepoKit } from '../repo-kit';
 import { FileUtils } from '../utils/file-utils';
 import { TestUtils } from '../utils/test-utils';
@@ -32,12 +32,12 @@ describe('app', () => {
     name: 'branch'
   };
 
-  const commit: CommitArgs = {
+  const commit = {
     paths: ['path1', 'path2'],
     message: 'commit-message'
   };
 
-  const pullRequest: PullRequestArgs = {
+  const pullRequest = {
     title: 'pull-request-title',
     body: 'pull-request-body',
     base: 'custom-base-branch',
@@ -152,9 +152,8 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branchName: branch.name,
-          paths: commit.paths,
-          message: commit.message
+          ...commit,
+          branchName: branch.name
         }
       ]
     ]);
@@ -219,9 +218,8 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branchName: branch.name,
-          paths: commit.paths,
-          message: commit.message
+          ...commit,
+          branchName: branch.name
         }
       ]
     ]);
@@ -280,9 +278,8 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branchName: branch.name,
-          paths: commit.paths,
-          message: commit.message
+          ...commit,
+          branchName: branch.name
         }
       ]
     ]);
@@ -333,9 +330,8 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branchName: branch.name,
-          paths: commit.paths,
-          message: commit.message
+          ...commit,
+          branchName: branch.name
         }
       ]
     ]);
@@ -352,9 +348,9 @@ describe('app', () => {
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
 
     const exitCode = await app({
-      ...appArgs,
+      ...appArgs
       // Do not commit
-      commit: undefined
+      // commit: missing
     });
 
     expect(consoleErrorMock).not.toBeCalled();
@@ -390,9 +386,9 @@ describe('app', () => {
     const exitCode = await app({
       ...appArgs,
       // Commit the changes
-      commit,
+      commit
       // Do not create a pull request
-      pullRequest: undefined
+      // pullRequest: missing
     });
 
     expect(consoleErrorMock).not.toBeCalled();
@@ -420,9 +416,8 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branchName: branch.name,
-          paths: commit.paths,
-          message: commit.message
+          ...commit,
+          branchName: branch.name
         }
       ]
     ]);
@@ -447,9 +442,9 @@ describe('app', () => {
       commit: {
         ...commit,
         amend: true
-      },
+      }
       // Do not create a pull request
-      pullRequest: undefined
+      // pullRequest: missing
     });
 
     expect(consoleErrorMock).not.toBeCalled();
@@ -477,9 +472,8 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
+          ...commit,
           branchName: branch.name,
-          paths: commit.paths,
-          message: commit.message,
           amend: true
         }
       ]
@@ -500,11 +494,11 @@ describe('app', () => {
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
 
     const exitCode = await app({
-      ...appArgs,
+      ...appArgs
       // Do not commit
-      commit: undefined,
+      // commit: missing,
       // Do not create a pull request
-      pullRequest: undefined
+      // pullRequest: missing
     });
 
     expect(consoleErrorMock).not.toBeCalled();
@@ -574,9 +568,8 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
-          branchName: branch.name,
-          paths: commit.paths,
-          message: commit.message
+          ...commit,
+          branchName: branch.name
         }
       ]
     ]);
@@ -638,9 +631,8 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
       [
         {
+          ...commit,
           branchName: branch.name,
-          paths: commit.paths,
-          message: commit.message,
           token: commitToken
         }
       ]
@@ -654,8 +646,8 @@ describe('app', () => {
       [
         {
           ...pullRequest,
-          branchName: branch.name,
-          baseBranchName: pullRequest.base
+          baseBranchName: pullRequest.base,
+          branchName: branch.name
         }
       ]
     ]);

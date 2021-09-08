@@ -15,7 +15,7 @@ describe('ActionUtils', () => {
   });
 
   describe('getInputAsBoolean', () => {
-    // Typing check for (string) => boolean | undefined.
+    // Typing check for (string) => boolean | null.
     it('should return true if the input is "true" and options are not set', () => {
       actionsCoreGetInputMock.mockReturnValue('true');
 
@@ -23,7 +23,7 @@ describe('ActionUtils', () => {
       expect(output).toBe(true);
       expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
 
-      output = undefined;
+      output = null;
       output = true;
     });
 
@@ -34,18 +34,18 @@ describe('ActionUtils', () => {
       expect(output).toBe(false);
       expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
 
-      output = undefined;
+      output = null;
       output = false;
     });
 
-    it('should return undefined if the input is not defined and options are not set', () => {
+    it('should return null if the input is not defined and options are not set', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsBoolean(inputName)).toBeUndefined();
+      expect(ActionUtils.getInputAsBoolean(inputName)).toBeNull();
       expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
     });
 
-    // Typing check for (string, {}) => boolean | undefined.
+    // Typing check for (string, {}) => boolean | null.
     it('should return true if the input is "true" and options are empty', () => {
       actionsCoreGetInputMock.mockReturnValue('true');
 
@@ -53,7 +53,7 @@ describe('ActionUtils', () => {
       expect(output).toBe(true);
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, {});
 
-      output = undefined;
+      output = null;
       output = true;
     });
 
@@ -64,18 +64,18 @@ describe('ActionUtils', () => {
       expect(output).toBe(false);
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, {});
 
-      output = undefined;
+      output = null;
       output = false;
     });
 
-    it('should return undefined if the input is not defined and options are empty', () => {
+    it('should return null if the input is not defined and options are empty', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsBoolean(inputName, {})).toBeUndefined();
+      expect(ActionUtils.getInputAsBoolean(inputName, {})).toBeNull();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, {});
     });
 
-    // Typing check for (string, NonRequiredInputOptions) => boolean | undefined.
+    // Typing check for (string, NonRequiredInputOptions) => boolean | null.
     it('should return true if the input is "true" and not required', () => {
       actionsCoreGetInputMock.mockReturnValue('true');
 
@@ -83,7 +83,7 @@ describe('ActionUtils', () => {
       expect(output).toBe(true);
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: false });
 
-      output = undefined;
+      output = null;
       output = true;
     });
 
@@ -94,14 +94,14 @@ describe('ActionUtils', () => {
       expect(output).toBe(false);
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: false });
 
-      output = undefined;
+      output = null;
       output = false;
     });
 
-    it('should return undefined if the input is not defined and not required', () => {
+    it('should return null if the input is not defined and not required', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsBoolean(inputName, { required: false })).toBeUndefined();
+      expect(ActionUtils.getInputAsBoolean(inputName, { required: false })).toBeNull();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: false });
     });
 
@@ -125,9 +125,9 @@ describe('ActionUtils', () => {
         throw new Error();
       });
 
-      const getUndefinedRequiredInput = () => ActionUtils.getInputAsBoolean(inputName, { required: true });
+      const getNonDefinedRequiredInput = () => ActionUtils.getInputAsBoolean(inputName, { required: true });
 
-      expect(getUndefinedRequiredInput).toThrowError();
+      expect(getNonDefinedRequiredInput).toThrowError();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: true });
     });
   });
@@ -136,7 +136,7 @@ describe('ActionUtils', () => {
     const inputValue = '42';
     const parsedValue = 42;
 
-    // Typing check for (string) => number | undefined.
+    // Typing check for (string) => number | null.
     it('should return the corresponding parsed value if the input is defined and options are not set', () => {
       actionsCoreGetInputMock.mockReturnValue(inputValue);
 
@@ -144,18 +144,18 @@ describe('ActionUtils', () => {
       expect(output).toBe(parsedValue);
       expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
 
-      output = undefined;
+      output = null;
       output = parsedValue;
     });
 
-    it('should return undefined if the input is not defined and options are not set', () => {
+    it('should return null if the input is not defined and options are not set', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsInteger(inputName)).toBeUndefined();
+      expect(ActionUtils.getInputAsInteger(inputName)).toBeNull();
       expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
     });
 
-    // Typing check for (string, {}) => number | undefined.
+    // Typing check for (string, {}) => number | null.
     it('should return the corresponding parsed value if the input is defined and options are empty', () => {
       actionsCoreGetInputMock.mockReturnValue(inputValue);
 
@@ -163,18 +163,18 @@ describe('ActionUtils', () => {
       expect(output).toBe(parsedValue);
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, {});
 
-      output = undefined;
+      output = null;
       output = parsedValue;
     });
 
-    it('should return undefined if the input is not defined and options are empty', () => {
+    it('should return null if the input is not defined and options are empty', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsInteger(inputName, {})).toBeUndefined();
+      expect(ActionUtils.getInputAsInteger(inputName, {})).toBeNull();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, {});
     });
 
-    // Typing check for (string, NonRequiredInputOptions) => number | undefined.
+    // Typing check for (string, NonRequiredInputOptions) => number | null.
     it('should return the corresponding parsed value if the input is defined and not required', () => {
       actionsCoreGetInputMock.mockReturnValue(inputValue);
 
@@ -182,14 +182,14 @@ describe('ActionUtils', () => {
       expect(output).toBe(parsedValue);
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: false });
 
-      output = undefined;
+      output = null;
       output = parsedValue;
     });
 
-    it('should return undefined if the input is not defined and not required', () => {
+    it('should return null if the input is not defined and not required', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsInteger(inputName, { required: false })).toBeUndefined();
+      expect(ActionUtils.getInputAsInteger(inputName, { required: false })).toBeNull();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: false });
     });
 
@@ -206,9 +206,9 @@ describe('ActionUtils', () => {
         throw new Error();
       });
 
-      const getUndefinedRequiredInput = () => ActionUtils.getInputAsInteger(inputName, { required: true });
+      const getNonDefinedRequiredInput = () => ActionUtils.getInputAsInteger(inputName, { required: true });
 
-      expect(getUndefinedRequiredInput).toThrowError();
+      expect(getNonDefinedRequiredInput).toThrowError();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: true });
     });
   });
@@ -216,7 +216,7 @@ describe('ActionUtils', () => {
   describe('getInputAsString', () => {
     const inputValue = 'value';
 
-    // Typing check for (string) => string | undefined.
+    // Typing check for (string) => string | null.
     it('should return the corresponding value if the input is defined and options are not set', () => {
       actionsCoreGetInputMock.mockReturnValue(inputValue);
 
@@ -224,18 +224,18 @@ describe('ActionUtils', () => {
       expect(output).toBe(inputValue);
       expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
 
-      output = undefined;
+      output = null;
       output = '';
     });
 
-    it('should return undefined if the input is not defined and options are not set', () => {
+    it('should return null if the input is not defined and options are not set', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsString(inputName)).toBeUndefined();
+      expect(ActionUtils.getInputAsString(inputName)).toBeNull();
       expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
     });
 
-    // Typing check for (string, {}) => string | undefined.
+    // Typing check for (string, {}) => string | null.
     it('should return the corresponding value if the input is defined and options are empty', () => {
       actionsCoreGetInputMock.mockReturnValue(inputValue);
 
@@ -243,18 +243,18 @@ describe('ActionUtils', () => {
       expect(output).toBe(inputValue);
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, {});
 
-      output = undefined;
+      output = null;
       output = '';
     });
 
-    it('should return undefined if the input is not defined and options are empty', () => {
+    it('should return null if the input is not defined and options are empty', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsString(inputName, {})).toBeUndefined();
+      expect(ActionUtils.getInputAsString(inputName, {})).toBeNull();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, {});
     });
 
-    // Typing check for (string, NonRequiredInputOptions) => string | undefined.
+    // Typing check for (string, NonRequiredInputOptions) => string | null.
     it('should return the corresponding value if the input is defined and not required', () => {
       actionsCoreGetInputMock.mockReturnValue(inputValue);
 
@@ -262,14 +262,14 @@ describe('ActionUtils', () => {
       expect(output).toBe(inputValue);
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: false });
 
-      output = undefined;
+      output = null;
       output = '';
     });
 
-    it('should return undefined if the input is not defined and not required', () => {
+    it('should return null if the input is not defined and not required', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsString(inputName, { required: false })).toBeUndefined();
+      expect(ActionUtils.getInputAsString(inputName, { required: false })).toBeNull();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: false });
     });
 
@@ -286,9 +286,9 @@ describe('ActionUtils', () => {
         throw new Error();
       });
 
-      const getUndefinedRequiredInput = () => ActionUtils.getInputAsString(inputName, { required: true });
+      const getNonDefinedRequiredInput = () => ActionUtils.getInputAsString(inputName, { required: true });
 
-      expect(getUndefinedRequiredInput).toThrowError();
+      expect(getNonDefinedRequiredInput).toThrowError();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: true });
     });
   });
@@ -297,7 +297,7 @@ describe('ActionUtils', () => {
     const inputValue = 'value1, value2';
     const parsedValue = ['value1', 'value2'];
 
-    // Typing check for (string) => string[] | undefined.
+    // Typing check for (string) => string[] | null.
     it('should return the corresponding parsed value if the input is defined and options are not set', () => {
       actionsCoreGetInputMock.mockReturnValue(inputValue);
 
@@ -305,18 +305,18 @@ describe('ActionUtils', () => {
       expect(output).toStrictEqual(parsedValue);
       expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
 
-      output = undefined;
+      output = null;
       output = parsedValue;
     });
 
-    it('should return undefined if the input is not defined and options are not set', () => {
+    it('should return null if the input is not defined and options are not set', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsStrings(inputName)).toBeUndefined();
+      expect(ActionUtils.getInputAsStrings(inputName)).toBeNull();
       expect(actionsCoreGetInputMock.mock.calls[0]?.[0]).toBe(inputName);
     });
 
-    // Typing check for (string, {}) => string[] | undefined.
+    // Typing check for (string, {}) => string[] | null.
     it('should return the corresponding parsed value if the input is defined and options are empty', () => {
       actionsCoreGetInputMock.mockReturnValue(inputValue);
 
@@ -324,18 +324,18 @@ describe('ActionUtils', () => {
       expect(output).toStrictEqual(parsedValue);
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, {});
 
-      output = undefined;
+      output = null;
       output = parsedValue;
     });
 
-    it('should return undefined if the input is not defined and options are empty', () => {
+    it('should return null if the input is not defined and options are empty', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsStrings(inputName, {})).toBeUndefined();
+      expect(ActionUtils.getInputAsStrings(inputName, {})).toBeNull();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, {});
     });
 
-    // Typing check for (string, NonRequiredInputOptions) => string[] | undefined.
+    // Typing check for (string, NonRequiredInputOptions) => string[] | null.
     it('should return the corresponding parsed value if the input is defined and not required', () => {
       actionsCoreGetInputMock.mockReturnValue(inputValue);
 
@@ -343,14 +343,14 @@ describe('ActionUtils', () => {
       expect(output).toStrictEqual(parsedValue);
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: false });
 
-      output = undefined;
+      output = null;
       output = parsedValue;
     });
 
-    it('should return undefined if the input is not defined and not required', () => {
+    it('should return null if the input is not defined and not required', () => {
       actionsCoreGetInputMock.mockReturnValue('');
 
-      expect(ActionUtils.getInputAsStrings(inputName, { required: false })).toBeUndefined();
+      expect(ActionUtils.getInputAsStrings(inputName, { required: false })).toBeNull();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: false });
     });
 
@@ -367,9 +367,9 @@ describe('ActionUtils', () => {
         throw new Error();
       });
 
-      const getUndefinedRequiredInput = () => ActionUtils.getInputAsStrings(inputName, { required: true });
+      const getNonDefinedRequiredInput = () => ActionUtils.getInputAsStrings(inputName, { required: true });
 
-      expect(getUndefinedRequiredInput).toThrowError();
+      expect(getNonDefinedRequiredInput).toThrowError();
       expect(actionsCoreGetInputMock).toBeCalledWith(inputName, { required: true });
     });
   });

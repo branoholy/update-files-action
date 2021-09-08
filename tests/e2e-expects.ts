@@ -168,10 +168,8 @@ const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branchName:
       [
         expect.stringMatching(new RegExp(`/42$`)),
         expect.objectContaining<Partial<GitHubRestParameters<'issues/update'>>>({
-          // @ts-ignore Type 'string[]' is not assignable to type '...'.
           labels: E2EConstants.pullRequestLabels.split(',').map((label) => label.trim()),
           assignees: E2EConstants.pullRequestAssignees.split(',').map((assignee) => assignee.trim()),
-          // @ts-ignore Type 'number' is not assignable to type '((string | number) & { [key: string]: any; }) | null | undefined'.
           milestone: parseInt(E2EConstants.pullRequestMilestone, 10)
         })
       ]

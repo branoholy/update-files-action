@@ -33,6 +33,8 @@ module.exports = {
     'import/no-unassigned-import': 'error',
     'import/order': 'off',
 
+    'no-undefined': 'error',
+
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
 

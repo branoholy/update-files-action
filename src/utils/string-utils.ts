@@ -1,9 +1,13 @@
-function parseList(listString: undefined): undefined;
+function parseList(listString: null): null;
 function parseList(listString: string): string[];
-function parseList(listString: string | undefined): string[] | undefined;
+function parseList(listString: string | null): string[] | null;
 
-function parseList(listString: string | undefined): string[] | undefined {
-  return listString?.split(',').map((item) => item.trim());
+function parseList(listString: string | null): string[] | null {
+  if (listString === null) {
+    return null;
+  }
+
+  return listString.split(',').map((item) => item.trim());
 }
 
 export const StringUtils = {

@@ -127,7 +127,7 @@ export class GitHubMock {
       .post(`/repos/${this.repository}/git/blobs`)
       .optionally()
       .times(Infinity)
-      // @ts-ignore
+      // @ts-expect-error
       .reply(this.restMocks.git.createBlob);
   }
 
@@ -150,7 +150,7 @@ export class GitHubMock {
       .get((uri: string) => uri.startsWith(`/repos/${this.repository}/git/commits/`))
       .optionally()
       .times(Infinity)
-      // @ts-ignore
+      // @ts-expect-error
       .reply(this.restMocks.git.getCommit);
   }
 
@@ -189,7 +189,7 @@ export class GitHubMock {
       .post(`/repos/${this.repository}/git/commits`)
       .optionally()
       .times(Infinity)
-      // @ts-ignore
+      // @ts-expect-error
       .reply(this.restMocks.git.createCommit);
   }
 
@@ -220,7 +220,7 @@ export class GitHubMock {
       .get((uri) => uri.startsWith(`/repos/${this.repository}/git/ref/`))
       .optionally()
       .times(Infinity)
-      // @ts-ignore
+      // @ts-expect-error
       .reply(this.restMocks.git.getRef);
   }
 
@@ -233,7 +233,7 @@ export class GitHubMock {
 
     this.api
       .post(`/repos/${this.repository}/git/refs`)
-      // @ts-ignore
+      // @ts-expect-error
       .reply(this.restMocks.git.createRef);
   }
 
@@ -256,7 +256,7 @@ export class GitHubMock {
       .patch((uri: string) => uri.startsWith(`/repos/${this.repository}/git/refs/`))
       .optionally()
       .times(Infinity)
-      // @ts-ignore
+      // @ts-expect-error
       .reply(this.restMocks.git.updateRef);
   }
 
@@ -279,7 +279,7 @@ export class GitHubMock {
       .delete((uri) => uri.startsWith(`/repos/${this.repository}/git/refs/`))
       .optionally()
       .times(Infinity)
-      // @ts-ignore
+      // @ts-expect-error
       .reply(this.restMocks.git.deleteRef);
   }
 
@@ -298,7 +298,7 @@ export class GitHubMock {
       .post(`/repos/${this.repository}/git/trees`)
       .optionally()
       .times(Infinity)
-      // @ts-ignore
+      // @ts-expect-error
       .reply(this.restMocks.git.createTree);
   }
 
@@ -323,7 +323,7 @@ export class GitHubMock {
       .post(`/repos/${this.repository}/pulls`)
       .optionally()
       .times(Infinity)
-      // @ts-ignore
+      // @ts-expect-error
       .reply(this.restMocks.pulls.create);
   }
 
@@ -375,7 +375,7 @@ export class GitHubMock {
       .get((uri: string) => uri.startsWith(`/repos/${this.repository}/branches/`))
       .optionally()
       .times(Infinity)
-      // @ts-ignore
+      // @ts-expect-error
       .reply(this.restMocks.repos.getBranch);
   }
 }

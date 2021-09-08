@@ -1,6 +1,6 @@
 import * as envalid from 'envalid';
 
-import { app, BranchArgs, CommitArgs, PullRequestArgs } from '../app';
+import { app } from '../app';
 import { main } from '../main';
 import { ActionUtils } from '../utils/action-utils';
 import { TestUtils } from '../utils/test-utils';
@@ -30,18 +30,18 @@ describe('main', () => {
   const repository = 'owner/repository-name';
   const token = 'token';
 
-  const branch: BranchArgs = {
+  const branch = {
     name: 'branch'
   };
 
-  const commit: CommitArgs = {
+  const commit = {
     paths: ['path1', 'path2'],
     message: 'commit-message',
     token: 'commit-token',
     amend: true
   };
 
-  const pullRequest: PullRequestArgs = {
+  const pullRequest = {
     title: 'pull-request-title',
     body: 'pull-request-body',
     base: 'custom-base-branch',
@@ -152,50 +152,50 @@ describe('main', () => {
 
     ActionUtilsMock.getInputAsBoolean.mockImplementation((name, { required } = {}) => {
       if (isBooleanInput(name) && names.includes(name)) {
-        return inputs[name];
+        return inputs[name] ?? null;
       }
 
       if (required) {
         throw new Error(`Missing required input: ${name}`);
       }
 
-      return undefined;
+      return null;
     });
 
     ActionUtilsMock.getInputAsInteger.mockImplementation((name, { required } = {}) => {
       if (isIntegerInput(name) && names.includes(name)) {
-        return inputs[name];
+        return inputs[name] ?? null;
       }
 
       if (required) {
         throw new Error(`Missing required input: ${name}`);
       }
 
-      return undefined;
+      return null;
     });
 
     ActionUtilsMock.getInputAsString.mockImplementation((name, { required } = {}) => {
       if (isStringInput(name) && names.includes(name)) {
-        return inputs[name];
+        return inputs[name] ?? null;
       }
 
       if (required) {
         throw new Error(`Missing required input: ${name}`);
       }
 
-      return undefined;
+      return null;
     });
 
     ActionUtilsMock.getInputAsStrings.mockImplementation((name, { required } = {}) => {
       if (isStringsInput(name) && names.includes(name)) {
-        return inputs[name];
+        return inputs[name] ?? null;
       }
 
       if (required) {
         throw new Error(`Missing required input: ${name}`);
       }
 
-      return undefined;
+      return null;
     });
 
     ActionUtilsMock.hasInput.mockImplementation((name) => {
