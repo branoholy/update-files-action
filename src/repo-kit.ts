@@ -58,7 +58,7 @@ export class RepoKit {
   }
 
   async getBranch(name: string) {
-    const { data } = await this.octokit.git.getRef({
+    const { data } = await this.octokit.rest.git.getRef({
       ...this.getRepositoryInfo(),
       ref: `heads/${name}`
     });
@@ -70,7 +70,7 @@ export class RepoKit {
   }
 
   async createBranch(name: string, sha: string) {
-    const { data } = await this.octokit.git.createRef({
+    const { data } = await this.octokit.rest.git.createRef({
       ...this.getRepositoryInfo(),
       ref: `refs/heads/${name}`,
       sha
@@ -80,14 +80,14 @@ export class RepoKit {
   }
 
   deleteBranch(name: string) {
-    return this.octokit.git.deleteRef({
+    return this.octokit.rest.git.deleteRef({
       ...this.getRepositoryInfo(),
       ref: `heads/${name}`
     });
   }
 
   async getDefaultBranchName() {
-    const response = await this.octokit.repos.get(this.getRepositoryInfo());
+    const response = await this.octokit.rest.repos.get(this.getRepositoryInfo());
 
     if (response.status !== 200) {
       throw new Error(`Fetch for the default branch failed with the status code ${response.status}`);
@@ -106,7 +106,7 @@ export class RepoKit {
     for (const path of paths) {
       const {
         data: { sha }
-      } = await this.octokit.git.createBlob({
+      } = await this.octokit.rest.git.createBlob({
         ...this.getRepositoryInfo(),
         content: btoa(readFileSync(path)),
         encoding
@@ -122,12 +122,12 @@ export class RepoKit {
     const commitOctokit = token ? new Octokit({ auth: token }) : this.octokit;
 
     if (amend) {
-      const { data: commit } = await this.octokit.git.getCommit({
+      const { data: commit } = await this.octokit.rest.git.getCommit({
         ...this.getRepositoryInfo(),
         commit_sha: branchSha
       });
 
-      const { data } = await commitOctokit.git.createCommit({
+      const { data } = await commitOctokit.rest.git.createCommit({
         ...this.getRepositoryInfo(),
         parents: commit.parents.map(({ sha }) => sha),
         tree: treeSha,
@@ -140,7 +140,7 @@ export class RepoKit {
         throw new Error('Commit message is empty');
       }
 
-      const { data } = await commitOctokit.git.createCommit({
+      const { data } = await commitOctokit.rest.git.createCommit({
         ...this.getRepositoryInfo(),
         parents: [branchSha],
         tree: treeSha,
@@ -160,7 +160,7 @@ export class RepoKit {
 
     const {
       data: { sha: treeSha }
-    } = await this.octokit.git.createTree({
+    } = await this.octokit.rest.git.createTree({
       ...this.getRepositoryInfo(),
       tree: treeBlobs,
       base_tree: branchSha
@@ -168,7 +168,7 @@ export class RepoKit {
 
     const commit = await this.createCommit({ branchSha, treeSha, amend, ...restCommitArgs });
 
-    await this.octokit.git.updateRef({
+    await this.octokit.rest.git.updateRef({
       ...this.getRepositoryInfo(),
       ref: `heads/${branchName}`,
       sha: commit.sha,
@@ -181,7 +181,7 @@ export class RepoKit {
   private async getBranchCommitMessage(branchName: string) {
     const {
       data: { commit }
-    } = await this.octokit.repos.getBranch({
+    } = await this.octokit.rest.repos.getBranch({
       ...this.getRepositoryInfo(),
       branch: branchName
     });
@@ -201,7 +201,7 @@ export class RepoKit {
     milestone,
     draft
   }: CreatePullRequestArgs) {
-    const { data } = await this.octokit.pulls.create({
+    const { data } = await this.octokit.rest.pulls.create({
       ...this.getRepositoryInfo(),
       base: baseBranchName || (await this.getDefaultBranchName()),
       head: branchName,
@@ -211,7 +211,7 @@ export class RepoKit {
     });
 
     if (reviewers || teamReviewers) {
-      await this.octokit.pulls.requestReviewers({
+      await this.octokit.rest.pulls.requestReviewers({
         ...this.getRepositoryInfo(),
         pull_number: data.number,
         ...dp({ reviewers }),
@@ -220,7 +220,7 @@ export class RepoKit {
     }
 
     if (labels || assignees || milestone) {
-      await this.octokit.issues.update({
+      await this.octokit.rest.issues.update({
         ...this.getRepositoryInfo(),
         issue_number: data.number,
         ...dp({ labels }),
