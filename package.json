@@ -59,7 +59,7 @@
     "@types/btoa": "1.2.3",
     "@types/diff": "5.0.1",
     "@types/jest": "27.0.2",
-    "@types/node": "16.10.3",
+    "@types/node": "16.11.6",
     "@typescript-eslint/eslint-plugin": "4.33.0",
     "@typescript-eslint/parser": "4.33.0",
     "babel-jest": "27.3.1",
