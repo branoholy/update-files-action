@@ -9,7 +9,8 @@ module.exports = ({ production, development }) => ({
   target: 'node12',
   output: {
     path: path.resolve(__dirname, 'build/'),
-    filename: 'index.js'
+    filename: 'index.js',
+    hashFunction: 'xxhash64'
   },
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx']
