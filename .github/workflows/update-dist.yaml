@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v2.4.1
         with:
-          node-version: 17.0.1
+          node-version: 17.1.0
       - name: Cache or restore dependencies
         id: cache-dependencies
         uses: actions/cache@v2.1.6
