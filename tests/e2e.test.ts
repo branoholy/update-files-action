@@ -79,9 +79,7 @@ describe('e2e tests', () => {
 
   test('flow #01: no file is changed => do not connect to GitHub', async () => {
     // No file is changed
-    ChildProcess.execSync(
-      `echo -n content1 > ${E2EConstants.testFilesDirectory}/path1 && echo -n content2 > ${E2EConstants.testFilesDirectory}/path2`
-    );
+    // noop()
 
     // Commit the changes
     process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
