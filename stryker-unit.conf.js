@@ -12,6 +12,5 @@ module.exports = {
     enableFindRelatedTests: true
   },
   coverageAnalysis: 'perTest',
-  concurrency: 1,
   reporters: ['progress', 'clear-text']
 };
