@@ -2,7 +2,7 @@
   "name": "update-files-action",
   "version": "0.1.0",
   "description": "A GitHub action for updating files.",
-  "author": "Branislav Holý <branoholy@gmail.com>",
+  "author": "Branislav Holý <brano@holy.am>",
   "repository": "git@github.com/branoholy/branoholy-com.git",
   "bugs": {
     "url": "https://github.com/branoholy/update-files-action/issues"
