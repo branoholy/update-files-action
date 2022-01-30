@@ -2,6 +2,8 @@ name: CI
 
 on: push
 
+concurrency: ci-${{ github.sha }}
+
 jobs:
   check-suitability:
     name: Check suitability

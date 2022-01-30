@@ -1,8 +1,8 @@
-# Dependencies
-node_modules/
-
 # Build
 build/
+
+# Dependencies
+node_modules/
 
 # Jest
 coverage/

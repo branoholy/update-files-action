@@ -3,13 +3,8 @@
 module.exports = {
   env: {
     es6: true,
-    node: true,
-    jest: true
-  },
-  parser: '@typescript-eslint/parser',
-  parserOptions: {
-    ecmaVersion: 2018,
-    sourceType: 'module'
+    jest: true,
+    node: true
   },
   extends: [
     'eslint:recommended',
@@ -18,27 +13,32 @@ module.exports = {
     'plugin:json/recommended-with-comments',
     'plugin:markdown/recommended'
   ],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 2018,
+    sourceType: 'module'
+  },
   plugins: ['import', 'simple-import-sort', 'jest'],
   rules: {
-    'object-shorthand': 'error',
-    'sort-imports': 'off',
+    '@typescript-eslint/ban-ts-comment': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
 
-    'import/no-default-export': 'error',
-    'import/no-mutable-exports': 'error',
-    'import/no-commonjs': 'error',
-    'import/no-amd': 'error',
     'import/first': 'error',
-    'import/no-duplicates': 'error',
     'import/newline-after-import': 'error',
+    'import/no-amd': 'error',
+    'import/no-commonjs': 'error',
+    'import/no-default-export': 'error',
+    'import/no-duplicates': 'error',
+    'import/no-mutable-exports': 'error',
     'import/no-unassigned-import': 'error',
     'import/order': 'off',
 
     'no-undefined': 'error',
+    'object-shorthand': 'error',
 
-    'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
+    'simple-import-sort/imports': 'error',
 
-    '@typescript-eslint/ban-ts-comment': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off'
+    'sort-imports': 'off'
   }
 };
