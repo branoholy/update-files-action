@@ -6,9 +6,5 @@ on:
 
 jobs:
   lint-pr-title:
-    name: Lint PR title
-    runs-on: ubuntu-latest
-    if: github.event.action != 'opened' || github.event.pull_request.user.login != 'dependabot[bot]'
-    steps:
-      - name: Lint title
-        uses: cluenar/actions/lint-pr-title@main
+    name: Cluenar
+    uses: cluenar/actions/.github/workflows/lint-pr-title.yaml@main
