@@ -37,7 +37,10 @@ with:
   branch.base: develop
   branch.recreate: false
   commit: true
-  commit.paths: 'path/to/file/a.txt, path/to/file/b.txt, path/to/file/c.txt'
+  commit.paths: |
+    path/to/file/a.txt
+    path/to/file/b.txt
+    path/to/file/c.txt
   commit.message: Commit message
   commit.token: ${{ secrets.ANOTHER_TOKEN }}
   commit.amend: false
@@ -45,10 +48,18 @@ with:
   pull-request.title: Pull request title
   pull-request.body: Pull request body
   pull-request.base: develop
-  pull-request.labels: label1, label2
-  pull-request.assignees: assignee1, assignee2
-  pull-request.reviewers: reviewer1, reviewer2
-  pull-request.team-reviewers: team1, team2
+  pull-request.labels: |
+    label1
+    label2
+  pull-request.assignees: |
+    assignee1
+    assignee2
+  pull-request.reviewers: |
+    reviewer1
+    reviewer2
+  pull-request.team-reviewers: |
+    team1
+    team2
   pull-request.milestone: 1
   pull-request.draft: false
 ```

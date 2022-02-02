@@ -158,8 +158,14 @@ const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branchName:
       [
         expect.stringMatching(new RegExp(`/42/requested_reviewers$`)),
         expect.objectContaining<Partial<GitHubRestParameters<'pulls/request-reviewers'>>>({
-          reviewers: E2EConstants.pullRequestReviewers.split(',').map((reviewer) => reviewer.trim()),
-          team_reviewers: E2EConstants.pullRequestTeamReviewers.split(',').map((teamReviewer) => teamReviewer.trim())
+          reviewers: E2EConstants.pullRequestReviewers
+            .split(OS.EOL)
+            .map((reviewer) => reviewer.trim())
+            .filter(Boolean),
+          team_reviewers: E2EConstants.pullRequestTeamReviewers
+            .split(OS.EOL)
+            .map((teamReviewer) => teamReviewer.trim())
+            .filter(Boolean)
         })
       ]
     ]);
@@ -168,8 +174,14 @@ const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branchName:
       [
         expect.stringMatching(new RegExp(`/42$`)),
         expect.objectContaining<Partial<GitHubRestParameters<'issues/update'>>>({
-          labels: E2EConstants.pullRequestLabels.split(',').map((label) => label.trim()),
-          assignees: E2EConstants.pullRequestAssignees.split(',').map((assignee) => assignee.trim()),
+          labels: E2EConstants.pullRequestLabels
+            .split(OS.EOL)
+            .map((label) => label.trim())
+            .filter(Boolean),
+          assignees: E2EConstants.pullRequestAssignees
+            .split(OS.EOL)
+            .map((assignee) => assignee.trim())
+            .filter(Boolean),
           milestone: parseInt(E2EConstants.pullRequestMilestone, 10)
         })
       ]

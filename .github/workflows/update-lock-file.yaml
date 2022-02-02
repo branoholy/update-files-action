@@ -28,4 +28,6 @@ jobs:
           commit.message: 'deps(lock): Update lock file'
           commit.token: ${{ secrets.GITHUB_TOKEN }}
           pull-request.body: Automatic update of dependencies in `package-lock.json`.
-          pull-request.labels: 'type: deps, scope: lock'
+          pull-request.labels: |
+            type: deps
+            scope: lock
