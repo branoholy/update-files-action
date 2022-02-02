@@ -294,7 +294,7 @@ describe('ActionUtils', () => {
   });
 
   describe('getInputAsStrings', () => {
-    const inputValue = 'value1, value2';
+    const inputValue = 'value1\n value2';
     const parsedValue = ['value1', 'value2'];
 
     // Typing check for (string) => string[] | null.

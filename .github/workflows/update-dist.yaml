@@ -33,7 +33,9 @@ jobs:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
           branch.name: build-update-dist
           branch.recreate: true
-          commit.paths: 'dist/index.js, dist/index.js.LICENSE.txt'
+          commit.paths: |
+            dist/index.js
+            dist/index.js.LICENSE.txt
           commit.message: 'chore: Update dist'
           commit.token: ${{ secrets.GITHUB_TOKEN }}
           pull-request.body: Automatic update of `dist/index.js`.
