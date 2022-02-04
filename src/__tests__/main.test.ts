@@ -569,7 +569,7 @@ describe('main', () => {
     expect(appMock).not.toBeCalled();
   });
 
-  it('should print error and exit with 1 if app throws an error', async () => {
+  it('should print error message and exit with 1 if app throws an Error', async () => {
     const errorMessage = 'error-message';
 
     mockEnv();
@@ -580,6 +580,37 @@ describe('main', () => {
 
     appMock.mockImplementation(() => {
       throw new Error(errorMessage);
+    });
+
+    await main();
+
+    TestUtils.expectToBeCalled(consoleErrorMock, [[errorMessage]]);
+    TestUtils.expectToBeCalled(processExitMock, [[1]]);
+
+    expectEnv();
+
+    TestUtils.expectToBeCalled(appMock, [
+      [
+        {
+          repository,
+          token,
+          branch
+        }
+      ]
+    ]);
+  });
+
+  it('should print error exit with 1 if app throws an exception different from Error', async () => {
+    const errorMessage = 'error-message';
+
+    mockEnv();
+    mockInputs({
+      token,
+      'branch.name': branch.name
+    });
+
+    appMock.mockImplementation(() => {
+      throw errorMessage;
     });
 
     await main();

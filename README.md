@@ -1,7 +1,7 @@
 # Update Files Action
 
-![build](https://img.shields.io/github/workflow/status/branoholy/update-files-action/CI/develop)
-![coverage](https://img.shields.io/codecov/c/github/branoholy/update-files-action/develop)
+![build](https://img.shields.io/github/workflow/status/branoholy/update-files-action/CI/main)
+![coverage](https://img.shields.io/codecov/c/github/branoholy/update-files-action/main)
 
 _A GitHub action for updating files._
 
