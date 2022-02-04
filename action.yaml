@@ -17,7 +17,7 @@ inputs:
     description: 'A flag to enable/disable committing the changes. Default: `true` if any `commit.*` input is specified, otherwise `false`.'
     required: false
   commit.paths:
-    description: A new-line-separated list of paths to commit if they were changed. Required if `commit` is `true`.
+    description: A line-separated list of paths to commit if they were changed. The glob syntax is supported. Required if `commit` is `true`.
     required: false
   commit.message:
     description: A commit message. Required if `commit.amend` is `false`.
@@ -41,16 +41,16 @@ inputs:
     description: 'A custom base branch for the pull request. Default: default branch.'
     required: false
   pull-request.labels:
-    description: A new-line-separated list of labels.
+    description: A line-separated list of labels.
     required: false
   pull-request.assignees:
-    description: A new-line-separated list of assignees.
+    description: A line-separated list of assignees.
     required: false
   pull-request.reviewers:
-    description: A new-line-separated list of reviewers.
+    description: A line-separated list of reviewers.
     required: false
   pull-request.team-reviewers:
-    description: A new-line-separated list of team reviewers.
+    description: A line-separated list of team reviewers.
     required: false
   pull-request.milestone:
     description: A milestone number.
