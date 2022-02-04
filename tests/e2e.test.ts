@@ -1,6 +1,7 @@
 import ChildProcess from 'child_process';
 import FileSystem from 'fs';
 import Nock from 'nock';
+import OS from 'os';
 import Path from 'path';
 
 import { main } from '../src/main';
@@ -26,6 +27,8 @@ jest.mock('child_process', () => {
 
 describe('e2e tests', () => {
   let gitHubMock: GitHubMock;
+  const token = E2EConstants.token;
+  const branchName = E2EConstants.branchName;
 
   beforeAll(() => {
     Nock.disableNetConnect();
@@ -61,8 +64,8 @@ describe('e2e tests', () => {
     gitHubMock = new GitHubMock(E2EConstants.repository, E2EConstants.defaultBranchName);
 
     process.env.GITHUB_REPOSITORY = E2EConstants.repository;
-    process.env.INPUT_TOKEN = E2EConstants.token;
-    process.env['INPUT_BRANCH.NAME'] = E2EConstants.branchName;
+    process.env.INPUT_TOKEN = token;
+    process.env['INPUT_BRANCH.NAME'] = branchName;
   });
 
   afterEach(() => {
@@ -115,15 +118,15 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
-      [`Branch "${E2EConstants.branchName}" has been created`],
+      [`Branch "${branchName}" has been created`],
       ['Changed files have been committed to commit-1-sha']
     ]);
 
     // The branch is not deleted
     expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
 
-    E2EExpects.branchIsCreated(gitHubMock, E2EConstants.token, E2EConstants.branchName);
-    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName);
+    E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
+    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName });
   });
 
   test('flow #03: all files are changed, branch does not exist => create branch, use non-default base, commit', async () => {
@@ -149,15 +152,20 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
-      [`Branch "${E2EConstants.branchName}" has been created`],
+      [`Branch "${branchName}" has been created`],
       ['Changed files have been committed to commit-2-sha']
     ]);
 
     // The branch is not deleted
     expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
 
-    E2EExpects.branchIsCreated(gitHubMock, E2EConstants.token, E2EConstants.branchName, baseBranchName);
-    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName);
+    E2EExpects.branchIsCreated({
+      gitHubMock,
+      token,
+      branchName,
+      baseBranchName
+    });
+    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName });
   });
 
   test('flow #04: all files are changed, branch exists => recreate branch, commit', async () => {
@@ -165,7 +173,7 @@ describe('e2e tests', () => {
     ChildProcess.execSync(E2EConstants.commands);
 
     // The branch exists
-    gitHubMock.createBranch(E2EConstants.branchName);
+    gitHubMock.createBranch(branchName);
 
     // Recreate the branch
     process.env['INPUT_BRANCH.RECREATE'] = 'true';
@@ -182,20 +190,20 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
-      [`Branch "${E2EConstants.branchName}" already exists`],
-      [`Deleting branch "${E2EConstants.branchName}"...`],
-      [`Branch "${E2EConstants.branchName}" has been deleted`],
-      [`Branch "${E2EConstants.branchName}" has been created`],
+      [`Branch "${branchName}" already exists`],
+      [`Deleting branch "${branchName}"...`],
+      [`Branch "${branchName}" has been deleted`],
+      [`Branch "${branchName}" has been created`],
       ['Changed files have been committed to commit-1-sha']
     ]);
 
     // The branch is deleted
     TestUtils.expectToBeCalled(gitHubMock.restMocks.git.deleteRef, [
-      [expect.stringMatching(new RegExp(`/heads%2F${E2EConstants.branchName}$`)), expect.anything()]
+      [expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)), expect.anything()]
     ]);
 
-    E2EExpects.branchIsCreated(gitHubMock, E2EConstants.token, E2EConstants.branchName);
-    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName);
+    E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
+    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName });
   });
 
   test('flow #05: all files are changed, ref exists => do not delete branch, commit', async () => {
@@ -203,10 +211,10 @@ describe('e2e tests', () => {
     ChildProcess.execSync(E2EConstants.commands);
 
     // The branch exists
-    gitHubMock.createBranch(E2EConstants.branchName);
+    gitHubMock.createBranch(branchName);
 
     // Use a ref
-    process.env['INPUT_BRANCH.NAME'] = `refs/heads/${E2EConstants.branchName}`;
+    process.env['INPUT_BRANCH.NAME'] = `refs/heads/${branchName}`;
 
     // Commit the changes
     process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
@@ -220,7 +228,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
-      [`Branch "${E2EConstants.branchName}" already exists`],
+      [`Branch "${branchName}" already exists`],
       [`Changed files have been committed to commit-1-sha`]
     ]);
 
@@ -230,7 +238,7 @@ describe('e2e tests', () => {
     // The branch is not created
     expect(gitHubMock.restMocks.git.createRef).not.toBeCalled();
 
-    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName);
+    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName });
   });
 
   test('flow #06: all files are changed, branch exists => do not delete branch, do not commit', async () => {
@@ -238,7 +246,7 @@ describe('e2e tests', () => {
     ChildProcess.execSync(E2EConstants.commands);
 
     // The branch exists
-    gitHubMock.createBranch(E2EConstants.branchName);
+    gitHubMock.createBranch(branchName);
 
     // Do not commit
     process.env['INPUT_COMMIT'] = 'false';
@@ -248,7 +256,7 @@ describe('e2e tests', () => {
     expect(E2EMocks.consoleError).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
 
-    TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [[`Branch "${E2EConstants.branchName}" already exists`]]);
+    TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [[`Branch "${branchName}" already exists`]]);
 
     // The branch is not deleted
     expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
@@ -268,7 +276,7 @@ describe('e2e tests', () => {
     ChildProcess.execSync(E2EConstants.commands);
 
     // The branch exists
-    gitHubMock.createBranch(E2EConstants.branchName);
+    gitHubMock.createBranch(branchName);
 
     // Commit the changes
     process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
@@ -285,7 +293,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
-      [`Branch "${E2EConstants.branchName}" already exists`],
+      [`Branch "${branchName}" already exists`],
       [`Changed files have been committed to commit-1-sha`]
     ]);
 
@@ -295,7 +303,7 @@ describe('e2e tests', () => {
     // The branch is not created
     expect(gitHubMock.restMocks.git.createRef).not.toBeCalled();
 
-    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName);
+    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName });
 
     // A pull request is not created
     expect(gitHubMock.restMocks.pulls.create).not.toBeCalled();
@@ -306,8 +314,8 @@ describe('e2e tests', () => {
     ChildProcess.execSync(E2EConstants.commands);
 
     // The branch exists
-    gitHubMock.createBranch(E2EConstants.branchName);
-    gitHubMock.commit(E2EConstants.branchName);
+    gitHubMock.createBranch(branchName);
+    gitHubMock.commit(branchName);
 
     // Commit the changes, amend the commit
     process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
@@ -325,7 +333,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
-      [`Branch "${E2EConstants.branchName}" already exists`],
+      [`Branch "${branchName}" already exists`],
       [`Changed files have been committed to commit-2-sha`]
     ]);
 
@@ -335,7 +343,12 @@ describe('e2e tests', () => {
     // The branch is not created
     expect(gitHubMock.restMocks.git.createRef).not.toBeCalled();
 
-    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName, E2EConstants.token, true);
+    E2EExpects.filesAreCommitted({
+      gitHubMock,
+      token,
+      branchName,
+      amend: true
+    });
 
     // A pull request is not created
     expect(gitHubMock.restMocks.pulls.create).not.toBeCalled();
@@ -346,7 +359,7 @@ describe('e2e tests', () => {
     ChildProcess.execSync(E2EConstants.commands);
 
     // The branch exists
-    gitHubMock.createBranch(E2EConstants.branchName);
+    gitHubMock.createBranch(branchName);
 
     // Do not commit
     process.env['INPUT_COMMIT'] = 'false';
@@ -359,7 +372,7 @@ describe('e2e tests', () => {
     expect(E2EMocks.consoleError).not.toBeCalled();
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
 
-    TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [[`Branch "${E2EConstants.branchName}" already exists`]]);
+    TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [[`Branch "${branchName}" already exists`]]);
 
     // The branch is not deleted
     expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
@@ -379,7 +392,7 @@ describe('e2e tests', () => {
     ChildProcess.execSync(E2EConstants.commands);
 
     // The branch exists
-    gitHubMock.createBranch(E2EConstants.branchName);
+    gitHubMock.createBranch(branchName);
 
     // Commit the changes
     process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
@@ -396,7 +409,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
-      [`Branch "${E2EConstants.branchName}" already exists`],
+      [`Branch "${branchName}" already exists`],
       [`Changed files have been committed to commit-1-sha`],
       [`Pull request has been created at html_url`]
     ]);
@@ -407,8 +420,8 @@ describe('e2e tests', () => {
     // The branch is not created
     expect(gitHubMock.restMocks.git.createRef).not.toBeCalled();
 
-    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName);
-    E2EExpects.pullRequestIsCreated(gitHubMock, E2EConstants.token, E2EConstants.branchName);
+    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName });
+    E2EExpects.pullRequestIsCreated({ gitHubMock, token, branchName });
   });
 
   test('flow #11: all files are changed, branch does not exist => create branch, commit with token, create pull request with all args', async () => {
@@ -439,7 +452,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
-      [`Branch "${E2EConstants.branchName}" has been created`],
+      [`Branch "${branchName}" has been created`],
       [`Changed files have been committed to commit-1-sha`],
       [`Pull request has been created at html_url`]
     ]);
@@ -447,9 +460,19 @@ describe('e2e tests', () => {
     // The branch is not deleted
     expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
 
-    E2EExpects.branchIsCreated(gitHubMock, E2EConstants.token, E2EConstants.branchName);
-    E2EExpects.filesAreCommitted(gitHubMock, E2EConstants.token, E2EConstants.branchName, E2EConstants.commitToken);
-    E2EExpects.pullRequestIsCreated(gitHubMock, E2EConstants.token, E2EConstants.branchName, true);
+    E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
+    E2EExpects.filesAreCommitted({
+      gitHubMock,
+      token,
+      branchName,
+      commitToken: E2EConstants.commitToken
+    });
+    E2EExpects.pullRequestIsCreated({
+      gitHubMock,
+      token,
+      branchName,
+      full: true
+    });
   });
 
   test('flow #12: exception is thrown when checking for changed files => print error, do not connect to GitHub, exit 1', async () => {
@@ -515,7 +538,69 @@ describe('e2e tests', () => {
     expect(gitHubMock.restMocks.any).not.toBeCalled();
   });
 
-  test('flow #15: branch is missing => print error, do not connect to GitHub, exit 1', async () => {
+  test('flow #15: glob finds more files, all files are changed, branch does not exist => create branch, commit', async () => {
+    // Add additional files to repo
+    FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path1-2'), 'content1-2');
+    FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path2-2'), 'content2-2');
+    ChildProcess.execSync(`git add ${E2EConstants.testFilesDirectory}`);
+
+    // All files are changed
+    ChildProcess.execSync(E2EConstants.commands);
+    // Additional files are created
+    ChildProcess.execSync(
+      `echo cmd1 > ${E2EConstants.testFilesDirectory}/path1-2 && echo cmd2 > ${E2EConstants.testFilesDirectory}/path2-2`
+    );
+
+    // Commit the changes, use glob pattern
+    process.env[
+      'INPUT_COMMIT.PATHS'
+    ] = `${E2EConstants.testFilesDirectory}/path1*${OS.EOL} ${E2EConstants.testFilesDirectory}/path2*${OS.EOL}`;
+    process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+
+    await main();
+
+    expect(E2EMocks.consoleError).not.toBeCalled();
+    TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
+
+    TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
+      [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path1-2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path2-2" is changed`],
+      [`Branch "${branchName}" has been created`],
+      ['Changed files have been committed to commit-1-sha']
+    ]);
+
+    // The branch is not deleted
+    expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
+
+    E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
+    E2EExpects.filesAreCommitted({
+      gitHubMock,
+      token,
+      branchName,
+      files: [
+        {
+          path: `${E2EConstants.testFilesDirectory}/path1`,
+          content: 'Y21kMQo='
+        },
+        {
+          path: `${E2EConstants.testFilesDirectory}/path1-2`,
+          content: 'Y21kMQo='
+        },
+        {
+          path: `${E2EConstants.testFilesDirectory}/path2`,
+          content: 'Y21kMgo='
+        },
+        {
+          path: `${E2EConstants.testFilesDirectory}/path2-2`,
+          content: 'Y21kMgo='
+        }
+      ]
+    });
+  });
+
+  test('flow #16: branch is missing => print error, do not connect to GitHub, exit 1', async () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
@@ -533,7 +618,7 @@ describe('e2e tests', () => {
     expect(gitHubMock.restMocks.any).not.toBeCalled();
   });
 
-  test('flow #16: repository is missing => print error, do not connect to GitHub, exit 1', async () => {
+  test('flow #17: repository is missing => print error, do not connect to GitHub, exit 1', async () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 

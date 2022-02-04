@@ -1,5 +1,6 @@
 import * as ActionsCore from '@actions/core';
 import { execSync } from 'child_process';
+import Glob from 'glob';
 
 import { app, AppArgs, BranchArgs } from '../app';
 import { RepoKit } from '../repo-kit';
@@ -15,6 +16,9 @@ const actionsCoreSetOutputMock = TestUtils.asMockedFunction(ActionsCore.setOutpu
 
 jest.mock('child_process');
 const execSyncMock = TestUtils.asMockedFunction(execSync);
+
+jest.mock('glob');
+const globSyncMock = TestUtils.asMockedFunction(Glob.sync);
 
 jest.mock('../utils/file-utils');
 const isFileChangedMock = TestUtils.asMockedFunction(FileUtils.isFileChanged);
@@ -77,6 +81,9 @@ describe('app', () => {
   beforeEach(() => {
     jest.resetAllMocks();
 
+    // Glob finds only one file
+    globSyncMock.mockImplementation((path: string) => [path]);
+
     // Default branch name
     RepoKitMock.prototype.getDefaultBranchName.mockResolvedValue(defaultBranchName);
 
@@ -104,6 +111,10 @@ describe('app', () => {
 
     TestUtils.expectToBeCalled(consoleInfoMock, [['No file has been changed']]);
 
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
 
     // No request to GitHub is made
@@ -136,6 +147,10 @@ describe('app', () => {
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -202,6 +217,10 @@ describe('app', () => {
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -262,6 +281,10 @@ describe('app', () => {
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -315,6 +338,10 @@ describe('app', () => {
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -358,6 +385,7 @@ describe('app', () => {
 
     TestUtils.expectToBeCalled(consoleInfoMock, [[`Branch "${branch.name}" already exists`]]);
 
+    expect(globSyncMock).not.toBeCalled();
     expect(isFileChangedMock).not.toBeCalled();
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -401,6 +429,10 @@ describe('app', () => {
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -457,6 +489,10 @@ describe('app', () => {
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -506,6 +542,7 @@ describe('app', () => {
 
     TestUtils.expectToBeCalled(consoleInfoMock, [[`Branch "${branch.name}" already exists`]]);
 
+    expect(globSyncMock).not.toBeCalled();
     expect(isFileChangedMock).not.toBeCalled();
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -553,6 +590,10 @@ describe('app', () => {
       [`Pull request has been created at ${createPullRequestResult.html_url}`]
     ]);
 
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -615,6 +656,10 @@ describe('app', () => {
       [`Pull request has been created at ${createPullRequestResult.html_url}`]
     ]);
 
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -671,6 +716,10 @@ describe('app', () => {
 
     TestUtils.expectToBeCalled(consoleErrorMock, [[error]]);
 
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1']]);
 
     // No request to GitHub is made
@@ -694,6 +743,7 @@ describe('app', () => {
       [new Error('Repository "wrong" does not have the valid format (owner/repositoryName)')]
     ]);
 
+    expect(globSyncMock).not.toBeCalled();
     expect(execSyncMock).not.toBeCalled();
     expect(isFileChangedMock).not.toBeCalled();
 
@@ -718,10 +768,73 @@ describe('app', () => {
       [new Error('Commit message is missing, please specify the "commit.message" input')]
     ]);
 
+    expect(globSyncMock).not.toBeCalled();
     expect(execSyncMock).not.toBeCalled();
     expect(isFileChangedMock).not.toBeCalled();
 
     // No request to GitHub is made
     expect(RepoKitMock.mock.instances.length).toBe(0);
+  });
+
+  test('flow #15: glob finds more files, all files are changed, branch does not exist => create branch, commit', async () => {
+    // Glob finds more files
+    globSyncMock.mockImplementation((path: string) => [path, `${path}-2`]);
+
+    // All files are changed
+    isFileChangedMock.mockReturnValue(true);
+
+    // The branch does not exist
+    RepoKitMock.prototype.hasBranch.mockResolvedValue(false);
+
+    // Use the default base branch
+    RepoKitMock.prototype.getBranch.mockResolvedValue(getDefaultBranchResult);
+
+    const exitCode = await app({
+      ...appArgs,
+      // Commit the changes
+      commit
+    });
+
+    expect(consoleErrorMock).not.toBeCalled();
+    expect(exitCode).toBe(0);
+
+    TestUtils.expectToBeCalled(consoleInfoMock, [
+      ['File "path1" is changed'],
+      ['File "path1-2" is changed'],
+      ['File "path2" is changed'],
+      ['File "path2-2" is changed'],
+      [`Branch "${branch.name}" has been created`],
+      [`Changed files have been committed to ${commitFilesResult.sha}`]
+    ]);
+
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }]
+    ]);
+    TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path1-2'], ['path2'], ['path2-2']]);
+    TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
+
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch.name]]);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.getBranch, [[defaultBranchName]]);
+
+    // The branch is not deleted
+    expect(RepoKitMock.mock.instances[0]?.deleteBranch).not.toBeCalled();
+
+    // The branch is created
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createBranch, [[branch.name, defaultBranchSha]]);
+
+    // All files are committed
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
+      [
+        {
+          ...commit,
+          paths: ['path1', 'path1-2', 'path2', 'path2-2'],
+          branchName: branch.name
+        }
+      ]
+    ]);
+
+    // The commit hash is sent to the output
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
   });
 });

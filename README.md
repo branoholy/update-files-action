@@ -38,9 +38,8 @@ with:
   branch.recreate: false
   commit: true
   commit.paths: |
-    path/to/file/a.txt
-    path/to/file/b.txt
-    path/to/file/c.txt
+    path/to/file/*.txt
+    path/to/file/*.yaml
   commit.message: Commit message
   commit.token: ${{ secrets.ANOTHER_TOKEN }}
   commit.amend: false

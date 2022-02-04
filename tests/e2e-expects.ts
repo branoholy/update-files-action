@@ -8,12 +8,19 @@ import { GitHubMock } from './github-mock';
 import { GitHubMockUtils } from './github-mock-utils';
 import { GitHubRestParameters } from './github-rest-mocks';
 
-const branchIsCreated = (
-  gitHubMock: GitHubMock,
-  token: string,
-  branchName: string,
+interface BranchIsCreatedArgs {
+  readonly gitHubMock: GitHubMock;
+  readonly token: string;
+  readonly branchName: string;
+  readonly baseBranchName?: GitHubMock['defaultBranchName'];
+}
+
+const branchIsCreated = ({
+  gitHubMock,
+  token,
+  branchName,
   baseBranchName = gitHubMock.defaultBranchName
-) => {
+}: BranchIsCreatedArgs) => {
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createRef, [
     [
       expect.any(String),
@@ -28,32 +35,55 @@ const branchIsCreated = (
   expect(gitCreateRefMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
 };
 
-const filesAreCommitted = (
-  gitHubMock: GitHubMock,
-  token: string,
-  branchName: string,
+interface FileArg {
+  readonly path: string;
+  readonly content: string;
+}
+
+const defaultFiles: FileArg[] = [
+  {
+    path: `${E2EConstants.testFilesDirectory}/path1`,
+    content: 'Y21kMQo='
+  },
+  {
+    path: `${E2EConstants.testFilesDirectory}/path2`,
+    content: 'Y21kMgo='
+  }
+];
+
+interface FilesAreCommittedArgs {
+  readonly gitHubMock: GitHubMock;
+  readonly token: string;
+  readonly branchName: string;
+  readonly commitToken?: string;
+  readonly amend?: boolean;
+  readonly files?: FileArg[];
+}
+
+const filesAreCommitted = ({
+  gitHubMock,
+  token,
+  branchName,
   commitToken = token,
-  amend = false
-) => {
+  amend = false,
+  files = defaultFiles
+}: FilesAreCommittedArgs) => {
   const newCommitSha = gitHubMock.getBranchSha(branchName);
   const oldCommitSha = GitHubMockUtils.createCommitSha(GitHubMockUtils.getCommitId(newCommitSha) - 1);
 
-  TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createBlob, [
-    [
-      expect.any(String),
-      expect.objectContaining<Partial<GitHubRestParameters<'git/create-blob'>>>({
-        content: 'Y21kMQo=',
-        encoding: 'base64'
-      })
-    ],
-    [
-      expect.any(String),
-      expect.objectContaining<Partial<GitHubRestParameters<'git/create-blob'>>>({
-        content: 'Y21kMgo=',
-        encoding: 'base64'
-      })
-    ]
-  ]);
+  TestUtils.expectToBeCalled(
+    gitHubMock.restMocks.git.createBlob,
+    files.map(
+      ({ content }) =>
+        [
+          expect.any(String),
+          expect.objectContaining<Partial<GitHubRestParameters<'git/create-blob'>>>({
+            content,
+            encoding: 'base64'
+          })
+        ] as [string, GitHubRestParameters<'git/create-blob'>]
+    )
+  );
 
   const gitCreateBlobMock = gitHubMock.restMocks.git.createBlob.mock.instances[0] as Nock.ReplyFnContext | undefined;
   expect(gitCreateBlobMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
@@ -68,10 +98,12 @@ const filesAreCommitted = (
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'git/create-tree'>>>({
         base_tree: oldCommitSha,
-        tree: [
-          { mode: '100644', path: `${E2EConstants.testFilesDirectory}/path1`, sha: 'blob-sha', type: 'blob' },
-          { mode: '100644', path: `${E2EConstants.testFilesDirectory}/path2`, sha: 'blob-sha', type: 'blob' }
-        ]
+        tree: files.map(({ path }) => ({
+          mode: '100644',
+          path,
+          sha: 'blob-sha',
+          type: 'blob'
+        }))
       })
     ]
   ]);
@@ -121,7 +153,14 @@ const filesAreCommitted = (
   ]);
 };
 
-const pullRequestIsCreated = (gitHubMock: GitHubMock, token: string, branchName: string, full = false) => {
+interface PullRequestIsCreatedArgs {
+  readonly gitHubMock: GitHubMock;
+  readonly token: string;
+  readonly branchName: string;
+  readonly full?: boolean;
+}
+
+const pullRequestIsCreated = ({ gitHubMock, token, branchName, full = false }: PullRequestIsCreatedArgs) => {
   if (!full) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.repos.getBranch, [
       [expect.stringMatching(new RegExp(`/${branchName}$`)), expect.anything()]
