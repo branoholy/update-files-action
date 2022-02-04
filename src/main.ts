@@ -106,6 +106,8 @@ export const main = async () => {
   } catch (error) {
     if (error instanceof Error) {
       console.error(error.message);
+    } else {
+      console.error(error);
     }
 
     process.exit(1);
