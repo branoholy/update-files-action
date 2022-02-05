@@ -7,41 +7,7 @@ on:
 
 jobs:
   update-node:
-    name: Update Node.js
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2.4.0
-      - name: Setup Node.js
-        uses: actions/setup-node@v2.5.1
-        with:
-          node-version: 17.4.0
-      - name: Cache or restore dependencies
-        id: cache-dependencies
-        uses: actions/cache@v2.1.7
-        with:
-          path: node_modules
-          key: ${{ runner.OS }}-node_modules-${{ hashFiles('**/package-lock.json') }}
-      - name: Install dependencies
-        if: steps.cache-dependencies.outputs.cache-hit == false
-        run: npm ci
-      - name: Update Node.js versions
-        id: update-node-versions
-        run: npm run node-versions-update && npm i
-      - name: Create a pull request with the updated files
-        uses: branoholy/update-files-action@main
-        with:
-          token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
-          branch.name: deps-update-node
-          branch.recreate: true
-          commit.paths: |
-            .nvmrc
-            package.json
-            package-lock.json
-            .github/workflows/*.yaml
-          commit.message: 'deps(dev): Update Node.js to ${{ steps.update-node-versions.outputs.version }}'
-          commit.token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request.body: Automatic update of Node.js to version ${{ steps.update-node-versions.outputs.version }}.
-          pull-request.labels: |
-            type: deps
-            scope: dev
+    name: Cluenar
+    uses: cluenar/actions/.github/workflows/update-node.yaml@main
+    secrets:
+      token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
