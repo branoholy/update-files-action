@@ -12,6 +12,8 @@ jobs:
       PR_TITLE: ${{ github.event.pull_request.title }}
 
     steps:
+      - name: Print
+        uses: cluenar/actions/print-context@main
       - name: Assign author
         if: github.event.action == 'opened' && github.event.pull_request.user.type == 'User'
         uses: octokit/graphql-action@v2.2.20
@@ -187,25 +189,7 @@ jobs:
             }
 
       - name: Auto-merge
-        if: >-
-          (
-            github.event.action == 'opened' ||
-            github.event.action == 'synchronize' ||
-            github.event.action == 'reopened'
-          ) &&
-          (
-            github.event.pull_request.user.login == 'dependabot[bot]' ||
-            github.event.pull_request.user.login == 'github-actions[bot]' ||
-            github.event.pull_request.user.login == 'branoholy-bot'
-          )
-        uses: octokit/graphql-action@v2.2.20
+        uses: cluenar/actions/auto-merge-pr@main
         with:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
-          query: |
-            mutation enablePullRequestAutoMerge($id: ID!, $message: String!) {
-              enablePullRequestAutoMerge(input: {pullRequestId: $id, commitHeadline: $message, commitBody: "", mergeMethod: SQUASH}) {
-                clientMutationId
-              }
-            }
-          id: ${{ github.event.pull_request.node_id }}
-          message: '"${{ env.PR_TITLE }} (#${{ github.event.pull_request.number }})"'
+          title: ${{ env.PR_TITLE }}
