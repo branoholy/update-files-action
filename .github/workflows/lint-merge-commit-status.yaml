@@ -4,10 +4,6 @@ on:
   workflow_run:
     workflows: 'Lint merge commit'
 
-concurrency:
-  group: lint-merge-commit-status-${{ github.event.workflow_run.head_sha }}
-  cancel-in-progress: true
-
 jobs:
   send-status:
     name: Cluenar
