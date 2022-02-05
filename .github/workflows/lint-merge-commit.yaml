@@ -4,10 +4,6 @@ on:
   pull_request:
     types: [auto_merge_enabled, auto_merge_disabled, edited, synchronize]
 
-concurrency:
-  group: lint-merge-commit-${{ github.event.number }}
-  cancel-in-progress: true
-
 jobs:
   lint-merge-commit:
     name: Cluenar
