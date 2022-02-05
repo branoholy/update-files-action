@@ -12,6 +12,8 @@ jobs:
       PR_TITLE: ${{ github.event.pull_request.title }}
 
     steps:
+      - name: Print
+        uses: cluenar/actions/print-context@main
       - name: Assign author
         if: github.event.action == 'opened' && github.event.pull_request.user.type == 'User'
         uses: octokit/graphql-action@v2.2.20
