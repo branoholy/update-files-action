@@ -8,8 +8,6 @@ jobs:
   automate-pr:
     name: Automate PR
     runs-on: ubuntu-latest
-    env:
-      PR_TITLE: ${{ github.event.pull_request.title }}
 
     steps:
       - name: Print
@@ -163,33 +161,13 @@ jobs:
           user: ${{ fromJSON(steps.get-user-id.outputs.data).user.id }}
 
       - name: Update title
-        if: >-
-          (
-            github.event.action == 'opened' ||
-            github.event.action == 'synchronize' ||
-            github.event.action == 'reopened'
-          ) &&
-          github.event.pull_request.user.login == 'dependabot[bot]'
-        uses: actions/github-script@v5.1.0
+        id: update-title
+        uses: cluenar/actions/update-pr-title@main
         with:
-          github-token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
-          script: |
-            const {title} = context.payload.pull_request;
-            const formattedTitle = title.replace(': bump', ': Bump');
-
-            if (formattedTitle !== title) {
-              core.exportVariable('PR_TITLE', formattedTitle);
-
-              github.rest.issues.update({
-                issue_number: context.payload.pull_request.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: formattedTitle
-              });
-            }
+          token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
 
       - name: Auto-merge
         uses: cluenar/actions/auto-merge-pr@main
         with:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
-          title: ${{ env.PR_TITLE }}
+          title: ${{ steps.update-title.outputs.title }}
