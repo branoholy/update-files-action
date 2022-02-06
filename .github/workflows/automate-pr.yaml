@@ -10,49 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Print
-        uses: cluenar/actions/print-context@main
       - name: Assign author
-        if: github.event.action == 'opened' && github.event.pull_request.user.type == 'User'
-        uses: octokit/graphql-action@v2.2.20
+        uses: cluenar/actions/assign-pr-author@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          query: |
-            mutation addAssigneesToAssignable($id: ID!, $assignee: ID!) {
-              addAssigneesToAssignable(input: {assignableId: $id, assigneeIds: [$assignee]}) {
-                clientMutationId
-              }
-            }
-          id: ${{ github.event.pull_request.node_id }}
-          assignee: ${{ github.event.pull_request.user.node_id }}
 
       - name: Add labels
-        if: github.event.action == 'opened' || github.event.action == 'edited'
-        uses: actions/github-script@v5.1.0
+        uses: cluenar/actions/add-pr-labels@main
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const types = ['chore', 'deps', 'docs', 'feat', 'fix', 'perf', 'refactor', 'release', 'revert', 'style', 'test'];
-            const scopes = ['actions', 'dev', 'lock', 'prod', 'security'];
-
-            const {title} = context.payload.pull_request;
-
-            const type = types.find(type => title.startsWith(`${type}:`) || title.startsWith(`${type}!:`) || title.startsWith(`${type}(`));
-            const scope = scopes.find(scope => title.includes(`(${scope}):`) || title.includes(`(${scope})!:`));
-
-            const typeLabel = type ? `type: ${type}` : null;
-            const scopeLabel = scope ? `scope: ${scope}` : null;
-
-            const labels = [typeLabel, scopeLabel].filter(Boolean);
-
-            if (labels.length > 0) {
-              github.rest.issues.addLabels({
-                issue_number: context.payload.pull_request.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                labels
-              });
-            }
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Approve
         if: >-
