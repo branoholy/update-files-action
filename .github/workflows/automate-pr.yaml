@@ -21,7 +21,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Approve or request review
-        uses: cluenar/actions/review-pr
+        uses: cluenar/actions/review-pr@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           trusted-user: branoholy
