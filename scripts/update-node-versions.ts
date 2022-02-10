@@ -1,8 +1,7 @@
 import * as ActionsCore from '@actions/core';
+import * as FileSystem from 'fs';
 
-import { NvmrcStorage } from './node-version-storages/nvmrc';
-import { PackageJsonStorage } from './node-version-storages/package-json';
-import { WorkflowsStorage } from './node-version-storages/workflows';
+import packageJson from '../package.json';
 import { TypeUtils } from './utils/type-utils';
 
 const nodeReleasesUrl = 'https://nodejs.org/dist/index.json';
@@ -30,10 +29,29 @@ const fetchLatestNodeVersion = async () => {
   const version = release?.version;
 
   if (version) {
-    return version.startsWith('v') ? version.substr(1) : version;
+    return version.startsWith('v') ? version.slice(1) : version;
   }
 
   return null;
+};
+
+const updateNvmrc = (version: string) => FileSystem.writeFileSync('.nvmrc', `v${version}\n`);
+
+const updatePackageJson = (version: string) => {
+  if (packageJson.engines.node === version) {
+    return;
+  }
+
+  const nextPackageJson = {
+    ...packageJson,
+    engines: {
+      ...packageJson.engines,
+      node: version
+    }
+  };
+
+  const nextContent = JSON.stringify(nextPackageJson, null, 2) + '\n';
+  FileSystem.writeFileSync('package.json', nextContent);
 };
 
 const main = async () => {
@@ -46,9 +64,8 @@ const main = async () => {
 
     console.info(`Info: Trying to update Node.js versions to ${version}`);
 
-    NvmrcStorage.setNodeVersion(version);
-    PackageJsonStorage.setNodeVersion(version);
-    WorkflowsStorage.setNodeVersion(version);
+    updateNvmrc(version);
+    updatePackageJson(version);
 
     console.info('Info: Update successful');
 
