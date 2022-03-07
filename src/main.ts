@@ -2,6 +2,7 @@ import * as envalid from 'envalid';
 
 import { app, BranchArgs, CommitArgs, PullRequestArgs } from './app';
 import { ActionUtils } from './utils/action-utils';
+import { EnvUtils } from './utils/env-utils';
 import { dp } from './utils/js-utils';
 
 const commitArgFields = ['paths', 'message', 'token', 'amend'];
@@ -85,7 +86,7 @@ const getPullRequestArgs = (): PullRequestArgs | null => {
 
 export const main = async () => {
   try {
-    const requiredEnv = envalid.cleanEnv(process.env, {
+    const requiredEnv = EnvUtils.requireEnv({
       GITHUB_REPOSITORY: envalid.str()
     });
 

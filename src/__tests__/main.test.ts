@@ -69,6 +69,9 @@ describe('main', () => {
         process.env,
         {
           GITHUB_REPOSITORY: envalidMock.str()
+        },
+        {
+          reporter: expect.any(Function)
         }
       ]
     ]);

@@ -628,9 +628,9 @@ describe('e2e tests', () => {
     await main();
 
     expect(E2EMocks.consoleInfo).not.toBeCalled();
-    TestUtils.expectToBeCalled(E2EMocks.processExit, [[1], [1]]);
+    TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
 
-    TestUtils.expectToBeCalled(E2EMocks.consoleError, [['[envalid] Env var not found: GITHUB_REPOSITORY']]);
+    TestUtils.expectToBeCalled(E2EMocks.consoleError, [['Missing env(s): GITHUB_REPOSITORY']]);
 
     // No request to GitHub is made
     expect(gitHubMock.restMocks.any).not.toBeCalled();
