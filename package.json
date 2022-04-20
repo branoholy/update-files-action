@@ -64,7 +64,7 @@
     "@typescript-eslint/eslint-plugin": "5.20.0",
     "@typescript-eslint/parser": "5.20.0",
     "babel-jest": "27.5.1",
-    "babel-loader": "8.2.4",
+    "babel-loader": "8.2.5",
     "conventional-changelog-conventionalcommits": "4.6.3",
     "diff": "5.0.0",
     "eslint": "8.13.0",
