@@ -43,7 +43,7 @@
     "@octokit/rest": "18.12.0",
     "btoa": "1.2.1",
     "envalid": "7.3.1",
-    "glob": "8.0.1"
+    "glob": "8.0.2"
   },
   "devDependencies": {
     "@babel/cli": "7.17.10",
