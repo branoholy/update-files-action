@@ -60,7 +60,7 @@
     "@types/diff": "5.0.2",
     "@types/glob": "7.2.0",
     "@types/jest": "27.5.1",
-    "@types/node": "18.0.0",
+    "@types/node": "18.0.1",
     "@typescript-eslint/eslint-plugin": "5.25.0",
     "@typescript-eslint/parser": "5.30.4",
     "babel-jest": "28.1.0",
