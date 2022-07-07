@@ -21,7 +21,9 @@ describe('EnvUtils', () => {
     });
 
     it('should throw an error when the requred env is missing', () => {
-      expect(() => EnvUtils.requireEnv({ MISSING_ENV: envalid.str() })).toThrowError('Missing env(s): MISSING_ENV');
+      expect(() => EnvUtils.requireEnv({ MISSING_ENV_1: envalid.str(), MISSING_ENV_2: envalid.str() })).toThrowError(
+        'Missing env(s): MISSING_ENV_1, MISSING_ENV_2'
+      );
     });
   });
 });
