@@ -1,3 +1,4 @@
+import FileSystem from 'fs';
 import Nock from 'nock';
 import OS from 'os';
 
@@ -147,10 +148,35 @@ const filesAreCommitted = ({
   const gitUpdateRefMock = gitHubMock.restMocks.git.updateRef.mock.instances[0] as Nock.ReplyFnContext | undefined;
   expect(gitUpdateRefMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
 
-  TestUtils.expectToBeCalled(E2EMocks.processStdoutWrite, [
-    [OS.EOL],
-    [`::set-output name=commit.sha::${newCommitSha}` + OS.EOL]
-  ]);
+  if (process.env['GITHUB_OUTPUT']) {
+    const delimiterPrefix = 'ghadelimiter_';
+    const delimiterFullPrefix = `<<${delimiterPrefix}`;
+
+    const fileContent = FileSystem.readFileSync(process.env['GITHUB_OUTPUT']).toString();
+    const fileLines = fileContent.split(OS.EOL);
+
+    expect(fileLines).toHaveLength(4);
+
+    const [firstLine, varValue, delimiter, emptyLine] = fileLines;
+    if (firstLine && varValue && delimiter) {
+      const [varName, delimiterValue] = firstLine.split(delimiterFullPrefix);
+
+      expect(varName).toBe('commit.sha');
+      expect(varValue).toBe(newCommitSha);
+      expect(delimiter).toBe(`${delimiterPrefix}${delimiterValue}`);
+      expect(emptyLine).toBe('');
+    } else {
+      expect(firstLine?.length).toBeGreaterThan(0);
+      expect(varValue?.length).toBeGreaterThan(0);
+      expect(delimiter?.length).toBeGreaterThan(0);
+      expect(emptyLine).toBeDefined();
+    }
+  } else {
+    TestUtils.expectToBeCalled(E2EMocks.processStdoutWrite, [
+      [OS.EOL],
+      [`::set-output name=commit.sha::${newCommitSha}` + OS.EOL]
+    ]);
+  }
 };
 
 interface PullRequestIsCreatedArgs {
