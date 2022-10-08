@@ -1,6 +1,8 @@
 import OS from 'os';
+import Path from 'path';
 
 const testFilesDirectory = 'temp-e2e-test-files';
+const githubOutputFile = Path.join(testFilesDirectory, 'github-output.txt');
 
 const owner = 'owner';
 const repositoryName = 'repository-name';
@@ -8,6 +10,7 @@ const repositoryName = 'repository-name';
 export const E2EConstants = {
   testFilesDirectory,
   shellMocksDirectory: 'temp-e2e-shell-mocks',
+  githubOutputFile,
   commands: `echo cmd1 > ${testFilesDirectory}/path1 && echo cmd2 > ${testFilesDirectory}/path2`,
 
   repository: `${owner}/${repositoryName}`,

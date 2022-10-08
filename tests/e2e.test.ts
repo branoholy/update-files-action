@@ -72,7 +72,7 @@ describe('e2e tests', () => {
     delete process.env.GITHUB_REPOSITORY;
 
     Object.keys(process.env).forEach((key) => {
-      if (key.startsWith('INPUT_')) {
+      if (key.startsWith('INPUT_') || key === 'GITHUB_OUTPUT') {
         delete process.env[key];
       }
     });
@@ -143,6 +143,10 @@ describe('e2e tests', () => {
     // Commit the changes
     process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
     process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+
+    // Use GitHub Output file for GitHub Actions output
+    process.env['GITHUB_OUTPUT'] = E2EConstants.githubOutputFile;
+    FileSystem.writeFileSync(E2EConstants.githubOutputFile, '');
 
     await main();
 
