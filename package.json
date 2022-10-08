@@ -46,7 +46,7 @@
     "glob": "8.0.3"
   },
   "devDependencies": {
-    "@babel/cli": "7.18.9",
+    "@babel/cli": "7.19.3",
     "@babel/core": "7.19.3",
     "@babel/node": "7.19.1",
     "@babel/preset-env": "7.19.3",
