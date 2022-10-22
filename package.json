@@ -67,7 +67,7 @@
     "babel-loader": "8.2.5",
     "conventional-changelog-conventionalcommits": "5.0.0",
     "diff": "5.1.0",
-    "eslint": "8.25.0",
+    "eslint": "8.26.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-import": "2.26.0",
     "eslint-plugin-jest": "27.1.2",
