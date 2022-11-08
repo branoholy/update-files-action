@@ -71,7 +71,7 @@ describe('main', () => {
           GITHUB_REPOSITORY: envalidMock.str()
         },
         {
-          reporter: expect.any(Function)
+          reporter: expect.any(Function) as (opts: envalid.ReporterOptions<unknown>) => void
         }
       ]
     ]);
