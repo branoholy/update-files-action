@@ -57,7 +57,7 @@
     "@stryker-mutator/jest-runner": "6.1.2",
     "@stryker-mutator/typescript-checker": "6.1.2",
     "@types/btoa": "1.2.3",
-    "@types/diff": "5.0.2",
+    "@types/diff": "5.0.3",
     "@types/glob": "8.0.0",
     "@types/jest": "29.2.5",
     "@types/node": "18.15.11",
