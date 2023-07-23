@@ -569,10 +569,10 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
 
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
-      [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path1-2" is changed`],
-      [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2-2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
       [`Branch "${branchName}" has been created`],
       ['Changed files have been committed to commit-1-sha']
     ]);
@@ -587,19 +587,19 @@ describe('e2e tests', () => {
       branchName,
       files: [
         {
-          path: `${E2EConstants.testFilesDirectory}/path1`,
-          content: 'Y21kMQo='
-        },
-        {
           path: `${E2EConstants.testFilesDirectory}/path1-2`,
           content: 'Y21kMQo='
         },
         {
-          path: `${E2EConstants.testFilesDirectory}/path2`,
-          content: 'Y21kMgo='
+          path: `${E2EConstants.testFilesDirectory}/path1`,
+          content: 'Y21kMQo='
         },
         {
           path: `${E2EConstants.testFilesDirectory}/path2-2`,
+          content: 'Y21kMgo='
+        },
+        {
+          path: `${E2EConstants.testFilesDirectory}/path2`,
           content: 'Y21kMgo='
         }
       ]

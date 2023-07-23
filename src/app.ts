@@ -1,5 +1,5 @@
 import * as ActionsCore from '@actions/core';
-import Glob from 'glob';
+import { globSync } from 'glob';
 
 import { RepoKit } from './repo-kit';
 import { FileUtils } from './utils/file-utils';
@@ -9,7 +9,7 @@ const branchRefPrefix = 'refs/heads/';
 
 const findChangedFiles = (paths: string[]) => {
   const filePaths = paths.reduce<string[]>((acc, path) => {
-    acc.push(...Glob.sync(path, { nodir: true }));
+    acc.push(...globSync(path, { nodir: true }));
     return acc;
   }, []);
 
