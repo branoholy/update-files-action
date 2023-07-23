@@ -1,20 +1,25 @@
 import type { operations } from '@octokit/openapi-types';
 
-export type GitHubRestParameters<OperationT extends keyof operations> =
-  // @ts-expect-error Type '"requestBody"' cannot be used to index type 'operations[OperationT]'.
-  operations[OperationT]['requestBody']['content']['application/json'] & operations[OperationT]['parameters']['path'];
+import { OptionalChain } from '../src/utils/type-utils';
+
+export type GitHubRestParameters<OperationT extends keyof operations> = OptionalChain<
+  operations[OperationT],
+  ['requestBody', 'content', 'application/json']
+> &
+  OptionalChain<operations[OperationT], ['parameters', 'path']>;
 
 export type GitHubRestResponseData<
   OperationT extends keyof operations,
   HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
-> =
-  // @ts-expect-error Type 'HttpCodeT' cannot be used to index type 'operations[OperationT]["responses"]'.
-  operations[OperationT]['responses'][HttpCodeT]['content']['application/json'];
+> = OptionalChain<operations[OperationT]['responses'][HttpCodeT], ['content', 'application/json']>;
 
 type GitHubRestMock<
   OperationT extends keyof operations,
   HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
-> = jest.Mock<[HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?], [string, GitHubRestParameters<OperationT>]>;
+> = jest.Mock<
+  [HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?],
+  GitHubRestParameters<OperationT> extends never ? [string, ''] : [string, GitHubRestParameters<OperationT>]
+>;
 
 export type GitHubRestMocks = {
   readonly any: jest.Mock;
@@ -44,4 +49,7 @@ export const createGitHubRestMock = <
   OperationT extends keyof operations,
   HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
 >() =>
-  jest.fn<[HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?], [string, GitHubRestParameters<OperationT>]>();
+  jest.fn<
+    [HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?],
+    GitHubRestParameters<OperationT> extends never ? [string, ''] : [string, GitHubRestParameters<OperationT>]
+  >();

@@ -205,7 +205,7 @@ describe('e2e tests', () => {
 
     // The branch is deleted
     TestUtils.expectToBeCalled(gitHubMock.restMocks.git.deleteRef, [
-      [expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)), expect.anything()]
+      [expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)), '']
     ]);
 
     E2EExpects.branchIsCreated({ gitHubMock, token, branchName });

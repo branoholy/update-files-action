@@ -111,7 +111,7 @@ const filesAreCommitted = ({
 
   if (amend) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.git.getCommit, [
-      [expect.stringMatching(new RegExp(`/${oldCommitSha}`)), expect.anything()]
+      [expect.stringMatching(new RegExp(`/${oldCommitSha}`)), '']
     ]);
   }
 
@@ -189,7 +189,7 @@ interface PullRequestIsCreatedArgs {
 const pullRequestIsCreated = ({ gitHubMock, token, branchName, full = false }: PullRequestIsCreatedArgs) => {
   if (!full) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.repos.getBranch, [
-      [expect.stringMatching(new RegExp(`/${branchName}$`)), expect.anything()]
+      [expect.stringMatching(new RegExp(`/${branchName}$`)), '']
     ]);
   }
 

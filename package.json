@@ -52,7 +52,7 @@
     "@babel/preset-env": "7.21.4",
     "@babel/preset-typescript": "7.22.5",
     "@commitlint/cli": "17.5.1",
-    "@octokit/openapi-types": "16.0.0",
+    "@octokit/openapi-types": "18.0.0",
     "@stryker-mutator/core": "6.1.2",
     "@stryker-mutator/jest-runner": "6.1.2",
     "@stryker-mutator/typescript-checker": "6.1.2",
