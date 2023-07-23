@@ -46,7 +46,7 @@
     "glob": "10.3.3"
   },
   "devDependencies": {
-    "@babel/cli": "7.21.0",
+    "@babel/cli": "7.22.9",
     "@babel/core": "7.21.4",
     "@babel/node": "7.22.6",
     "@babel/preset-env": "7.21.4",
