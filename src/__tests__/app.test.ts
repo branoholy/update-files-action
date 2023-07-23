@@ -1,6 +1,6 @@
 import * as ActionsCore from '@actions/core';
 import { execSync } from 'child_process';
-import Glob from 'glob';
+import { GlobOptionsWithFileTypesUnset, globSync } from 'glob';
 
 import { app, AppArgs, BranchArgs } from '../app';
 import { RepoKit } from '../repo-kit';
@@ -18,7 +18,8 @@ jest.mock('child_process');
 const execSyncMock = TestUtils.asMockedFunction(execSync);
 
 jest.mock('glob');
-const globSyncMock = TestUtils.asMockedFunction(Glob.sync);
+const globSyncMock =
+  TestUtils.asMockedFunction<(path: string, options?: GlobOptionsWithFileTypesUnset | undefined) => string[]>(globSync);
 
 jest.mock('../utils/file-utils');
 const isFileChangedMock = TestUtils.asMockedFunction(FileUtils.isFileChanged);
