@@ -34,6 +34,6 @@ module.exports = {
   'src/**/*.ts?(x)': (filenames) => {
     const relativeFilenames = mapToRelative(filenames).join(' ');
 
-    return `jest --findRelatedTests ${relativeFilenames}`;
+    return `npm test -- --findRelatedTests ${relativeFilenames}`;
   }
 };
