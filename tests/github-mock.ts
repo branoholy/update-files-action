@@ -54,7 +54,10 @@ export class GitHubMock {
     }
   };
 
-  public constructor(private repository: string, public readonly defaultBranchName: string) {
+  public constructor(
+    private repository: string,
+    public readonly defaultBranchName: string
+  ) {
     this.commit(defaultBranchName);
     this.mockAll();
   }

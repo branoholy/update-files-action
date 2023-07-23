@@ -16,7 +16,7 @@ jest.mock('child_process', () => {
 
   return {
     ...originalModule,
-    execSync: (...[command, options]: Parameters<typeof ChildProcess['execSync']>) => {
+    execSync: (...[command, options]: Parameters<(typeof ChildProcess)['execSync']>) => {
       return originalModule.execSync(command, {
         ...options,
         env: process.env
@@ -60,6 +60,8 @@ describe('e2e tests', () => {
 
     jest.resetAllMocks();
     Nock.cleanAll();
+
+    E2EMocks.mockImplementation();
 
     gitHubMock = new GitHubMock(E2EConstants.repository, E2EConstants.defaultBranchName);
 

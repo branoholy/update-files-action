@@ -36,7 +36,11 @@ export interface CreatePullRequestArgs {
 export class RepoKit {
   private octokit: Octokit;
 
-  constructor(private owner: string, private repositoryName: string, token: string) {
+  constructor(
+    private owner: string,
+    private repositoryName: string,
+    token: string
+  ) {
     this.octokit = new Octokit({ auth: token });
   }
 

@@ -5,8 +5,8 @@ import { main } from '../main';
 import { ActionUtils } from '../utils/action-utils';
 import { TestUtils } from '../utils/test-utils';
 
-const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation();
-const processExitMock = jest.spyOn(process, 'exit').mockImplementation();
+const consoleErrorMock = jest.spyOn(console, 'error');
+const processExitMock = jest.spyOn(process, 'exit');
 
 jest.mock('envalid');
 const envalidMock = {
@@ -83,10 +83,10 @@ describe('main', () => {
     'pull-request',
     'pull-request.draft'
   ] as const;
-  type BooleanInputName = typeof booleanInputNames[number];
+  type BooleanInputName = (typeof booleanInputNames)[number];
 
   const integerInputNames = ['pull-request.milestone'] as const;
-  type IntegerInputName = typeof integerInputNames[number];
+  type IntegerInputName = (typeof integerInputNames)[number];
 
   const stringInputNames = [
     'token',
@@ -98,7 +98,7 @@ describe('main', () => {
     'pull-request.body',
     'pull-request.base'
   ] as const;
-  type StringInputName = typeof stringInputNames[number];
+  type StringInputName = (typeof stringInputNames)[number];
 
   const stringsInputNames = [
     'commit.paths',
@@ -107,7 +107,7 @@ describe('main', () => {
     'pull-request.reviewers',
     'pull-request.team-reviewers'
   ] as const;
-  type StringsInputName = typeof stringsInputNames[number];
+  type StringsInputName = (typeof stringsInputNames)[number];
 
   type InputName = BooleanInputName | IntegerInputName | StringInputName | StringsInputName;
 
@@ -249,6 +249,10 @@ describe('main', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
+
+    // Mock console and process
+    consoleErrorMock.mockImplementation();
+    processExitMock.mockImplementation();
   });
 
   it('should run app with required args and exit with 0', async () => {

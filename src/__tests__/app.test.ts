@@ -81,6 +81,10 @@ describe('app', () => {
   beforeEach(() => {
     jest.resetAllMocks();
 
+    // Mock console
+    consoleInfoMock.mockImplementation();
+    consoleErrorMock.mockImplementation();
+
     // Glob finds only one file
     globSyncMock.mockImplementation((path: string) => [path]);
 
