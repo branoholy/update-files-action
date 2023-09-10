@@ -618,11 +618,11 @@ describe('e2e tests', () => {
         },
         {
           path: `${E2EConstants.testFilesDirectory}/path3-2`,
-          content: 'Y21kMwo=' // TODO
+          content: 'Y21kMwo='
         },
         {
           path: `${E2EConstants.testFilesDirectory}/path3`,
-          content: 'Y21kMwo=' // TODO
+          content: 'Y21kMwo='
         }
       ]
     });
