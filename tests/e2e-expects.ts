@@ -49,6 +49,10 @@ const defaultFiles: FileArg[] = [
   {
     path: `${E2EConstants.testFilesDirectory}/path2`,
     content: 'Y21kMgo='
+  },
+  {
+    path: `${E2EConstants.testFilesDirectory}/path3`,
+    content: 'Y21kMwo='
   }
 ];
 
