@@ -22,6 +22,7 @@ const globSyncMock =
   TestUtils.asMockedFunction<(path: string, options?: GlobOptionsWithFileTypesUnset | undefined) => string[]>(globSync);
 
 jest.mock('../utils/file-utils');
+const isFileUntrackedMock = TestUtils.asMockedFunction(FileUtils.isFileUntracked);
 const isFileChangedMock = TestUtils.asMockedFunction(FileUtils.isFileChanged);
 
 jest.mock('../repo-kit');
@@ -38,7 +39,7 @@ describe('app', () => {
   };
 
   const commit = {
-    paths: ['path1', 'path2'],
+    paths: ['path1', 'path2', 'path3'],
     message: 'commit-message'
   };
 
@@ -101,6 +102,7 @@ describe('app', () => {
 
   test('flow #01: no file is changed => do not connect to GitHub', async () => {
     // No file is changed
+    isFileUntrackedMock.mockReturnValue(false);
     isFileChangedMock.mockReturnValue(false);
 
     const exitCode = await app({
@@ -118,9 +120,11 @@ describe('app', () => {
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
     ]);
-    TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
+    TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2'], ['path3']]);
 
     // No request to GitHub is made
     expect(RepoKitMock.mock.instances.length).toBe(0);
@@ -128,7 +132,8 @@ describe('app', () => {
 
   test('flow #02: all files are changed, branch does not exist => create branch, commit', async () => {
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch does not exist
     RepoKitMock.prototype.hasBranch.mockResolvedValue(false);
@@ -148,14 +153,17 @@ describe('app', () => {
     TestUtils.expectToBeCalled(consoleInfoMock, [
       ['File "path1" is changed'],
       ['File "path2" is changed'],
+      ['File "path3" is created'],
       [`Branch "${branch.name}" has been created`],
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
     ]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -187,7 +195,8 @@ describe('app', () => {
     const baseBranchSha = 'base-branch-sha';
 
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch does not exist
     RepoKitMock.prototype.hasBranch.mockResolvedValue(false);
@@ -218,14 +227,17 @@ describe('app', () => {
     TestUtils.expectToBeCalled(consoleInfoMock, [
       ['File "path1" is changed'],
       ['File "path2" is changed'],
+      ['File "path3" is created'],
       [`Branch "${branch.name}" has been created`],
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
     ]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -254,7 +266,8 @@ describe('app', () => {
 
   test('flow #04: all files are changed, branch exists => recreate branch, commit', async () => {
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
@@ -279,6 +292,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(consoleInfoMock, [
       ['File "path1" is changed'],
       ['File "path2" is changed'],
+      ['File "path3" is created'],
       [`Branch "${branch.name}" already exists`],
       [`Deleting branch "${branch.name}"...`],
       [`Branch "${branch.name}" has been deleted`],
@@ -288,8 +302,10 @@ describe('app', () => {
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
     ]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -318,7 +334,8 @@ describe('app', () => {
 
   test('flow #05: all files are changed, ref exists => do not recreate branch, commit', async () => {
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
@@ -339,14 +356,17 @@ describe('app', () => {
     TestUtils.expectToBeCalled(consoleInfoMock, [
       ['File "path1" is changed'],
       ['File "path2" is changed'],
+      ['File "path3" is created'],
       [`Branch "${branch.name}" already exists`],
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
     ]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -374,7 +394,8 @@ describe('app', () => {
 
   test('flow #06: all files are changed, branch exists => do not recreate branch, do not commit', async () => {
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
@@ -411,7 +432,8 @@ describe('app', () => {
 
   test('flow #07: all files are changed, branch exists => do not recreate branch, commit, do not create pull request', async () => {
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
@@ -430,14 +452,17 @@ describe('app', () => {
     TestUtils.expectToBeCalled(consoleInfoMock, [
       ['File "path1" is changed'],
       ['File "path2" is changed'],
+      ['File "path3" is created'],
       [`Branch "${branch.name}" already exists`],
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
     ]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -468,7 +493,8 @@ describe('app', () => {
 
   test('flow #08: all files are changed, branch exists => do not recreate branch, amend commit, do not create pull request', async () => {
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
@@ -490,14 +516,17 @@ describe('app', () => {
     TestUtils.expectToBeCalled(consoleInfoMock, [
       ['File "path1" is changed'],
       ['File "path2" is changed'],
+      ['File "path3" is created'],
       [`Branch "${branch.name}" already exists`],
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
     ]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -529,7 +558,8 @@ describe('app', () => {
 
   test('flow #09: all files are changed, branch exists => do not recreate branch, do not commit, do not create pull request', async () => {
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
@@ -571,7 +601,8 @@ describe('app', () => {
 
   test('flow #10: all files are changed, branch exists => do not recreate branch, commit, create pull request', async () => {
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch exists
     RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
@@ -590,6 +621,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(consoleInfoMock, [
       ['File "path1" is changed'],
       ['File "path2" is changed'],
+      ['File "path3" is created'],
       [`Branch "${branch.name}" already exists`],
       [`Changed files have been committed to ${commitFilesResult.sha}`],
       [`Pull request has been created at ${createPullRequestResult.html_url}`]
@@ -597,8 +629,10 @@ describe('app', () => {
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
     ]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -631,7 +665,8 @@ describe('app', () => {
     const commitToken = 'commit-token';
 
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch does not exist
     RepoKitMock.prototype.hasBranch.mockResolvedValue(false);
@@ -656,6 +691,7 @@ describe('app', () => {
     TestUtils.expectToBeCalled(consoleInfoMock, [
       ['File "path1" is changed'],
       ['File "path2" is changed'],
+      ['File "path3" is created'],
       [`Branch "${branch.name}" has been created`],
       [`Changed files have been committed to ${commitFilesResult.sha}`],
       [`Pull request has been created at ${createPullRequestResult.html_url}`]
@@ -663,8 +699,10 @@ describe('app', () => {
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
     ]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
@@ -706,7 +744,7 @@ describe('app', () => {
   test('flow #12: exception is thrown when checking for changed files => print error, do not connect to GitHub, exit 1', async () => {
     const error = new Error('error-message');
 
-    isFileChangedMock.mockImplementation(() => {
+    isFileUntrackedMock.mockImplementation(() => {
       throw error;
     });
 
@@ -723,9 +761,10 @@ describe('app', () => {
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
     ]);
-    TestUtils.expectToBeCalled(isFileChangedMock, [['path1']]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1']]);
 
     // No request to GitHub is made
     expect(RepoKitMock.mock.instances.length).toBe(0);
@@ -733,7 +772,8 @@ describe('app', () => {
 
   test('flow #13: wrong repository is used => print error, do not connect to GitHub, exit 1', async () => {
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     const exitCode = await app({
       ...appArgs,
@@ -758,7 +798,8 @@ describe('app', () => {
 
   test('flow #14: commit paths are specified, commit message is missing => print error, do not connect to GitHub, exit 1', async () => {
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     const exitCode = await app({
       ...appArgs,
@@ -783,10 +824,11 @@ describe('app', () => {
 
   test('flow #15: glob finds more files, all files are changed, branch does not exist => create branch, commit', async () => {
     // Glob finds more files
-    globSyncMock.mockImplementation((path: string) => [path, `${path}-2`]);
+    globSyncMock.mockImplementation((path) => [path, `${path}-2`]);
 
     // All files are changed
-    isFileChangedMock.mockReturnValue(true);
+    isFileUntrackedMock.mockImplementation((path) => ['path3', 'path3-2'].includes(path));
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path1-2', 'path2', 'path2-2'].includes(path));
 
     // The branch does not exist
     RepoKitMock.prototype.hasBranch.mockResolvedValue(false);
@@ -808,13 +850,24 @@ describe('app', () => {
       ['File "path1-2" is changed'],
       ['File "path2" is changed'],
       ['File "path2-2" is changed'],
+      ['File "path3" is created'],
+      ['File "path3-2" is created'],
       [`Branch "${branch.name}" has been created`],
       [`Changed files have been committed to ${commitFilesResult.sha}`]
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
       ['path1', { nodir: true }],
-      ['path2', { nodir: true }]
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
+    ]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [
+      ['path1'],
+      ['path1-2'],
+      ['path2'],
+      ['path2-2'],
+      ['path3'],
+      ['path3-2']
     ]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path1-2'], ['path2'], ['path2-2']]);
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
@@ -833,7 +886,7 @@ describe('app', () => {
       [
         {
           ...commit,
-          paths: ['path1', 'path1-2', 'path2', 'path2-2'],
+          paths: ['path1', 'path1-2', 'path2', 'path2-2', 'path3', 'path3-2'],
           branchName: branch.name
         }
       ]

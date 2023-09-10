@@ -14,9 +14,18 @@ const findChangedFiles = (paths: string[]) => {
   }, []);
 
   const changedPaths = filePaths.reduce<string[]>((acc, filePath) => {
+    if (FileUtils.isFileUntracked(filePath)) {
+      console.info(`File "${filePath}" is created`);
+      acc.push(filePath);
+
+      return acc;
+    }
+
     if (FileUtils.isFileChanged(filePath)) {
       console.info(`File "${filePath}" is changed`);
       acc.push(filePath);
+
+      return acc;
     }
 
     return acc;

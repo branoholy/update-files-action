@@ -79,6 +79,9 @@ describe('e2e tests', () => {
       }
     });
 
+    FileSystem.rmSync(Path.join(E2EConstants.testFilesDirectory, 'path3'), { force: true });
+    FileSystem.rmSync(Path.join(E2EConstants.testFilesDirectory, 'path3-2'), { force: true });
+
     ChildProcess.execSync(`rm -rf ${E2EConstants.shellMocksDirectory}/*`);
   });
 
@@ -120,6 +123,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" has been created`],
       ['Changed files have been committed to commit-1-sha']
     ]);
@@ -158,6 +162,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" has been created`],
       ['Changed files have been committed to commit-2-sha']
     ]);
@@ -196,6 +201,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" already exists`],
       [`Deleting branch "${branchName}"...`],
       [`Branch "${branchName}" has been deleted`],
@@ -234,6 +240,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" already exists`],
       [`Changed files have been committed to commit-1-sha`]
     ]);
@@ -299,6 +306,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" already exists`],
       [`Changed files have been committed to commit-1-sha`]
     ]);
@@ -339,6 +347,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" already exists`],
       [`Changed files have been committed to commit-2-sha`]
     ]);
@@ -415,6 +424,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" already exists`],
       [`Changed files have been committed to commit-1-sha`],
       [`Pull request has been created at html_url`]
@@ -458,6 +468,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.consoleInfo, [
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" has been created`],
       [`Changed files have been committed to commit-1-sha`],
       [`Pull request has been created at html_url`]
@@ -485,7 +496,7 @@ describe('e2e tests', () => {
     FileSystem.writeFileSync(`${E2EConstants.shellMocksDirectory}/wc`, 'exit 1');
     FileSystem.chmodSync(`${E2EConstants.shellMocksDirectory}/wc`, 0o755);
 
-    const command = 'git diff --shortstat temp-e2e-test-files/path1 | wc -l';
+    const command = 'git ls-files --exclude-standard --others temp-e2e-test-files/path1 | wc -l';
     const error = new Error(`Command failed: ${command}`);
 
     // Commit the changes
@@ -549,18 +560,19 @@ describe('e2e tests', () => {
     FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path1-2'), 'content1-2');
     FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path2-2'), 'content2-2');
     ChildProcess.execSync(`git add ${E2EConstants.testFilesDirectory}`);
+    FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path3-2'), 'content3-2');
 
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
     // Additional files are created
     ChildProcess.execSync(
-      `echo cmd1 > ${E2EConstants.testFilesDirectory}/path1-2 && echo cmd2 > ${E2EConstants.testFilesDirectory}/path2-2`
+      `echo cmd1 > ${E2EConstants.testFilesDirectory}/path1-2 && echo cmd2 > ${E2EConstants.testFilesDirectory}/path2-2 && echo cmd3 > ${E2EConstants.testFilesDirectory}/path3-2`
     );
 
     // Commit the changes, use glob pattern
     process.env[
       'INPUT_COMMIT.PATHS'
-    ] = `${E2EConstants.testFilesDirectory}/path1*${OS.EOL} ${E2EConstants.testFilesDirectory}/path2*${OS.EOL}`;
+    ] = `${E2EConstants.testFilesDirectory}/path1*${OS.EOL} ${E2EConstants.testFilesDirectory}/path2*${OS.EOL} ${E2EConstants.testFilesDirectory}/path3*${OS.EOL}`;
     process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
 
     await main();
@@ -573,6 +585,8 @@ describe('e2e tests', () => {
       [`File "${E2EConstants.testFilesDirectory}/path1" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2-2" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
+      [`File "${E2EConstants.testFilesDirectory}/path3-2" is created`],
+      [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" has been created`],
       ['Changed files have been committed to commit-1-sha']
     ]);
@@ -601,6 +615,14 @@ describe('e2e tests', () => {
         {
           path: `${E2EConstants.testFilesDirectory}/path2`,
           content: 'Y21kMgo='
+        },
+        {
+          path: `${E2EConstants.testFilesDirectory}/path3-2`,
+          content: 'Y21kMwo='
+        },
+        {
+          path: `${E2EConstants.testFilesDirectory}/path3`,
+          content: 'Y21kMwo='
         }
       ]
     });

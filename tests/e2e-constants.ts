@@ -11,14 +11,14 @@ export const E2EConstants = {
   testFilesDirectory,
   shellMocksDirectory: 'temp-e2e-shell-mocks',
   githubOutputFile,
-  commands: `echo cmd1 > ${testFilesDirectory}/path1 && echo cmd2 > ${testFilesDirectory}/path2`,
+  commands: `echo cmd1 > ${testFilesDirectory}/path1 && echo cmd2 > ${testFilesDirectory}/path2 && echo cmd3 > ${testFilesDirectory}/path3`,
 
   repository: `${owner}/${repositoryName}`,
   token: 'token',
 
   branchName: 'branch',
 
-  commitPaths: `${testFilesDirectory}/path1${OS.EOL} ${testFilesDirectory}/path2${OS.EOL}`,
+  commitPaths: `${testFilesDirectory}/path1${OS.EOL} ${testFilesDirectory}/path2${OS.EOL} ${testFilesDirectory}/path3${OS.EOL}`,
   commitMessage: 'commit-message',
   commitToken: 'commit-token',
 
