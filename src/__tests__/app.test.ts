@@ -556,7 +556,79 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances[0]?.createPullRequest).not.toBeCalled();
   });
 
-  test('flow #09: all files are changed, branch exists => do not recreate branch, do not commit, do not create pull request', async () => {
+  test('flow #09: all files are changed, branch exists => do not recreate branch, amend commit without commit message, create pull request', async () => {
+    // All files are changed
+    isFileUntrackedMock.mockImplementation((path) => path === 'path3');
+    isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
+
+    // The branch exists
+    RepoKitMock.prototype.hasBranch.mockResolvedValue(true);
+
+    const exitCode = await app({
+      ...appArgs,
+      // Commit the changes, amend the commit
+      commit: {
+        paths: commit.paths,
+        amend: true
+      },
+      // Create a pull request
+      pullRequest: {}
+    });
+
+    expect(consoleErrorMock).not.toBeCalled();
+    expect(exitCode).toBe(0);
+
+    TestUtils.expectToBeCalled(consoleInfoMock, [
+      ['File "path1" is changed'],
+      ['File "path2" is changed'],
+      ['File "path3" is created'],
+      [`Branch "${branch.name}" already exists`],
+      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Pull request has been created at ${createPullRequestResult.html_url}`]
+    ]);
+
+    TestUtils.expectToBeCalled(globSyncMock, [
+      ['path1', { nodir: true }],
+      ['path2', { nodir: true }],
+      ['path3', { nodir: true }]
+    ]);
+    TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
+    TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
+    TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
+
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.hasBranch, [[branch.name]]);
+
+    // The branch is not deleted
+    expect(RepoKitMock.mock.instances[0]?.deleteBranch).not.toBeCalled();
+
+    // The branch is not created
+    expect(RepoKitMock.mock.instances[0]?.createBranch).not.toBeCalled();
+
+    // All files are committed
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.commitFiles, [
+      [
+        {
+          paths: commit.paths,
+          branchName: branch.name,
+          amend: true
+        }
+      ]
+    ]);
+
+    // The commit hash is sent to the output
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+
+    // A pull request is created
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [
+      [
+        {
+          branchName: branch.name
+        }
+      ]
+    ]);
+  });
+
+  test('flow #10: all files are changed, branch exists => do not recreate branch, do not commit, do not create pull request', async () => {
     // All files are changed
     isFileUntrackedMock.mockImplementation((path) => path === 'path3');
     isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
@@ -599,7 +671,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances[0]?.createPullRequest).not.toBeCalled();
   });
 
-  test('flow #10: all files are changed, branch exists => do not recreate branch, commit, create pull request', async () => {
+  test('flow #11: all files are changed, branch exists => do not recreate branch, commit, create pull request', async () => {
     // All files are changed
     isFileUntrackedMock.mockImplementation((path) => path === 'path3');
     isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
@@ -658,10 +730,17 @@ describe('app', () => {
     TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
 
     // A pull request is created
-    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [[{ branchName: branch.name }]]);
+    TestUtils.expectToBeCalled(RepoKitMock.mock.instances[0]?.createPullRequest, [
+      [
+        {
+          branchName: branch.name,
+          title: commit.message
+        }
+      ]
+    ]);
   });
 
-  test('flow #11: all files are changed, branch does not exist => create branch, commit with token, create pull request with all args', async () => {
+  test('flow #12: all files are changed, branch does not exist => create branch, commit with token, create pull request with all args', async () => {
     const commitToken = 'commit-token';
 
     // All files are changed
@@ -741,7 +820,7 @@ describe('app', () => {
     ]);
   });
 
-  test('flow #12: exception is thrown when checking for changed files => print error, do not connect to GitHub, exit 1', async () => {
+  test('flow #13: exception is thrown when checking for changed files => print error, do not connect to GitHub, exit 1', async () => {
     const error = new Error('error-message');
 
     isFileUntrackedMock.mockImplementation(() => {
@@ -770,7 +849,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances.length).toBe(0);
   });
 
-  test('flow #13: wrong repository is used => print error, do not connect to GitHub, exit 1', async () => {
+  test('flow #14: wrong repository is used => print error, do not connect to GitHub, exit 1', async () => {
     // All files are changed
     isFileUntrackedMock.mockImplementation((path) => path === 'path3');
     isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
@@ -796,7 +875,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances.length).toBe(0);
   });
 
-  test('flow #14: commit paths are specified, commit message is missing => print error, do not connect to GitHub, exit 1', async () => {
+  test('flow #15: commit paths are specified, commit message is missing => print error, do not connect to GitHub, exit 1', async () => {
     // All files are changed
     isFileUntrackedMock.mockImplementation((path) => path === 'path3');
     isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
@@ -822,7 +901,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances.length).toBe(0);
   });
 
-  test('flow #15: glob finds more files, all files are changed, branch does not exist => create branch, commit', async () => {
+  test('flow #16: glob finds more files, all files are changed, branch does not exist => create branch, commit', async () => {
     // Glob finds more files
     globSyncMock.mockImplementation((path) => [path, `${path}-2`]);
 
