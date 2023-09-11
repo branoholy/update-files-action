@@ -62,6 +62,7 @@ interface FilesAreCommittedArgs {
   readonly branchName: string;
   readonly commitToken?: string;
   readonly amend?: boolean;
+  readonly withoutCommitMessage?: boolean;
   readonly files?: FileArg[];
 }
 
@@ -71,6 +72,7 @@ const filesAreCommitted = ({
   branchName,
   commitToken = token,
   amend = false,
+  withoutCommitMessage = false,
   files = defaultFiles
 }: FilesAreCommittedArgs) => {
   const newCommitSha = gitHubMock.getBranchSha(branchName);
@@ -123,13 +125,17 @@ const filesAreCommitted = ({
     ? GitHubMockUtils.createCommitSha(GitHubMockUtils.getCommitId(oldCommitSha) - 1)
     : oldCommitSha;
 
+  const commitMessage = withoutCommitMessage
+    ? GitHubMockUtils.createCommitMessage(oldCommitSha)
+    : E2EConstants.commitMessage;
+
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createCommit, [
     [
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'git/create-commit'>>>({
         parents: [parentCommitSha],
         tree: 'tree-sha',
-        message: E2EConstants.commitMessage
+        message: commitMessage
       })
     ]
   ]);
@@ -187,11 +193,21 @@ interface PullRequestIsCreatedArgs {
   readonly gitHubMock: GitHubMock;
   readonly token: string;
   readonly branchName: string;
+  readonly withoutCommitMessage?: boolean;
   readonly full?: boolean;
 }
 
-const pullRequestIsCreated = ({ gitHubMock, token, branchName, full = false }: PullRequestIsCreatedArgs) => {
-  if (!full) {
+const pullRequestIsCreated = ({
+  gitHubMock,
+  token,
+  branchName,
+  withoutCommitMessage = false,
+  full = false
+}: PullRequestIsCreatedArgs) => {
+  const newCommitSha = gitHubMock.getBranchSha(branchName);
+  const oldCommitSha = GitHubMockUtils.createCommitSha(GitHubMockUtils.getCommitId(newCommitSha) - 1);
+
+  if (withoutCommitMessage) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.repos.getBranch, [
       [expect.stringMatching(new RegExp(`/${branchName}$`)), '']
     ]);
@@ -205,7 +221,7 @@ const pullRequestIsCreated = ({ gitHubMock, token, branchName, full = false }: P
         draft: E2EConstants.pullRequestDraft === 'true'
       }
     : {
-        title: E2EConstants.commitMessage,
+        title: withoutCommitMessage ? GitHubMockUtils.createCommitMessage(oldCommitSha) : E2EConstants.commitMessage,
         base: E2EConstants.defaultBranchName
       };
 

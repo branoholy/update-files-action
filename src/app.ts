@@ -138,7 +138,7 @@ export const app = async ({
     }
 
     if (branchName.startsWith(branchRefPrefix)) {
-      branchName = branchName.substr(branchRefPrefix.length);
+      branchName = branchName.slice(branchRefPrefix.length);
     }
 
     const changedPaths = commit ? findChangedFiles(commit.paths) : null;
@@ -155,7 +155,10 @@ export const app = async ({
     }
 
     if (pullRequest) {
-      await createPullRequest(repoKit, branchName, pullRequest);
+      await createPullRequest(repoKit, branchName, {
+        ...dp({ title: commit?.message }),
+        ...pullRequest
+      });
     }
   } catch (error) {
     console.error(error);
