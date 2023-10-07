@@ -1,0 +1,13 @@
+name: Create release
+
+on:
+  pull_request:
+    types: closed
+    branches: main
+
+jobs:
+  create-release:
+    name: Cluenar
+    uses: cluenar/actions/.github/workflows/create-release.yaml@v1.0.3
+    secrets:
+      token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}

@@ -7,4 +7,6 @@ on:
 jobs:
   lint-merge-commit:
     name: Cluenar
-    uses: cluenar/actions/.github/workflows/lint-merge-commit.yaml@main
+    uses: cluenar/actions/.github/workflows/lint-merge-commit.yaml@v1.0.3
+    with:
+      command: npm run lint commit

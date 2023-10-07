@@ -1,0 +1,14 @@
+name: CI status
+
+on:
+  workflow_run:
+    workflows: CI
+    types: completed
+    branches: [main, latest]
+
+jobs:
+  send-status:
+    name: Cluenar
+    uses: cluenar/actions/.github/workflows/ci-status.yaml@v1.0.3
+    secrets:
+      token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
