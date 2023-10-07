@@ -1,4 +1,5 @@
 import nock from 'nock';
+import { vi } from 'vitest';
 
 import { GitHubMockUtils } from './github-mock-utils';
 import { createGitHubRestMock, GitHubRestMocks, GitHubRestResponseData } from './github-rest-mocks';
@@ -28,7 +29,7 @@ export class GitHubMock {
   private commits: Commits = {};
 
   public readonly restMocks: GitHubRestMocks = {
-    any: jest.fn(),
+    any: vi.fn(),
     git: {
       createBlob: createGitHubRestMock<'git/create-blob'>(),
 

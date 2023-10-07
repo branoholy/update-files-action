@@ -1,7 +1,1 @@
-/* eslint-disable import/no-commonjs */
-
-module.exports = {
-  printWidth: 120,
-  singleQuote: true,
-  trailingComma: 'none'
-};
+export { default } from '@cluenar/tools/dist/configs/prettier.config.js';

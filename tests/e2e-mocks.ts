@@ -1,8 +1,10 @@
-const consoleInfo = jest.spyOn(console, 'info');
-const consoleError = jest.spyOn(console, 'error');
+import { vi } from 'vitest';
 
-const processExit = jest.spyOn(process, 'exit');
-const processStdoutWrite = jest.spyOn(process.stdout, 'write');
+const consoleInfo = vi.spyOn(console, 'info').mockReset();
+const consoleError = vi.spyOn(console, 'error').mockReset();
+
+const processExit = vi.spyOn(process, 'exit').mockReset();
+const processStdoutWrite = vi.spyOn(process.stdout, 'write').mockReset();
 
 export const E2EMocks = {
   consoleInfo,
@@ -10,10 +12,10 @@ export const E2EMocks = {
   processExit,
   processStdoutWrite,
 
-  mockImplementation: () => {
-    consoleInfo.mockImplementation();
-    consoleError.mockImplementation();
-    processExit.mockImplementation();
-    processStdoutWrite.mockImplementation();
+  mockReset: () => {
+    consoleInfo.mockReset();
+    consoleError.mockReset();
+    processExit.mockReset();
+    processStdoutWrite.mockReset();
   }
 };

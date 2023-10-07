@@ -4,14 +4,18 @@ build/
 # Dependencies
 node_modules/
 
-# Jest
-coverage/
+# .env
+.env
 
 # Lint Staged
 .lint-staged-temp-tsconfig.json
 
 # Misc
+.DS_Store
 etc/
 
 # Stryker
 .stryker-tmp/
+
+# Tests coverage
+coverage/

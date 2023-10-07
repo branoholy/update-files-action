@@ -1,0 +1,10 @@
+name: Create release PR
+
+on: workflow_dispatch
+
+jobs:
+  create-release-pr:
+    name: Cluenar
+    uses: cluenar/actions/.github/workflows/create-release-pr.yaml@v1.0.3
+    secrets:
+      token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}

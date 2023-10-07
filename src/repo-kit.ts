@@ -2,7 +2,7 @@ import { Octokit } from '@octokit/rest';
 import btoa from 'btoa';
 import { readFileSync } from 'fs';
 
-import { dp } from './utils/js-utils';
+import { dp } from ':/utils';
 
 interface CreateCommitArgs {
   readonly branchSha: string;

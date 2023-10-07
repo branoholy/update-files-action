@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install
-        uses: cluenar/actions/install@main
+        uses: cluenar/actions/install@v1.0.3
       - name: Update the dist folder
         run: 'npm run build:dist'
       - name: Create a pull request with the updated files

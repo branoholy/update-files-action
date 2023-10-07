@@ -1,23 +1,24 @@
 import * as envalid from 'envalid';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ActionUtils, TestUtils } from ':/utils';
 
 import { app } from '../app';
 import { main } from '../main';
-import { ActionUtils } from '../utils/action-utils';
-import { TestUtils } from '../utils/test-utils';
 
-const consoleErrorMock = jest.spyOn(console, 'error');
-const processExitMock = jest.spyOn(process, 'exit');
+const consoleErrorMock = vi.spyOn(console, 'error').mockReset();
+const processExitMock = vi.spyOn(process, 'exit').mockReset();
 
-jest.mock('envalid');
+vi.mock('envalid');
 const envalidMock = {
   cleanEnv: TestUtils.asMockedFunction(envalid.cleanEnv),
   str: TestUtils.asMockedFunction(envalid.str)
 };
 
-jest.mock('../app');
+vi.mock('../app');
 const appMock = TestUtils.asMockedFunction(app);
 
-jest.mock('../utils/action-utils');
+vi.mock('../utils/action-utils');
 const ActionUtilsMock = {
   getInputAsBoolean: TestUtils.asMockedFunction(ActionUtils.getInputAsBoolean),
   getInputAsInteger: TestUtils.asMockedFunction(ActionUtils.getInputAsInteger),
@@ -55,7 +56,7 @@ describe('main', () => {
 
   const mockEnv = () => {
     envalidMock.str.mockReturnValue({
-      _parse: jest.fn()
+      _parse: vi.fn()
     });
 
     envalidMock.cleanEnv.mockReturnValue({ GITHUB_REPOSITORY: repository } as unknown as ReturnType<
@@ -248,11 +249,11 @@ describe('main', () => {
   };
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 
     // Mock console and process
-    consoleErrorMock.mockImplementation();
-    processExitMock.mockImplementation();
+    consoleErrorMock.mockReset();
+    processExitMock.mockReset();
   });
 
   it('should run app with required args and exit with 0', async () => {

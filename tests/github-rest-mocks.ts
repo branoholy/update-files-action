@@ -1,6 +1,7 @@
 import type { operations } from '@octokit/openapi-types';
+import { Mock, vi } from 'vitest';
 
-import { OptionalChain } from '../src/utils/type-utils';
+import { OptionalChain } from ':/utils';
 
 export type GitHubRestParameters<OperationT extends keyof operations> = OptionalChain<
   operations[OperationT],
@@ -16,13 +17,13 @@ export type GitHubRestResponseData<
 type GitHubRestMock<
   OperationT extends keyof operations,
   HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
-> = jest.Mock<
-  [HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?],
-  GitHubRestParameters<OperationT> extends never ? [string, ''] : [string, GitHubRestParameters<OperationT>]
+> = Mock<
+  GitHubRestParameters<OperationT> extends never ? [string, ''] : [string, GitHubRestParameters<OperationT>],
+  [HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?]
 >;
 
 export type GitHubRestMocks = {
-  readonly any: jest.Mock;
+  readonly any: Mock;
   readonly git: {
     readonly createBlob: GitHubRestMock<'git/create-blob'>;
     readonly getCommit: GitHubRestMock<'git/get-commit'>;
@@ -49,7 +50,7 @@ export const createGitHubRestMock = <
   OperationT extends keyof operations,
   HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
 >() =>
-  jest.fn<
-    [HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?],
-    GitHubRestParameters<OperationT> extends never ? [string, ''] : [string, GitHubRestParameters<OperationT>]
+  vi.fn<
+    GitHubRestParameters<OperationT> extends never ? [string, ''] : [string, GitHubRestParameters<OperationT>],
+    [HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?]
   >();

@@ -1,4 +1,5 @@
 import OS from 'os';
+import { describe, expect, it } from 'vitest';
 
 import { StringUtils } from '../string-utils';
 

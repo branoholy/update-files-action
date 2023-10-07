@@ -11,17 +11,17 @@ jobs:
 
     steps:
       - name: Assign author
-        uses: cluenar/actions/assign-pr-author@main
+        uses: cluenar/actions/assign-pr-author@v1.0.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add labels
-        uses: cluenar/actions/add-pr-labels@main
+        uses: cluenar/actions/add-pr-labels@v1.0.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Approve or request review
-        uses: cluenar/actions/review-pr@main
+        uses: cluenar/actions/review-pr@v1.0.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           trusted-user: branoholy
@@ -30,18 +30,18 @@ jobs:
           dependency-approved: >-
             ${{
               startsWith(github.head_ref, 'dependabot-npm_and_yarn-actions-core-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-babel-') ||
               startsWith(github.head_ref, 'dependabot-npm_and_yarn-btoa-') ||
+              startsWith(github.head_ref, 'dependabot-npm_and_yarn-cluenar-tools-') ||
               startsWith(github.head_ref, 'dependabot-npm_and_yarn-envalid-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-eslint-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-jest-') ||
+              startsWith(github.head_ref, 'dependabot-npm_and_yarn-glob-') ||
               startsWith(github.head_ref, 'dependabot-npm_and_yarn-nock-') ||
+              startsWith(github.head_ref, 'dependabot-npm_and_yarn-node-fetch-') ||
               startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-openapi-types-') ||
               startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-rest-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-prettier-') ||
               startsWith(github.head_ref, 'dependabot-npm_and_yarn-types-') ||
               startsWith(github.head_ref, 'dependabot-npm_and_yarn-typescript-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-webpack-') ||
+              startsWith(github.head_ref, 'dependabot-npm_and_yarn-vite-') ||
+              startsWith(github.head_ref, 'dependabot-npm_and_yarn-vitest-') ||
               startsWith(github.head_ref, 'dependabot-github_actions-actions-cache-') ||
               startsWith(github.head_ref, 'dependabot-github_actions-actions-checkout-') ||
               startsWith(github.head_ref, 'dependabot-github_actions-actions-setup-node-') ||
@@ -50,12 +50,13 @@ jobs:
 
       - name: Update title
         id: update-title
-        uses: cluenar/actions/update-pr-title@main
+        uses: cluenar/actions/update-pr-title@v1.0.3
         with:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
 
       - name: Auto-merge
-        uses: cluenar/actions/auto-merge-pr@main
+        uses: cluenar/actions/auto-merge-pr@v1.0.3
         with:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
           title: ${{ steps.update-title.outputs.title }}
+          trusted-bot: branoholy-bot

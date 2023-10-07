@@ -1,18 +1,24 @@
 import ChildProcess from 'child_process';
 import FileSystem from 'fs';
 import Nock from 'nock';
+import nodeFetch from 'node-fetch';
 import OS from 'os';
 import Path from 'path';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { TestUtils } from ':/utils';
+
+// eslint-disable-next-line no-restricted-imports
 import { main } from '../src/main';
-import { TestUtils } from '../src/utils/test-utils';
 import { E2EConstants } from './e2e-constants';
 import { E2EExpects } from './e2e-expects';
 import { E2EMocks } from './e2e-mocks';
 import { GitHubMock } from './github-mock';
 
-jest.mock('child_process', () => {
-  const originalModule = jest.requireActual('child_process');
+const originalFetch = global.fetch;
+
+vi.mock('child_process', async () => {
+  const originalModule = await vi.importActual<typeof ChildProcess>('child_process');
 
   return {
     ...originalModule,
@@ -31,6 +37,9 @@ describe('e2e tests', () => {
   const branchName = E2EConstants.branchName;
 
   beforeAll(() => {
+    // @ts-expect-error
+    global.fetch = nodeFetch;
+
     Nock.disableNetConnect();
 
     FileSystem.mkdirSync(E2EConstants.testFilesDirectory);
@@ -44,8 +53,10 @@ describe('e2e tests', () => {
   });
 
   afterAll(() => {
+    global.fetch = originalFetch;
+
     // Restore E2EMocks
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
 
     // Fix a memory leak
     Nock.restore();
@@ -58,10 +69,10 @@ describe('e2e tests', () => {
   beforeEach(() => {
     ChildProcess.execSync(`git checkout ${E2EConstants.testFilesDirectory}`, { stdio: 'ignore' });
 
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     Nock.cleanAll();
 
-    E2EMocks.mockImplementation();
+    E2EMocks.mockReset();
 
     gitHubMock = new GitHubMock(E2EConstants.repository, E2EConstants.defaultBranchName);
 

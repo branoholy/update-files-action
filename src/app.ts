@@ -1,9 +1,9 @@
 import * as ActionsCore from '@actions/core';
 import { globSync } from 'glob';
 
+import { dp, FileUtils } from ':/utils';
+
 import { RepoKit } from './repo-kit';
-import { FileUtils } from './utils/file-utils';
-import { dp } from './utils/js-utils';
 
 const branchRefPrefix = 'refs/heads/';
 
