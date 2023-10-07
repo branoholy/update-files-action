@@ -1,10 +1,17 @@
+import { builtinModules } from 'module';
 import { defineConfig } from 'vite';
 
-import { dependencies } from './package.json';
-
 export default defineConfig({
-  ssr: {
-    noExternal: Object.keys(dependencies)
+  build: {
+    lib: {
+      entry: './src/index.ts',
+      formats: ['es'],
+      fileName: 'index'
+    },
+    outDir: './build',
+    rollupOptions: {
+      external: [...builtinModules, /^node:/]
+    }
   },
   resolve: {
     alias: {

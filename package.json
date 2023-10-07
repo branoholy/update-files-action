@@ -14,7 +14,7 @@
     "node": "20.8.0"
   },
   "scripts": {
-    "build": "vite build --outDir ./build/ --ssr ./src/index.ts",
+    "build": "vite build",
     "build:dist": "npm run build && rm -rf dist/ && cp -r build/ dist/",
     "clean": "rm -rf build/",
     "start": "node build/index.js",
