@@ -1,9 +1,10 @@
 import * as ActionsCore from '@actions/core';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ActionUtils } from '../action-utils';
 import { TestUtils } from '../test-utils';
 
-jest.mock('@actions/core');
+vi.mock('@actions/core');
 
 const actionsCoreGetInputMock = TestUtils.asMockedFunction(ActionsCore.getInput);
 

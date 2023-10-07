@@ -1,3 +1,5 @@
+import { describe, expect, it, MockedClass, MockedFunction, vi } from 'vitest';
+
 import { TestUtils } from '../test-utils';
 
 describe('TestUtils', () => {
@@ -5,7 +7,7 @@ describe('TestUtils', () => {
     // Typing check for (T) => jest.MockedFunction<T>.
     it('should return the same function and cast to a mocked function type', () => {
       const fn = (n: number) => `${n}`;
-      const fnMock: jest.MockedFunction<typeof fn> = TestUtils.asMockedFunction(fn);
+      const fnMock: MockedFunction<typeof fn> = TestUtils.asMockedFunction(fn);
 
       expect(fnMock).toBe(fn);
     });
@@ -22,9 +24,9 @@ describe('TestUtils', () => {
       }
 
       const ClsMock = TestUtils.asMockedClass(Cls);
-      const ClsMockWithType: jest.MockedClass<typeof Cls> = ClsMock;
+      const ClsMockWithType: MockedClass<typeof Cls> = ClsMock;
 
-      const getNumMock: jest.MockedFunction<Cls['getNum']> | undefined = ClsMock.mock?.instances[0]?.getNum;
+      const getNumMock = ClsMock.mock?.instances[0]?.getNum;
 
       expect(ClsMock).toBe(Cls);
       expect(ClsMockWithType).toBe(Cls);
@@ -34,7 +36,7 @@ describe('TestUtils', () => {
 
   describe('expectToBeCalled', () => {
     it('should check that a function has been called only 2 times with the specified args', () => {
-      const fn = jest.fn();
+      const fn = vi.fn();
 
       fn(4, 2);
       fn(42);

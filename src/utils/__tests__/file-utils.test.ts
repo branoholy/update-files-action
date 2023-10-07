@@ -1,9 +1,10 @@
 import { execSync } from 'child_process';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FileUtils } from '../file-utils';
 import { TestUtils } from '../test-utils';
 
-jest.mock('child_process');
+vi.mock('child_process');
 
 const execSyncMock = TestUtils.asMockedFunction(execSync);
 

@@ -1,4 +1,4 @@
 {
-  "typescript.preferences.importModuleSpecifier": "relative",
+  "prettier.ignorePath": "node_modules/@cluenar/tools/dist/configs/.prettierignore",
   "typescript.tsdk": "node_modules/typescript/lib"
 }

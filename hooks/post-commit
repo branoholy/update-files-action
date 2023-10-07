@@ -1,1 +1,1 @@
-rm -f .lint-staged-temp-tsconfig.json
+npm run __git-hook:post-commit --if-present "$@"

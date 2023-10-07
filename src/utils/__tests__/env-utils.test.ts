@@ -1,4 +1,5 @@
 import * as envalid from 'envalid';
+import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { EnvUtils } from '../env-utils';
 

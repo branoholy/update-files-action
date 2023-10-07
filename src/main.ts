@@ -1,9 +1,8 @@
 import * as envalid from 'envalid';
 
+import { ActionUtils, dp, EnvUtils } from ':/utils';
+
 import { app, BranchArgs, CommitArgs, PullRequestArgs } from './app';
-import { ActionUtils } from './utils/action-utils';
-import { EnvUtils } from './utils/env-utils';
-import { dp } from './utils/js-utils';
 
 const commitArgFields = ['paths', 'message', 'token', 'amend'];
 

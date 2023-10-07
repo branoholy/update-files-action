@@ -1,16 +1,14 @@
-/* eslint-disable import/no-commonjs */
+/* eslint-disable import/no-default-export */
 
 /**
  * @type {import('@stryker-mutator/api/core').StrykerOptions}
  */
-module.exports = {
+export default {
   mutate: ['src/**/*.ts', '!src/**/__tests__/**'],
   checkers: ['typescript'],
-  testRunner: 'jest',
-  jest: {
-    configFile: './jest-unit.config.js',
-    enableFindRelatedTests: true
+  testRunner: 'vitest',
+  vitest: {
+    configFile: './vite-unit.config.ts'
   },
-  coverageAnalysis: 'perTest',
   reporters: ['progress', 'clear-text']
 };

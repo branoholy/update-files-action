@@ -1,31 +1,31 @@
 import * as ActionsCore from '@actions/core';
 import { execSync } from 'child_process';
 import { GlobOptionsWithFileTypesUnset, globSync } from 'glob';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { Awaited, FileUtils, TestUtils } from ':/utils';
 
 import { app, AppArgs, BranchArgs } from '../app';
 import { RepoKit } from '../repo-kit';
-import { FileUtils } from '../utils/file-utils';
-import { TestUtils } from '../utils/test-utils';
-import { Awaited } from '../utils/type-utils';
 
-const consoleInfoMock = jest.spyOn(console, 'info');
-const consoleErrorMock = jest.spyOn(console, 'error');
+const consoleInfoMock = vi.spyOn(console, 'info').mockReset();
+const consoleErrorMock = vi.spyOn(console, 'error').mockReset();
 
-jest.mock('@actions/core');
+vi.mock('@actions/core');
 const actionsCoreSetOutputMock = TestUtils.asMockedFunction(ActionsCore.setOutput);
 
-jest.mock('child_process');
+vi.mock('child_process');
 const execSyncMock = TestUtils.asMockedFunction(execSync);
 
-jest.mock('glob');
+vi.mock('glob');
 const globSyncMock =
   TestUtils.asMockedFunction<(path: string, options?: GlobOptionsWithFileTypesUnset | undefined) => string[]>(globSync);
 
-jest.mock('../utils/file-utils');
+vi.mock('../utils/file-utils');
 const isFileUntrackedMock = TestUtils.asMockedFunction(FileUtils.isFileUntracked);
 const isFileChangedMock = TestUtils.asMockedFunction(FileUtils.isFileChanged);
 
-jest.mock('../repo-kit');
+vi.mock('../repo-kit');
 const RepoKitMock = TestUtils.asMockedClass(RepoKit);
 
 describe('app', () => {
@@ -81,11 +81,11 @@ describe('app', () => {
   } as Awaited<ReturnType<RepoKit['createPullRequest']>>;
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 
     // Mock console
-    consoleInfoMock.mockImplementation();
-    consoleErrorMock.mockImplementation();
+    consoleInfoMock.mockReset();
+    consoleErrorMock.mockReset();
 
     // Glob finds only one file
     globSyncMock.mockImplementation((path: string) => [path]);

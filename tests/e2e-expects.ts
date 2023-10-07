@@ -1,8 +1,10 @@
 import FileSystem from 'fs';
 import Nock from 'nock';
 import OS from 'os';
+import { expect } from 'vitest';
 
-import { TestUtils } from '../src/utils/test-utils';
+import { TestUtils } from ':/utils';
+
 import { E2EConstants } from './e2e-constants';
 import { E2EMocks } from './e2e-mocks';
 import { GitHubMock } from './github-mock';
@@ -33,7 +35,7 @@ const branchIsCreated = ({
   ]);
 
   const gitCreateRefMock = gitHubMock.restMocks.git.createRef.mock.instances[0] as Nock.ReplyFnContext | undefined;
-  expect(gitCreateRefMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
+  expect(gitCreateRefMock?.req.getHeader('authorization')).toStrictEqual(`token ${token}`);
 };
 
 interface FileArg {
@@ -93,7 +95,7 @@ const filesAreCommitted = ({
   );
 
   const gitCreateBlobMock = gitHubMock.restMocks.git.createBlob.mock.instances[0] as Nock.ReplyFnContext | undefined;
-  expect(gitCreateBlobMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
+  expect(gitCreateBlobMock?.req.getHeader('authorization')).toStrictEqual(`token ${token}`);
 
   expect(gitHubMock.restMocks.git.getRef).toBeCalledWith(
     expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)),
@@ -143,7 +145,7 @@ const filesAreCommitted = ({
   const gitCreateCommitMock = gitHubMock.restMocks.git.createCommit.mock.instances[0] as
     | Nock.ReplyFnContext
     | undefined;
-  expect(gitCreateCommitMock?.req.getHeader('authorization')).toStrictEqual([`token ${commitToken}`]);
+  expect(gitCreateCommitMock?.req.getHeader('authorization')).toStrictEqual(`token ${commitToken}`);
 
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.updateRef, [
     [
@@ -156,7 +158,7 @@ const filesAreCommitted = ({
   ]);
 
   const gitUpdateRefMock = gitHubMock.restMocks.git.updateRef.mock.instances[0] as Nock.ReplyFnContext | undefined;
-  expect(gitUpdateRefMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
+  expect(gitUpdateRefMock?.req.getHeader('authorization')).toStrictEqual(`token ${token}`);
 
   if (process.env['GITHUB_OUTPUT']) {
     const delimiterPrefix = 'ghadelimiter_';
@@ -236,7 +238,7 @@ const pullRequestIsCreated = ({
   ]);
 
   const pullsCreateMock = gitHubMock.restMocks.pulls.create.mock.instances[0] as Nock.ReplyFnContext | undefined;
-  expect(pullsCreateMock?.req.getHeader('authorization')).toStrictEqual([`token ${token}`]);
+  expect(pullsCreateMock?.req.getHeader('authorization')).toStrictEqual(`token ${token}`);
 
   if (full) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.pulls.requestReviewers, [

@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import { JsUtils } from '../js-utils';
 
 describe('JsUtils', () => {

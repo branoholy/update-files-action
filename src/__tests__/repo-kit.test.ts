@@ -1,11 +1,12 @@
 import { Octokit } from '@octokit/rest';
 import { readFileSync } from 'fs';
+import { beforeEach, describe, expect, it, MockedFunction, MockInstance, SpyInstance, vi } from 'vitest';
+
+import { Awaited, ExtractCallable, TestUtils } from ':/utils';
 
 import { RepoKit } from '../repo-kit';
-import { TestUtils } from '../utils/test-utils';
-import { Awaited, ExtractCallable } from '../utils/type-utils';
 
-jest.mock('fs');
+vi.mock('fs');
 const readFileSyncMock = TestUtils.asMockedFunction(readFileSync);
 
 type MockedOctokit = {
@@ -19,23 +20,23 @@ type MockedOctokit = {
         | 'createTree'
         | 'getCommit'
         | 'createCommit'
-        | 'updateRef']: jest.MockedFunction<ExtractCallable<Octokit['git'][fn]>>;
+        | 'updateRef']: MockedFunction<ExtractCallable<Octokit['git'][fn]>>;
     };
     issues: {
-      [fn in 'update']: jest.MockedFunction<ExtractCallable<Octokit['issues'][fn]>>;
+      [fn in 'update']: MockedFunction<ExtractCallable<Octokit['issues'][fn]>>;
     };
     pulls: {
-      [fn in 'create' | 'requestReviewers']: jest.MockedFunction<ExtractCallable<Octokit['pulls'][fn]>>;
+      [fn in 'create' | 'requestReviewers']: MockedFunction<ExtractCallable<Octokit['pulls'][fn]>>;
     };
     repos: {
-      [fn in 'get' | 'getBranch']: jest.MockedFunction<ExtractCallable<Octokit['repos'][fn]>>;
+      [fn in 'get' | 'getBranch']: MockedFunction<ExtractCallable<Octokit['repos'][fn]>>;
     };
   };
 };
 
-type OctokitMockType = jest.MockInstance<MockedOctokit, ConstructorParameters<typeof Octokit>> & typeof Octokit;
+type OctokitMockType = MockInstance<ConstructorParameters<typeof Octokit>, MockedOctokit> & typeof Octokit;
 
-jest.mock('@octokit/rest');
+vi.mock('@octokit/rest');
 const OctokitMock = Octokit as OctokitMockType;
 
 describe('RepoKit', () => {
@@ -79,25 +80,25 @@ describe('RepoKit', () => {
   const octokitMock: MockedOctokit = {
     rest: {
       git: {
-        createRef: jest.fn(),
-        deleteRef: jest.fn(),
-        getRef: jest.fn(),
-        createBlob: jest.fn(),
-        createTree: jest.fn(),
-        getCommit: jest.fn(),
-        createCommit: jest.fn(),
-        updateRef: jest.fn()
+        createRef: vi.fn(),
+        deleteRef: vi.fn(),
+        getRef: vi.fn(),
+        createBlob: vi.fn(),
+        createTree: vi.fn(),
+        getCommit: vi.fn(),
+        createCommit: vi.fn(),
+        updateRef: vi.fn()
       },
       issues: {
-        update: jest.fn()
+        update: vi.fn()
       },
       pulls: {
-        create: jest.fn(),
-        requestReviewers: jest.fn()
+        create: vi.fn(),
+        requestReviewers: vi.fn()
       },
       repos: {
-        get: jest.fn(),
-        getBranch: jest.fn()
+        get: vi.fn(),
+        getBranch: vi.fn()
       }
     }
   };
@@ -105,7 +106,7 @@ describe('RepoKit', () => {
   let repoKit: RepoKit;
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 
     OctokitMock.mockImplementation(function (this: MockedOctokit) {
       this.rest = {
@@ -137,14 +138,14 @@ describe('RepoKit', () => {
     const name = 'branch';
 
     it('should return true if the input is an existing branch', async () => {
-      const getBranchMock = jest.spyOn(repoKit, 'getBranch').mockResolvedValue({ name, ...ref });
+      const getBranchMock = vi.spyOn(repoKit, 'getBranch').mockResolvedValue({ name, ...ref });
 
       expect(await repoKit.hasBranch(name)).toBe(true);
       expect(getBranchMock).toBeCalledWith(name);
     });
 
     it('should return false if the input is a non-existing branch (an Error is thrown)', async () => {
-      const getBranchMock = jest.spyOn(repoKit, 'getBranch').mockImplementation(() => {
+      const getBranchMock = vi.spyOn(repoKit, 'getBranch').mockImplementation(() => {
         throw new Error();
       });
 
@@ -263,7 +264,7 @@ describe('RepoKit', () => {
       }
     };
 
-    let getBranchMock: jest.SpyInstance<ReturnType<RepoKit['getBranch']>, Parameters<RepoKit['getBranch']>>;
+    let getBranchMock: SpyInstance<Parameters<RepoKit['getBranch']>, ReturnType<RepoKit['getBranch']>>;
 
     const expectCommitMethods = () => {
       expect(octokitMock.rest.git.createBlob).toBeCalledWith({
@@ -314,7 +315,7 @@ describe('RepoKit', () => {
         data: commit
       });
 
-      getBranchMock = jest.spyOn(repoKit, 'getBranch').mockResolvedValue({ name: branchName, ...ref });
+      getBranchMock = vi.spyOn(repoKit, 'getBranch').mockResolvedValue({ name: branchName, ...ref });
     });
 
     it('should call all necessary methods in the correct order', async () => {
@@ -510,7 +511,7 @@ describe('RepoKit', () => {
 
     it('should use the default branch when base is not defined', async () => {
       const defaultBranchName = 'default-branch-name';
-      const getDefaultBranchName = jest.spyOn(repoKit, 'getDefaultBranchName').mockResolvedValue(defaultBranchName);
+      const getDefaultBranchName = vi.spyOn(repoKit, 'getDefaultBranchName').mockResolvedValue(defaultBranchName);
 
       await repoKit.createPullRequest({ branchName, title });
 
