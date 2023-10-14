@@ -7,6 +7,6 @@ on:
 jobs:
   lint-pr-title:
     name: Cluenar
-    uses: cluenar/actions/.github/workflows/lint-pr-title.yaml@v1.0.3
+    uses: cluenar/actions/.github/workflows/lint-pr-title.yaml@v1.0.4
     with:
       command: npm run lint commit

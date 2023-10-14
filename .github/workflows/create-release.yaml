@@ -8,6 +8,6 @@ on:
 jobs:
   create-release:
     name: Cluenar
-    uses: cluenar/actions/.github/workflows/create-release.yaml@v1.0.3
+    uses: cluenar/actions/.github/workflows/create-release.yaml@v1.0.4
     secrets:
       token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
