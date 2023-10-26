@@ -5315,7 +5315,7 @@ function Fw(t) {
 }
 function MC() {
   const { [Oe]: t } = this;
-  t.readMore();
+  t && t.readMore();
 }
 function GC(t) {
   const { [vt]: e, [Oe]: A } = this;
@@ -6293,7 +6293,7 @@ function uh(t) {
       let a = 0;
       for (const o of A)
         i.set(o, a), a += o.byteLength;
-      r(i);
+      r(i.buffer);
     } else
       e === "blob" && (Yc || (Yc = require("buffer").Blob), r(new Yc(A, { type: s[KC] })));
     Wg(t);
@@ -6495,6 +6495,8 @@ class ay extends iy {
         { callback: o, body: E, contentType: C, statusCode: e, statusMessage: s, headers: g }
       );
     } else {
+      if (n === null)
+        return;
       if (E = this.runInAsyncScope(n, null, {
         statusCode: e,
         headers: g,
@@ -6511,11 +6513,11 @@ class ay extends iy {
   }
   onData(e) {
     const { res: A } = this;
-    return A.write(e);
+    return A ? A.write(e) : !0;
   }
   onComplete(e) {
     const { res: A } = this;
-    Ih(this), this.trailers = ct.parseHeaders(e), A.end();
+    Ih(this), A && (this.trailers = ct.parseHeaders(e), A.end());
   }
   onError(e) {
     const { res: A, callback: r, opaque: s, body: n } = this;
