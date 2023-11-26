@@ -1195,7 +1195,7 @@ function Qf(t) {
   const e = t.protocol === "https:";
   if (ZQ(t))
     return;
-  const A = (() => e ? process.env.https_proxy || process.env.HTTPS_PROXY : process.env.http_proxy || process.env.HTTP_PROXY)();
+  const A = e ? process.env.https_proxy || process.env.HTTPS_PROXY : process.env.http_proxy || process.env.HTTP_PROXY;
   if (A)
     try {
       return new URL(A);
@@ -5214,7 +5214,7 @@ function Zp() {
     }), function(s) {
       s[s.SAFE = 0] = "SAFE", s[s.SAFE_WITH_CB = 1] = "SAFE_WITH_CB", s[s.UNSAFE = 2] = "UNSAFE";
     }(t.FINISH || (t.FINISH = {})), t.ALPHA = [];
-    for (let s = "A".charCodeAt(0); s <= "Z".charCodeAt(0); s++)
+    for (let s = 65; s <= 90; s++)
       t.ALPHA.push(String.fromCharCode(s)), t.ALPHA.push(String.fromCharCode(s + 32));
     t.NUM_MAP = {
       0: 0,
