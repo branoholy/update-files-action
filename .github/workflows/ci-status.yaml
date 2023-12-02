@@ -9,6 +9,6 @@ on:
 jobs:
   send-status:
     name: Cluenar
-    uses: cluenar/actions/.github/workflows/ci-status.yaml@v1.0.4
+    uses: cluenar/actions/.github/workflows/ci-status.yaml@v1.0.5
     secrets:
       token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
