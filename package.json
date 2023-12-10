@@ -45,7 +45,7 @@
     "glob": "10.3.10"
   },
   "devDependencies": {
-    "@cluenar/tools": "1.1.2",
+    "@cluenar/tools": "1.1.4",
     "@octokit/openapi-types": "19.0.2",
     "@stryker-mutator/core": "7.2.0",
     "@stryker-mutator/typescript-checker": "7.2.0",
