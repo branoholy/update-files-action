@@ -11,17 +11,17 @@ jobs:
 
     steps:
       - name: Assign author
-        uses: cluenar/actions/assign-pr-author@v1.0.4
+        uses: cluenar/actions/assign-pr-author@v1.0.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add labels
-        uses: cluenar/actions/add-pr-labels@v1.0.4
+        uses: cluenar/actions/add-pr-labels@v1.0.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Approve or request review
-        uses: cluenar/actions/review-pr@v1.0.4
+        uses: cluenar/actions/review-pr@v1.0.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           trusted-user: branoholy
@@ -50,12 +50,12 @@ jobs:
 
       - name: Update title
         id: update-title
-        uses: cluenar/actions/update-pr-title@v1.0.4
+        uses: cluenar/actions/update-pr-title@v1.0.6
         with:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
 
       - name: Auto-merge
-        uses: cluenar/actions/auto-merge-pr@v1.0.4
+        uses: cluenar/actions/auto-merge-pr@v1.0.6
         with:
           token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
           title: ${{ steps.update-title.outputs.title }}

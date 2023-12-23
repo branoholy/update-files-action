@@ -8,6 +8,6 @@ on:
 jobs:
   update-lock-file:
     name: Cluenar
-    uses: cluenar/actions/.github/workflows/update-lock-file.yaml@v1.0.4
+    uses: cluenar/actions/.github/workflows/update-lock-file.yaml@v1.0.6
     secrets:
       token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
