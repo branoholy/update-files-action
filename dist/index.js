@@ -18407,7 +18407,7 @@ var Sk = function(e) {
   return e = e.replace(/^(token|bearer) +/i, ""), Object.assign(Dk.bind(null, e), {
     hook: kk.bind(null, e)
   });
-}, OI = "5.0.2", tQ = () => {
+}, OI = "5.1.0", tQ = () => {
 }, Fk = console.warn.bind(console), Nk = console.error.bind(console), rQ = `octokit-core.js/${OI} ${Ma()}`, un, Uk = (un = class {
   static defaults(e) {
     return class extends this {
