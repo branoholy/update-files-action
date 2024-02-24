@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check CI suitability
-        uses: cluenar/actions/check-ci-suitability@v1.0.4
+        uses: cluenar/actions/check-ci-suitability@v1.0.7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -20,7 +20,7 @@ jobs:
     needs: check-suitability
     steps:
       - name: Install
-        uses: cluenar/actions/install@v1.0.4
+        uses: cluenar/actions/install@v1.0.7
 
   build:
     name: Build project
@@ -28,7 +28,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluenar/actions/install@v1.0.4
+        uses: cluenar/actions/install@v1.0.7
       - name: Build project
         run: npm run build
         env:
@@ -40,7 +40,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluenar/actions/install@v1.0.4
+        uses: cluenar/actions/install@v1.0.7
       - name: E2E tests
         run: npm run test:e2e:coverage
         env:
@@ -56,7 +56,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluenar/actions/install@v1.0.4
+        uses: cluenar/actions/install@v1.0.7
       - name: Unit tests
         run: npm run test:unit:coverage
         env:
@@ -72,7 +72,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluenar/actions/install@v1.0.4
+        uses: cluenar/actions/install@v1.0.7
       - name: Check types
         run: npm run type-check
         env:
@@ -84,7 +84,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluenar/actions/install@v1.0.4
+        uses: cluenar/actions/install@v1.0.7
       - name: Lint files
         run: npm run lint all
         env:
