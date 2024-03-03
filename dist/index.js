@@ -2021,7 +2021,7 @@ function SC() {
     if (!this._hparser && !this._bparser)
       return h();
     if (this._headerFirst && this._isPreamble) {
-      this._part || (this._part = new r(this._partOpts), this._events.preamble ? this.emit("preamble", this._part) : this._ignore());
+      this._part || (this._part = new r(this._partOpts), this.listenerCount("preamble") !== 0 ? this.emit("preamble", this._part) : this._ignore());
       const u = this._hparser.push(c);
       if (!this._inHeader && u !== void 0 && u < c.length)
         c = c.slice(u);
@@ -2051,12 +2051,12 @@ function SC() {
           this._dashes && (B = i), this._dashes = 0;
           break;
         }
-      if (this._dashes === 2 && (h + I < u && this._events.trailer && this.emit("trailer", E.slice(h + I, u)), this.reset(), this._finished = !0, Q._parts === 0 && (Q._realFinish = !0, Q.emit("finish"), Q._realFinish = !1)), this._dashes)
+      if (this._dashes === 2 && (h + I < u && this.listenerCount("trailer") !== 0 && this.emit("trailer", E.slice(h + I, u)), this.reset(), this._finished = !0, Q._parts === 0 && (Q._realFinish = !0, Q.emit("finish"), Q._realFinish = !1)), this._dashes)
         return;
     }
     this._justMatched && (this._justMatched = !1), this._part || (this._part = new r(this._partOpts), this._part._read = function(d) {
       Q._unpause();
-    }, this._isPreamble && this._events.preamble ? this.emit("preamble", this._part) : this._isPreamble !== !0 && this._events.part ? this.emit("part", this._part) : this._ignore(), this._isPreamble || (this._inHeader = !0)), E && h < u && !this._ignoreData && (this._isPreamble || !this._inHeader ? (B && (C = this._part.push(B)), C = this._part.push(E.slice(h, u)), C || (this._pause = !0)) : !this._isPreamble && this._inHeader && (B && this._hparser.push(B), f = this._hparser.push(E.slice(h, u)), !this._inHeader && f !== void 0 && f < u && this._oninfo(!1, E, h + f, u))), c && (this._hparser.reset(), this._isPreamble ? this._isPreamble = !1 : h !== u && (++this._parts, this._part.on("end", function() {
+    }, this._isPreamble && this.listenerCount("preamble") !== 0 ? this.emit("preamble", this._part) : this._isPreamble !== !0 && this.listenerCount("part") !== 0 ? this.emit("part", this._part) : this._ignore(), this._isPreamble || (this._inHeader = !0)), E && h < u && !this._ignoreData && (this._isPreamble || !this._inHeader ? (B && (C = this._part.push(B)), C = this._part.push(E.slice(h, u)), C || (this._pause = !0)) : !this._isPreamble && this._inHeader && (B && this._hparser.push(B), f = this._hparser.push(E.slice(h, u)), !this._inHeader && f !== void 0 && f < u && this._oninfo(!1, E, h + f, u))), c && (this._hparser.reset(), this._isPreamble ? this._isPreamble = !1 : h !== u && (++this._parts, this._part.on("end", function() {
       --Q._parts === 0 && (Q._finished ? (Q._realFinish = !0, Q.emit("finish"), Q._realFinish = !1) : Q._unpause());
     })), this._part.push(null), this._part = void 0, this._ignoreData = !1, this._justMatched = !0, this._dashes = 0);
   }, g.prototype._unpause = function() {
@@ -2751,7 +2751,7 @@ function Rp() {
         if (m(O, Z, Pe)) {
           if (K === Ee)
             return Q.hitFilesLimit || (Q.hitFilesLimit = !0, Q.emit("filesLimit")), u(P);
-          if (++K, !Q._events.file) {
+          if (++K, Q.listenerCount("file") === 0) {
             d.parser._ignore();
             return;
           }
@@ -18503,7 +18503,7 @@ var Sk = function(e) {
     for (let n = 0; n < s.plugins.length; ++n)
       Object.assign(this, s.plugins[n](this, e));
   }
-}, un.VERSION = _I, un.plugins = [], un), Tk = "4.0.0";
+}, un.VERSION = _I, un.plugins = [], un), Tk = "4.0.1";
 function HI(t) {
   t.hook.wrap("request", (e, A) => {
     t.log.debug("request", A);
@@ -18518,7 +18518,7 @@ function HI(t) {
   });
 }
 HI.VERSION = Tk;
-var Lk = "9.2.0";
+var Lk = "9.2.1";
 function vk(t) {
   if (!t.data)
     return {
@@ -18592,7 +18592,7 @@ function WI(t) {
   };
 }
 WI.VERSION = Lk;
-var Mk = "10.4.0", Gk = {
+var Mk = "10.4.1", Gk = {
   actions: {
     addCustomLabelsToSelfHostedRunnerForOrg: [
       "POST /orgs/{org}/actions/runners/{runner_id}/labels"
