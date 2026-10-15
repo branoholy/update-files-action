@@ -11,9 +11,9 @@ const requireEnv = <T>(specs: EnvSpecs<T>) =>
       if (missingEnvs.length > 0) {
         throw new Error(`Missing env(s): ${missingEnvs.join(', ')}`);
       }
-    }
+    },
   });
 
 export const EnvUtils = {
-  requireEnv
+  requireEnv,
 };

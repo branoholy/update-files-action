@@ -1,0 +1,20 @@
+gitChecks: false
+minimumReleaseAge: 4320 # 3 days
+optimisticRepeatInstall: false
+
+allowBuilds:
+  unrs-resolver: false
+
+minimumReleaseAgeExclude:
+  - '@cluerise/*'
+
+publicHoistPattern:
+  - '@commitlint/cli'
+  - eslint
+  - lint-staged
+  - prettier
+  - prettier-plugin-sh
+
+overrides:
+  prettier: 3.9.6
+  typescript: ^6

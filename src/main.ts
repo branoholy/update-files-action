@@ -1,8 +1,8 @@
+/* eslint-disable unicorn/no-process-exit */
 import * as envalid from 'envalid';
 
-import { ActionUtils, dp, EnvUtils } from ':/utils';
-
-import { app, BranchArgs, CommitArgs, PullRequestArgs } from './app';
+import { app, type BranchArgs, type CommitArgs, type PullRequestArgs } from './app.ts';
+import { ActionUtils, dp, EnvUtils } from './utils/index.ts';
 
 const commitArgFields = ['paths', 'message', 'token', 'amend'];
 
@@ -15,7 +15,7 @@ const pullRequestArgFields = [
   'reviewers',
   'team-reviewers',
   'milestone',
-  'draft'
+  'draft',
 ];
 
 const hasCommitArgs = () => commitArgFields.some((field) => ActionUtils.hasInput(`commit.${field}`));
@@ -29,7 +29,7 @@ const getBranchArgs = (): BranchArgs => {
   return {
     name,
     ...dp({ base }, null),
-    ...dp({ recreate }, null)
+    ...dp({ recreate }, null),
   };
 };
 
@@ -49,7 +49,7 @@ const getCommitArgs = (): CommitArgs | null => {
     paths,
     ...dp({ message }, null),
     ...dp({ token }, null),
-    ...dp({ amend }, null)
+    ...dp({ amend }, null),
   };
 };
 
@@ -79,14 +79,14 @@ const getPullRequestArgs = (): PullRequestArgs | null => {
     ...dp({ reviewers }, null),
     ...dp({ teamReviewers }, null),
     ...dp({ milestone }, null),
-    ...dp({ draft }, null)
+    ...dp({ draft }, null),
   };
 };
 
 export const main = async () => {
   try {
     const requiredEnv = EnvUtils.requireEnv({
-      GITHUB_REPOSITORY: envalid.str()
+      GITHUB_REPOSITORY: envalid.str(),
     });
 
     const token = ActionUtils.getInputAsString('token', { required: true });
@@ -99,7 +99,7 @@ export const main = async () => {
       token,
       branch,
       ...dp({ commit }, null),
-      ...dp({ pullRequest }, null)
+      ...dp({ pullRequest }, null),
     });
 
     process.exit(exitCode);

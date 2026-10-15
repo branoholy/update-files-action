@@ -11,20 +11,21 @@ This GitHub action commits changed files to a new or an existing branch and can 
 
 ### Basic usage
 
-This example updates `package-lock.json` by executing `npm i`.
+This example updates `pnpm-lock.yaml` by executing `pnpm install`.
 
 ```yaml
 steps:
   - name: Update the lock file
-    run: rm package-lock.json && npm i
+    run: rm pnpm-lock.yaml && pnpm install
   - name: Create a pull request with the updated file
     uses: branoholy/update-files-action
     with:
       token: ${{ secrets.GITHUB_TOKEN }}
       branch.name: update-lock-file
       branch.recreate: true
-      commit.paths: package-lock.json
+      commit.paths: pnpm-lock.yaml
       commit.message: Update lock file
+      pull-request: true
 ```
 
 ### Usage with all arguments
@@ -65,15 +66,19 @@ with:
 
 ### Example of workflow
 
-The following workflow runs this action to update `package-lock.json` when it was updated by something else. This happens when a new dependency is installed or updated (for example by a tool like Dependabot).
+The following workflow runs this action to update `pnpm-lock.yaml` when it was updated by something else. This happens when a new dependency is installed or updated (for example by a tool like Dependabot).
 
 ```yaml
 name: Update lock file
 
 on:
   push:
-    branches: develop
-    paths: package-lock.json
+    branches: [main]
+    paths: pnpm-lock.yaml
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   update-lock-file:
@@ -81,21 +86,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.1.0
+        uses: actions/checkout@v7.0.1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.1.0
       - name: Setup Node.js
-        uses: actions/setup-node@v1.4.0
+        uses: actions/setup-node@v7.1.0
         with:
-          node-version: 13.12.0
+          node-version-file: .nvmrc
       - name: Update the lock file
-        run: rm package-lock.json && npm i
+        run: rm pnpm-lock.yaml && pnpm install
       - name: Create a pull request with the updated file
         uses: branoholy/update-files-action
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch.name: update-lock-file
           branch.recreate: true
-          commit.paths: package-lock.json
+          commit.paths: pnpm-lock.yaml
           commit.message: Update lock file
+          pull-request: true
 ```
 
 ## Inputs

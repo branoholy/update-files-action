@@ -1,5 +1,6 @@
 name: Update Files Action
 description: A GitHub action for updating files.
+
 inputs:
   token:
     description: A token for committing the updated files and creating the pull request.
@@ -58,12 +59,15 @@ inputs:
   pull-request.draft:
     description: 'A flag to create a pull request draft or a regular pull request. Default: `false`.'
     required: false
+
 outputs:
   commit.sha:
     description: SHA of the new commit
+
 runs:
-  using: node20
+  using: node24
   main: dist/index.js
+
 branding:
   icon: refresh-cw
   color: red

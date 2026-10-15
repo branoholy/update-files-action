@@ -1,9 +1,8 @@
 import * as ActionsCore from '@actions/core';
 import { globSync } from 'glob';
 
-import { dp, FileUtils } from ':/utils';
-
-import { RepoKit } from './repo-kit';
+import { RepoKit } from './repo-kit.ts';
+import { dp, FileUtils } from './utils/index.ts';
 
 const branchRefPrefix = 'refs/heads/';
 
@@ -46,7 +45,7 @@ export interface BranchArgs {
 
 const createBranch = async (
   repoKit: RepoKit,
-  { name: branchName, base: baseBranchName, recreate = false }: BranchArgs
+  { name: branchName, base: baseBranchName, recreate = false }: BranchArgs,
 ) => {
   // Delete the branch
   if (await repoKit.hasBranch(branchName)) {
@@ -65,7 +64,7 @@ const createBranch = async (
 
   // Create the branch
   const {
-    object: { sha: baseBranchSha }
+    object: { sha: baseBranchSha },
   } = await repoKit.getBranch(baseBranchName ?? (await repoKit.getDefaultBranchName()));
 
   await repoKit.createBranch(branchName, baseBranchSha);
@@ -83,7 +82,7 @@ const commitFiles = async (repoKit: RepoKit, paths: string[], branchName: string
   const commit = await repoKit.commitFiles({
     ...commitArgs,
     paths,
-    branchName
+    branchName,
   });
 
   ActionsCore.setOutput('commit.sha', commit.sha);
@@ -106,7 +105,7 @@ const createPullRequest = async (repoKit: RepoKit, branchName: string, pullReque
   const pullRequest = await repoKit.createPullRequest({
     ...pullRequestArgs,
     ...dp({ baseBranchName: pullRequestArgs.base }),
-    branchName
+    branchName,
   });
 
   console.info(`Pull request has been created at ${pullRequest.html_url}`);
@@ -125,10 +124,10 @@ export const app = async ({
   token,
   branch: { name: branchName, ...restBranch },
   commit,
-  pullRequest
+  pullRequest,
 }: AppArgs) => {
   try {
-    const [owner, repositoryName] = repository.split('/');
+    const [owner, repositoryName] = repository.split('/', 2);
     if (!owner || !repositoryName) {
       throw new Error(`Repository "${repository}" does not have the valid format (owner/repositoryName)`);
     }
@@ -157,7 +156,7 @@ export const app = async ({
     if (pullRequest) {
       await createPullRequest(repoKit, branchName, {
         ...dp({ title: commit?.message }),
-        ...pullRequest
+        ...pullRequest,
       });
     }
   } catch (error) {

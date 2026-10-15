@@ -1,26 +1,40 @@
-import type { operations } from '@octokit/openapi-types';
-import { Mock, vi } from 'vitest';
+import type { RestEndpointMethodTypes } from '@octokit/rest';
+import { type Mock, vi } from 'vitest';
 
-import { OptionalChain } from ':/utils';
+interface GitHubRestOperations {
+  'git/create-blob': RestEndpointMethodTypes['git']['createBlob'];
+  'git/get-commit': RestEndpointMethodTypes['git']['getCommit'];
+  'git/create-commit': RestEndpointMethodTypes['git']['createCommit'];
+  'git/get-ref': RestEndpointMethodTypes['git']['getRef'];
+  'git/create-ref': RestEndpointMethodTypes['git']['createRef'];
+  'git/update-ref': RestEndpointMethodTypes['git']['updateRef'];
+  'git/delete-ref': RestEndpointMethodTypes['git']['deleteRef'];
+  'git/create-tree': RestEndpointMethodTypes['git']['createTree'];
+  'issues/update': RestEndpointMethodTypes['issues']['update'];
+  'pulls/create': RestEndpointMethodTypes['pulls']['create'];
+  'pulls/request-reviewers': RestEndpointMethodTypes['pulls']['requestReviewers'];
+  'repos/get': RestEndpointMethodTypes['repos']['get'];
+  'repos/get-branch': RestEndpointMethodTypes['repos']['getBranch'];
+}
 
-export type GitHubRestParameters<OperationT extends keyof operations> = OptionalChain<
-  operations[OperationT],
-  ['requestBody', 'content', 'application/json']
-> &
-  OptionalChain<operations[OperationT], ['parameters', 'path']>;
+export type GitHubRestParameters<OperationT extends keyof GitHubRestOperations> =
+  GitHubRestOperations[OperationT]['parameters'];
 
-export type GitHubRestResponseData<
-  OperationT extends keyof operations,
-  HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
-> = OptionalChain<operations[OperationT]['responses'][HttpCodeT], ['content', 'application/json']>;
+export type GitHubRestResponseData<OperationT extends keyof GitHubRestOperations> =
+  GitHubRestOperations[OperationT]['response']['data'];
 
-type GitHubRestMock<
-  OperationT extends keyof operations,
-  HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
-> = Mock<
-  GitHubRestParameters<OperationT> extends never ? [string, ''] : [string, GitHubRestParameters<OperationT>],
-  [HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?]
->;
+type GitHubRestBody<OperationT extends keyof GitHubRestOperations> = OperationT extends
+  'git/get-commit' | 'git/get-ref' | 'git/delete-ref' | 'repos/get' | 'repos/get-branch'
+  ? ''
+  : GitHubRestParameters<OperationT>;
+
+type GitHubRestHandler<OperationT extends keyof GitHubRestOperations> = (
+  this: { req: Request },
+  uri: string,
+  body: GitHubRestBody<OperationT>,
+) => [number, Partial<GitHubRestResponseData<OperationT>>?];
+
+type GitHubRestMock<OperationT extends keyof GitHubRestOperations> = Mock<GitHubRestHandler<OperationT>>;
 
 export type GitHubRestMocks = {
   readonly any: Mock;
@@ -46,11 +60,14 @@ export type GitHubRestMocks = {
   };
 };
 
-export const createGitHubRestMock = <
-  OperationT extends keyof operations,
-  HttpCodeT extends keyof operations[OperationT]['responses'] = keyof operations[OperationT]['responses']
->() =>
-  vi.fn<
-    GitHubRestParameters<OperationT> extends never ? [string, ''] : [string, GitHubRestParameters<OperationT>],
-    [HttpCodeT, GitHubRestResponseData<OperationT, HttpCodeT>?]
-  >();
+export const createGitHubRestMock = <OperationT extends keyof GitHubRestOperations>() =>
+  vi.fn<GitHubRestHandler<OperationT>>();
+
+export const createGitHubRestReply =
+  <OperationT extends keyof GitHubRestOperations>(mock: GitHubRestMock<OperationT>) =>
+  async (request: Request) => {
+    const rawBody = await request.text();
+    // eslint-disable-next-line no-restricted-globals -- Parse Nock's JSON request body for typed assertions.
+    const body: unknown = rawBody ? JSON.parse(rawBody) : '';
+    return mock.call({ req: request }, new URL(request.url).pathname, body as GitHubRestBody<OperationT>);
+  };

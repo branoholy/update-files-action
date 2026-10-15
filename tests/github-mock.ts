@@ -1,8 +1,13 @@
 import nock from 'nock';
 import { vi } from 'vitest';
 
-import { GitHubMockUtils } from './github-mock-utils';
-import { createGitHubRestMock, GitHubRestMocks, GitHubRestResponseData } from './github-rest-mocks';
+import { GitHubMockUtils } from './github-mock-utils.ts';
+import {
+  createGitHubRestMock,
+  createGitHubRestReply,
+  type GitHubRestMocks,
+  type GitHubRestResponseData,
+} from './github-rest-mocks.ts';
 
 interface Refs {
   // Key: The name of the fully qualified reference (ie: refs/heads/master).
@@ -41,23 +46,23 @@ export class GitHubMock {
       updateRef: createGitHubRestMock<'git/update-ref'>(),
       deleteRef: createGitHubRestMock<'git/delete-ref'>(),
 
-      createTree: createGitHubRestMock<'git/create-tree'>()
+      createTree: createGitHubRestMock<'git/create-tree'>(),
     },
     issues: {
-      update: createGitHubRestMock<'issues/update'>()
+      update: createGitHubRestMock<'issues/update'>(),
     },
     pulls: {
       create: createGitHubRestMock<'pulls/create'>(),
-      requestReviewers: createGitHubRestMock<'pulls/request-reviewers'>()
+      requestReviewers: createGitHubRestMock<'pulls/request-reviewers'>(),
     },
     repos: {
-      getBranch: createGitHubRestMock<'repos/get-branch'>()
-    }
+      getBranch: createGitHubRestMock<'repos/get-branch'>(),
+    },
   };
 
   public constructor(
     private repository: string,
-    public readonly defaultBranchName: string
+    public readonly defaultBranchName: string,
   ) {
     this.commit(defaultBranchName);
     this.mockAll();
@@ -73,7 +78,7 @@ export class GitHubMock {
   }
 
   public createBranch(name: string, sha = this.refs[GitHubMockUtils.createBranchRefName(this.defaultBranchName)]) {
-    if (!sha || !(sha in this.commits)) {
+    if (!sha || !Object.hasOwn(this.commits, sha)) {
       throw new Error('Commit SHA not found');
     }
 
@@ -90,7 +95,7 @@ export class GitHubMock {
     this.commits[commitSha] = {
       message: GitHubMockUtils.createCommitMessage(commitSha),
       sha: commitSha,
-      parents
+      parents,
     };
 
     this.refs[refName] = commitSha;
@@ -131,8 +136,7 @@ export class GitHubMock {
       .post(`/repos/${this.repository}/git/blobs`)
       .optionally()
       .times(Infinity)
-      // @ts-expect-error
-      .reply(this.restMocks.git.createBlob);
+      .reply(createGitHubRestReply(this.restMocks.git.createBlob));
   }
 
   private mockGitGetCommit() {
@@ -147,15 +151,14 @@ export class GitHubMock {
         return [404];
       }
 
-      return [200, commit as GitHubRestResponseData<'git/get-commit', 200>];
+      return [200, commit];
     });
 
     this.api
       .get((uri: string) => uri.startsWith(`/repos/${this.repository}/git/commits/`))
       .optionally()
       .times(Infinity)
-      // @ts-expect-error
-      .reply(this.restMocks.git.getCommit);
+      .reply(createGitHubRestReply(this.restMocks.git.getCommit));
   }
 
   private mockGitCreateCommit() {
@@ -166,17 +169,17 @@ export class GitHubMock {
       this.commits[sha] = {
         sha,
         message,
-        parents
+        parents,
       };
 
       if (parentShas) {
-        parentShas.forEach((parentSha) => {
+        for (const parentSha of parentShas) {
           const refName = Object.keys(this.refs).find((refName) => this.refs[refName] === parentSha);
 
           if (refName) {
             this.refs[refName] = parentSha;
           }
-        });
+        }
       }
 
       return [
@@ -184,8 +187,8 @@ export class GitHubMock {
         {
           sha,
           message,
-          parents
-        } as GitHubRestResponseData<'git/create-commit', 201>
+          parents,
+        },
       ];
     });
 
@@ -193,8 +196,7 @@ export class GitHubMock {
       .post(`/repos/${this.repository}/git/commits`)
       .optionally()
       .times(Infinity)
-      // @ts-expect-error
-      .reply(this.restMocks.git.createCommit);
+      .reply(createGitHubRestReply(this.restMocks.git.createCommit));
   }
 
   private mockGitGetRef() {
@@ -215,8 +217,8 @@ export class GitHubMock {
           node_id: 'node_id',
           object: { sha: commitSha, type: 'type', url: 'url' },
           ref: refName, // TODO Is this correct?
-          url: 'url'
-        } as GitHubRestResponseData<'git/get-ref', 200>
+          url: 'url',
+        },
       ];
     });
 
@@ -224,8 +226,7 @@ export class GitHubMock {
       .get((uri) => uri.startsWith(`/repos/${this.repository}/git/ref/`))
       .optionally()
       .times(Infinity)
-      // @ts-expect-error
-      .reply(this.restMocks.git.getRef);
+      .reply(createGitHubRestReply(this.restMocks.git.getRef));
   }
 
   private mockGitCreateRef() {
@@ -235,10 +236,7 @@ export class GitHubMock {
       return [201];
     });
 
-    this.api
-      .post(`/repos/${this.repository}/git/refs`)
-      // @ts-expect-error
-      .reply(this.restMocks.git.createRef);
+    this.api.post(`/repos/${this.repository}/git/refs`).reply(createGitHubRestReply(this.restMocks.git.createRef));
   }
 
   private mockGitUpdateRef() {
@@ -248,7 +246,7 @@ export class GitHubMock {
         return [422];
       }
 
-      if (!(refName in this.refs)) {
+      if (!Object.hasOwn(this.refs, refName)) {
         return [422];
       }
 
@@ -260,8 +258,7 @@ export class GitHubMock {
       .patch((uri: string) => uri.startsWith(`/repos/${this.repository}/git/refs/`))
       .optionally()
       .times(Infinity)
-      // @ts-expect-error
-      .reply(this.restMocks.git.updateRef);
+      .reply(createGitHubRestReply(this.restMocks.git.updateRef));
   }
 
   private mockGitDeleteRef() {
@@ -271,7 +268,7 @@ export class GitHubMock {
         return [422];
       }
 
-      if (!(refName in this.refs)) {
+      if (!Object.hasOwn(this.refs, refName)) {
         return [422];
       }
 
@@ -283,8 +280,7 @@ export class GitHubMock {
       .delete((uri) => uri.startsWith(`/repos/${this.repository}/git/refs/`))
       .optionally()
       .times(Infinity)
-      // @ts-expect-error
-      .reply(this.restMocks.git.deleteRef);
+      .reply(createGitHubRestReply(this.restMocks.git.deleteRef));
   }
 
   private mockGitCreateTree() {
@@ -294,24 +290,25 @@ export class GitHubMock {
         sha: 'tree-sha',
         tree: [],
         url: 'url',
-        truncated: false
-      }
+        truncated: false,
+      },
     ]);
 
     this.api
       .post(`/repos/${this.repository}/git/trees`)
       .optionally()
       .times(Infinity)
-      // @ts-expect-error
-      .reply(this.restMocks.git.createTree);
+      .reply(createGitHubRestReply(this.restMocks.git.createTree));
   }
 
   private mockIssuesUpdate() {
+    this.restMocks.issues.update.mockReturnValue([200, {}]);
+
     this.api
       .patch((uri: string) => uri.startsWith(`/repos/${this.repository}/issues/`))
       .optionally()
       .times(Infinity)
-      .reply(200, this.restMocks.issues.update);
+      .reply(createGitHubRestReply(this.restMocks.issues.update));
   }
 
   private mockPullsCreate() {
@@ -319,34 +316,31 @@ export class GitHubMock {
       201,
       {
         number: 42,
-        html_url: 'html_url'
-      } as GitHubRestResponseData<'pulls/create', 201>
+        html_url: 'html_url',
+      },
     ]);
 
     this.api
       .post(`/repos/${this.repository}/pulls`)
       .optionally()
       .times(Infinity)
-      // @ts-expect-error
-      .reply(this.restMocks.pulls.create);
+      .reply(createGitHubRestReply(this.restMocks.pulls.create));
   }
 
   private mockPullsRequestReviewers() {
+    this.restMocks.pulls.requestReviewers.mockReturnValue([200, {}]);
+
     this.api
-      .post(new RegExp(`^/repos/${this.repository}/pulls/\\d+/requested_reviewers$`))
+      .post(new RegExp(String.raw`^/repos/${this.repository}/pulls/\d+/requested_reviewers$`))
       .optionally()
       .times(Infinity)
-      .reply(200, this.restMocks.pulls.requestReviewers);
+      .reply(createGitHubRestReply(this.restMocks.pulls.requestReviewers));
   }
 
   private mockReposGet() {
-    this.api
-      .get(`/repos/${this.repository}`)
-      .optionally()
-      .times(Infinity)
-      .reply(200, {
-        default_branch: this.defaultBranchName
-      } as GitHubRestResponseData<'repos/get', 200>);
+    this.api.get(`/repos/${this.repository}`).optionally().times(Infinity).reply(200, {
+      default_branch: this.defaultBranchName,
+    });
   }
 
   private mockReposGetBranch() {
@@ -370,8 +364,8 @@ export class GitHubMock {
       return [
         200,
         {
-          commit: { commit: { message: commit.message } }
-        } as GitHubRestResponseData<'repos/get-branch', 200>
+          commit: { commit: { message: commit.message } },
+        } as GitHubRestResponseData<'repos/get-branch'>,
       ];
     });
 
@@ -379,7 +373,6 @@ export class GitHubMock {
       .get((uri: string) => uri.startsWith(`/repos/${this.repository}/branches/`))
       .optionally()
       .times(Infinity)
-      // @ts-expect-error
-      .reply(this.restMocks.repos.getBranch);
+      .reply(createGitHubRestReply(this.restMocks.repos.getBranch));
   }
 }

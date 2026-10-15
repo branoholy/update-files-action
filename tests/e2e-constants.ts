@@ -1,5 +1,5 @@
-import OS from 'os';
-import Path from 'path';
+import OS from 'node:os';
+import Path from 'node:path';
 
 const testFilesDirectory = 'temp-e2e-test-files';
 const githubOutputFile = Path.join(testFilesDirectory, 'github-output.txt');
@@ -32,5 +32,5 @@ export const E2EConstants = {
   pullRequestMilestone: '42',
   pullRequestDraft: 'true',
 
-  defaultBranchName: 'default-branch'
+  defaultBranchName: 'default-branch',
 };

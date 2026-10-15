@@ -1,7 +1,7 @@
 import * as envalid from 'envalid';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { EnvUtils } from '../env-utils';
+import { EnvUtils } from '../env-utils.ts';
 
 const envKey = 'MY_CUSTOM_VALUE';
 const envValue = 'test-value';
@@ -23,7 +23,7 @@ describe('EnvUtils', () => {
 
     it('should throw an error when the requred env is missing', () => {
       expect(() => EnvUtils.requireEnv({ MISSING_ENV_1: envalid.str(), MISSING_ENV_2: envalid.str() })).toThrowError(
-        'Missing env(s): MISSING_ENV_1, MISSING_ENV_2'
+        'Missing env(s): MISSING_ENV_1, MISSING_ENV_2',
       );
     });
   });

@@ -1,6 +1,6 @@
 import * as ActionsCore from '@actions/core';
 
-import { StringUtils } from './string-utils';
+import { StringUtils } from './string-utils.ts';
 
 export interface RequiredInputOptions extends ActionsCore.InputOptions {
   readonly required: true;
@@ -15,7 +15,7 @@ export type InputOptions = RequiredInputOptions | NonRequiredInputOptions;
 const getInput = (name: string, options?: InputOptions) => {
   const input = ActionsCore.getInput(name, options);
 
-  if (!options?.required && input === '') {
+  if (input === '' && !options?.required) {
     return null;
   }
 
@@ -48,7 +48,7 @@ function getInputAsInteger(name: string, options?: InputOptions): number | null 
   const input = getInput(name, options);
 
   if (typeof input === 'string') {
-    return parseInt(input, 10);
+    return Number(input);
   }
 
   return null;
@@ -78,5 +78,5 @@ export const ActionUtils = {
   getInputAsString,
   getInputAsStrings,
 
-  hasInput
+  hasInput,
 };

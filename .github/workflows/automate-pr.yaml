@@ -1,4 +1,4 @@
-name: Automate PR
+name: 🤖 Automate PR
 
 on:
   pull_request_target:
@@ -10,53 +10,57 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Get bot token
+        id: get-bot-token
+        uses: cluerise/actions/get-github-app-token@v7.5.1
+        with:
+          app-id: ${{ vars.BRANOHOLY_BOT_APP_ID }}
+          app-private-key: ${{ secrets.BRANOHOLY_BOT_APP_PRIVATE_KEY }}
+
       - name: Assign author
-        uses: cluenar/actions/assign-pr-author@v1.0.4
+        uses: cluerise/actions/assign-pr-author@v7.5.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add labels
-        uses: cluenar/actions/add-pr-labels@v1.0.4
+        uses: cluerise/actions/add-pr-labels@v7.5.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Approve or request review
-        uses: cluenar/actions/review-pr@v1.0.4
+        uses: cluerise/actions/review-pr@v7.5.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           trusted-user: branoholy
-          trusted-bot: branoholy-bot
+          trusted-bot: branoholy-bot[bot]
           reviewer: branoholy
           dependency-approved: >-
             ${{
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-actions-core-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-btoa-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-cluenar-tools-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-envalid-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-glob-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-nock-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-node-fetch-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-openapi-types-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-octokit-rest-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-types-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-typescript-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-vite-') ||
-              startsWith(github.head_ref, 'dependabot-npm_and_yarn-vitest-') ||
-              startsWith(github.head_ref, 'dependabot-github_actions-actions-cache-') ||
-              startsWith(github.head_ref, 'dependabot-github_actions-actions-checkout-') ||
-              startsWith(github.head_ref, 'dependabot-github_actions-actions-setup-node-') ||
-              startsWith(github.head_ref, 'dependabot-github_actions-octokit-request-action-')
+              (
+                github.head_ref == 'deps-update-lock-file' ||
+                github.head_ref == 'deps-update-node' ||
+                github.head_ref == 'deps-update-package-manager' ||
+
+                github.head_ref == 'deps-dev-cluerise' ||
+                github.head_ref == 'deps-dev-vite' ||
+
+                github.head_ref == 'deps-dev-@cluerise/tools' ||
+                startsWith(github.head_ref, 'deps-dev-@types/') ||
+                github.head_ref == 'deps-dev-typescript' ||
+
+                startsWith(github.head_ref, 'dependabot-github_actions-cluerise-actions-')
+              )
             }}
 
       - name: Update title
         id: update-title
-        uses: cluenar/actions/update-pr-title@v1.0.4
+        uses: cluerise/actions/update-pr-title@v7.5.1
         with:
-          token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
+          token: ${{ steps.get-bot-token.outputs.token }}
 
       - name: Auto-merge
-        uses: cluenar/actions/auto-merge-pr@v1.0.4
+        uses: cluerise/actions/auto-merge-pr@v7.5.1
         with:
-          token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
+          token: ${{ steps.get-bot-token.outputs.token }}
           title: ${{ steps.update-title.outputs.title }}
-          trusted-bot: branoholy-bot
+          trusted-bot: branoholy-bot[bot]

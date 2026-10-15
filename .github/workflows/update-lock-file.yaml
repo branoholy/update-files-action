@@ -1,13 +1,15 @@
-name: Update lock file
+name: 🔒 Update lock file
 
 on:
   schedule:
-    - cron: '0 14 * * 0'
+    - cron: '0 15 * * 3' # Every Wednesday at 15:00 UTC
   workflow_dispatch:
 
 jobs:
   update-lock-file:
-    name: Cluenar
-    uses: cluenar/actions/.github/workflows/update-lock-file.yaml@v1.0.4
+    name: Cluerise
+    uses: cluerise/actions/.github/workflows/update-lock-file.yaml@v7.5.1
+    with:
+      app-id: ${{ vars.BRANOHOLY_BOT_APP_ID }}
     secrets:
-      token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
+      app-private-key: ${{ secrets.BRANOHOLY_BOT_APP_PRIVATE_KEY }}
