@@ -9,7 +9,8 @@ jobs:
     name: Cluerise
     if: |
       github.event.issue.pull_request != null &&
-      github.event.comment.body == '/rebase'
+      github.event.comment.body == '/rebase' &&
+      github.event.comment.user.login == 'branoholy'
 
     uses: cluerise/actions/.github/workflows/rebase-pr.yaml@v7.5.1
     with:
