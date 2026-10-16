@@ -21,7 +21,7 @@ jobs:
     name: Cluerise
     uses: cluerise/actions/.github/workflows/update-packages.yaml@v7.5.1
     with:
-      app-id: ${{ vars.BRANOHOLY_BOT_APP_ID }}
+      app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
       update-strategy: ${{ inputs.update-strategy || 'Single PR' }}
       max-pull-requests: ${{ fromJSON(inputs.max-pull-requests || '3') }}
       package-groups: |
@@ -36,4 +36,4 @@ jobs:
           "typescript"
         ]
     secrets:
-      app-private-key: ${{ secrets.BRANOHOLY_BOT_APP_PRIVATE_KEY }}
+      app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}
