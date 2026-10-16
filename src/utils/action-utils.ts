@@ -48,7 +48,7 @@ function getInputAsInteger(name: string, options?: InputOptions): number | null 
   const input = getInput(name, options);
 
   if (typeof input === 'string') {
-    return Number(input);
+    return Math.trunc(Number(input));
   }
 
   return null;
