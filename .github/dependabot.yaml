@@ -1,27 +1,14 @@
 version: 2
 updates:
-  - package-ecosystem: npm
-    directory: /
-    schedule:
-      interval: weekly
-      day: saturday
-      time: '11:00'
-    pull-request-branch-name:
-      separator: '-'
-    open-pull-requests-limit: 10
-    versioning-strategy: increase
-    commit-message:
-      prefix: deps(prod)
-      prefix-development: deps(dev)
-    labels:
-      - 'type: deps'
-
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: saturday
       time: '11:30'
+    cooldown:
+      exclude:
+        - cluerise/actions
     pull-request-branch-name:
       separator: '-'
     open-pull-requests-limit: 10

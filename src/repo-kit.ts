@@ -1,8 +1,9 @@
+import { readFileSync } from 'node:fs';
+
 import { Octokit } from '@octokit/rest';
 import btoa from 'btoa';
-import { readFileSync } from 'fs';
 
-import { dp } from ':/utils';
+import { dp } from './utils/index.ts';
 
 interface CreateCommitArgs {
   readonly branchSha: string;
@@ -39,7 +40,7 @@ export class RepoKit {
   constructor(
     private owner: string,
     private repositoryName: string,
-    token: string
+    token: string,
   ) {
     this.octokit = new Octokit({ auth: token });
   }
@@ -47,7 +48,7 @@ export class RepoKit {
   getRepositoryInfo() {
     return {
       owner: this.owner,
-      repo: this.repositoryName
+      repo: this.repositoryName,
     };
   }
 
@@ -56,7 +57,7 @@ export class RepoKit {
       await this.getBranch(name);
 
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -64,12 +65,12 @@ export class RepoKit {
   async getBranch(name: string) {
     const { data } = await this.octokit.rest.git.getRef({
       ...this.getRepositoryInfo(),
-      ref: `heads/${name}`
+      ref: `heads/${name}`,
     });
 
     return {
       ...data,
-      name
+      name,
     };
   }
 
@@ -77,7 +78,7 @@ export class RepoKit {
     const { data } = await this.octokit.rest.git.createRef({
       ...this.getRepositoryInfo(),
       ref: `refs/heads/${name}`,
-      sha
+      sha,
     });
 
     return data;
@@ -86,17 +87,12 @@ export class RepoKit {
   deleteBranch(name: string) {
     return this.octokit.rest.git.deleteRef({
       ...this.getRepositoryInfo(),
-      ref: `heads/${name}`
+      ref: `heads/${name}`,
     });
   }
 
   async getDefaultBranchName() {
     const response = await this.octokit.rest.repos.get(this.getRepositoryInfo());
-
-    if (response.status !== 200) {
-      throw new Error(`Fetch for the default branch failed with the status code ${response.status}`);
-    }
-
     return response.data.default_branch;
   }
 
@@ -109,11 +105,11 @@ export class RepoKit {
 
     for (const path of paths) {
       const {
-        data: { sha }
+        data: { sha },
       } = await this.octokit.rest.git.createBlob({
         ...this.getRepositoryInfo(),
         content: btoa(readFileSync(path)),
-        encoding
+        encoding,
       });
 
       blobs.push({ type, mode, path, sha });
@@ -128,46 +124,46 @@ export class RepoKit {
     if (amend) {
       const { data: commit } = await this.octokit.rest.git.getCommit({
         ...this.getRepositoryInfo(),
-        commit_sha: branchSha
+        commit_sha: branchSha,
       });
 
       const { data } = await commitOctokit.rest.git.createCommit({
         ...this.getRepositoryInfo(),
         parents: commit.parents.map(({ sha }) => sha),
         tree: treeSha,
-        message: message || commit.message
-      });
-
-      return data;
-    } else {
-      if (!message) {
-        throw new Error('Commit message is empty');
-      }
-
-      const { data } = await commitOctokit.rest.git.createCommit({
-        ...this.getRepositoryInfo(),
-        parents: [branchSha],
-        tree: treeSha,
-        message
+        message: message || commit.message,
       });
 
       return data;
     }
+
+    if (!message) {
+      throw new Error('Commit message is empty');
+    }
+
+    const { data } = await commitOctokit.rest.git.createCommit({
+      ...this.getRepositoryInfo(),
+      parents: [branchSha],
+      tree: treeSha,
+      message,
+    });
+
+    return data;
   }
 
   async commitFiles({ paths, branchName, amend = false, ...restCommitArgs }: CommitFilesArgs) {
     const treeBlobs = await this.createBlobs(paths);
 
     const {
-      object: { sha: branchSha }
+      object: { sha: branchSha },
     } = await this.getBranch(branchName);
 
     const {
-      data: { sha: treeSha }
+      data: { sha: treeSha },
     } = await this.octokit.rest.git.createTree({
       ...this.getRepositoryInfo(),
       tree: treeBlobs,
-      base_tree: branchSha
+      base_tree: branchSha,
     });
 
     const commit = await this.createCommit({ branchSha, treeSha, amend, ...restCommitArgs });
@@ -176,7 +172,7 @@ export class RepoKit {
       ...this.getRepositoryInfo(),
       ref: `heads/${branchName}`,
       sha: commit.sha,
-      force: amend
+      force: amend,
     });
 
     return commit;
@@ -184,10 +180,10 @@ export class RepoKit {
 
   private async getBranchCommitMessage(branchName: string) {
     const {
-      data: { commit }
+      data: { commit },
     } = await this.octokit.rest.repos.getBranch({
       ...this.getRepositoryInfo(),
-      branch: branchName
+      branch: branchName,
     });
 
     return commit.commit.message;
@@ -203,7 +199,7 @@ export class RepoKit {
     reviewers,
     teamReviewers,
     milestone,
-    draft
+    draft,
   }: CreatePullRequestArgs) {
     const { data } = await this.octokit.rest.pulls.create({
       ...this.getRepositoryInfo(),
@@ -211,7 +207,7 @@ export class RepoKit {
       head: branchName,
       title: title || (await this.getBranchCommitMessage(branchName)),
       ...dp({ body }),
-      ...dp({ draft })
+      ...dp({ draft }),
     });
 
     if (reviewers || teamReviewers) {
@@ -219,7 +215,7 @@ export class RepoKit {
         ...this.getRepositoryInfo(),
         pull_number: data.number,
         ...dp({ reviewers }),
-        ...dp({ team_reviewers: teamReviewers })
+        ...dp({ team_reviewers: teamReviewers }),
       });
     }
 
@@ -229,7 +225,7 @@ export class RepoKit {
         issue_number: data.number,
         ...dp({ labels }),
         ...dp({ assignees }),
-        ...dp({ milestone })
+        ...dp({ milestone }),
       });
     }
 

@@ -1,18 +1,17 @@
 import * as envalid from 'envalid';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ActionUtils, TestUtils } from ':/utils';
+import { app } from '../app.ts';
+import { main } from '../main.ts';
+import { ActionUtils, TestUtils } from '../utils/index.ts';
 
-import { app } from '../app';
-import { main } from '../main';
-
-const consoleErrorMock = vi.spyOn(console, 'error').mockReset();
-const processExitMock = vi.spyOn(process, 'exit').mockReset();
+const consoleErrorMock = vi.spyOn(console, 'error');
+const processExitMock = vi.spyOn(process, 'exit');
 
 vi.mock('envalid');
 const envalidMock = {
   cleanEnv: TestUtils.asMockedFunction(envalid.cleanEnv),
-  str: TestUtils.asMockedFunction(envalid.str)
+  str: TestUtils.asMockedFunction(envalid.str),
 };
 
 vi.mock('../app');
@@ -24,7 +23,7 @@ const ActionUtilsMock = {
   getInputAsInteger: TestUtils.asMockedFunction(ActionUtils.getInputAsInteger),
   getInputAsString: TestUtils.asMockedFunction(ActionUtils.getInputAsString),
   getInputAsStrings: TestUtils.asMockedFunction(ActionUtils.getInputAsStrings),
-  hasInput: TestUtils.asMockedFunction(ActionUtils.hasInput)
+  hasInput: TestUtils.asMockedFunction(ActionUtils.hasInput),
 };
 
 describe('main', () => {
@@ -32,14 +31,14 @@ describe('main', () => {
   const token = 'token';
 
   const branch = {
-    name: 'branch'
+    name: 'branch',
   };
 
   const commit = {
     paths: ['path1', 'path2'],
     message: 'commit-message',
     token: 'commit-token',
-    amend: true
+    amend: true,
   };
 
   const pullRequest = {
@@ -51,17 +50,15 @@ describe('main', () => {
     reviewers: ['reviewer1', 'reviewer2', 'reviewer3'],
     teamReviewers: ['teamReviewer1'],
     milestone: 42,
-    draft: true
+    draft: true,
   };
 
   const mockEnv = () => {
     envalidMock.str.mockReturnValue({
-      _parse: vi.fn()
+      _parse: vi.fn(),
     });
 
-    envalidMock.cleanEnv.mockReturnValue({ GITHUB_REPOSITORY: repository } as unknown as ReturnType<
-      typeof envalid.cleanEnv
-    >);
+    envalidMock.cleanEnv.mockReturnValue({ GITHUB_REPOSITORY: repository });
   };
 
   const expectEnv = () =>
@@ -69,12 +66,12 @@ describe('main', () => {
       [
         process.env,
         {
-          GITHUB_REPOSITORY: envalidMock.str()
+          GITHUB_REPOSITORY: envalidMock.str(),
         },
         {
-          reporter: expect.any(Function) as (opts: envalid.ReporterOptions<unknown>) => void
-        }
-      ]
+          reporter: expect.any(Function) as (options: envalid.ReporterOptions<unknown>) => void,
+        },
+      ],
     ]);
 
   const booleanInputNames = [
@@ -82,7 +79,7 @@ describe('main', () => {
     'commit',
     'commit.amend',
     'pull-request',
-    'pull-request.draft'
+    'pull-request.draft',
   ] as const;
   type BooleanInputName = (typeof booleanInputNames)[number];
 
@@ -97,7 +94,7 @@ describe('main', () => {
     'commit.token',
     'pull-request.title',
     'pull-request.body',
-    'pull-request.base'
+    'pull-request.base',
   ] as const;
   type StringInputName = (typeof stringInputNames)[number];
 
@@ -106,7 +103,7 @@ describe('main', () => {
     'pull-request.labels',
     'pull-request.assignees',
     'pull-request.reviewers',
-    'pull-request.team-reviewers'
+    'pull-request.team-reviewers',
   ] as const;
   type StringsInputName = (typeof stringsInputNames)[number];
 
@@ -203,11 +200,7 @@ describe('main', () => {
     });
 
     ActionUtilsMock.hasInput.mockImplementation((name) => {
-      if (isInput(name) && names.includes(name)) {
-        return true;
-      }
-
-      return false;
+      return isInput(name) && names.includes(name);
     });
   };
 
@@ -252,15 +245,15 @@ describe('main', () => {
     vi.resetAllMocks();
 
     // Mock console and process
-    consoleErrorMock.mockReset();
-    processExitMock.mockReset();
+    consoleErrorMock.mockImplementation(() => {});
+    processExitMock.mockImplementation(() => undefined as never);
   });
 
   it('should run app with required args and exit with 0', async () => {
     mockEnv();
     mockInputs({
       token,
-      'branch.name': branch.name
+      'branch.name': branch.name,
     });
 
     appMock.mockResolvedValue(0);
@@ -278,9 +271,9 @@ describe('main', () => {
         {
           repository,
           token,
-          branch
-        }
-      ]
+          branch,
+        },
+      ],
     ]);
   });
 
@@ -289,7 +282,7 @@ describe('main', () => {
     mockInputs({
       token,
       'branch.name': branch.name,
-      commit: true
+      commit: true,
     });
 
     appMock.mockResolvedValue(0);
@@ -311,7 +304,7 @@ describe('main', () => {
       token,
       'branch.name': branch.name,
       commit: false,
-      'commit.paths': commit.paths
+      'commit.paths': commit.paths,
     });
 
     appMock.mockResolvedValue(0);
@@ -329,9 +322,9 @@ describe('main', () => {
         {
           repository,
           token,
-          branch
-        }
-      ]
+          branch,
+        },
+      ],
     ]);
   });
 
@@ -340,7 +333,7 @@ describe('main', () => {
     mockInputs({
       token,
       'branch.name': branch.name,
-      'commit.paths': commit.paths
+      'commit.paths': commit.paths,
     });
 
     appMock.mockResolvedValue(0);
@@ -361,17 +354,17 @@ describe('main', () => {
           token,
           branch,
           commit: {
-            paths: commit.paths
-          }
-        }
-      ]
+            paths: commit.paths,
+          },
+        },
+      ],
     ]);
   });
 
   it.each([
     ['commit.message', commit.message],
     ['commit.token', commit.token],
-    ['commit.amend', commit.amend]
+    ['commit.amend', commit.amend],
   ])(
     'should print error and exit with 1 if %s arg is specified but commit.paths arg is missing',
     async (name, value) => {
@@ -379,7 +372,7 @@ describe('main', () => {
       mockInputs({
         token,
         'branch.name': branch.name,
-        [name]: value
+        [name]: value,
       });
 
       appMock.mockResolvedValue(0);
@@ -393,7 +386,7 @@ describe('main', () => {
       expectInputs(false);
 
       expect(appMock).not.toBeCalled();
-    }
+    },
   );
 
   it('should run app with empty pullRequest and exit with 0 if pull-request arg is true', async () => {
@@ -401,7 +394,7 @@ describe('main', () => {
     mockInputs({
       token,
       'branch.name': branch.name,
-      'pull-request': true
+      'pull-request': true,
     });
 
     appMock.mockResolvedValue(0);
@@ -421,9 +414,9 @@ describe('main', () => {
           repository,
           branch,
           token,
-          pullRequest: {}
-        }
-      ]
+          pullRequest: {},
+        },
+      ],
     ]);
   });
 
@@ -433,7 +426,7 @@ describe('main', () => {
       token,
       'branch.name': branch.name,
       'pull-request': false,
-      'pull-request.title': pullRequest.title
+      'pull-request.title': pullRequest.title,
     });
 
     appMock.mockResolvedValue(0);
@@ -451,9 +444,9 @@ describe('main', () => {
         {
           repository,
           token,
-          branch
-        }
-      ]
+          branch,
+        },
+      ],
     ]);
   });
 
@@ -466,13 +459,13 @@ describe('main', () => {
     ['pull-request.reviewers', 'reviewers', pullRequest.reviewers],
     ['pull-request.team-reviewers', 'teamReviewers', pullRequest.teamReviewers],
     ['pull-request.milestone', 'milestone', pullRequest.milestone],
-    ['pull-request.draft', 'draft', pullRequest.draft]
+    ['pull-request.draft', 'draft', pullRequest.draft],
   ])('should run app with %s arg and exit with 0', async (name, field, value) => {
     mockEnv();
     mockInputs({
       token,
       'branch.name': branch.name,
-      [name]: value
+      [name]: value,
     });
 
     appMock.mockResolvedValue(0);
@@ -493,10 +486,10 @@ describe('main', () => {
           token,
           branch,
           pullRequest: {
-            [field]: value
-          }
-        }
-      ]
+            [field]: value,
+          },
+        },
+      ],
     ]);
   });
 
@@ -525,7 +518,7 @@ describe('main', () => {
       'pull-request.reviewers': pullRequest.reviewers,
       'pull-request.team-reviewers': pullRequest.teamReviewers,
       'pull-request.milestone': pullRequest.milestone,
-      'pull-request.draft': pullRequest.draft
+      'pull-request.draft': pullRequest.draft,
     });
 
     appMock.mockResolvedValue(0);
@@ -548,12 +541,12 @@ describe('main', () => {
           branch: {
             ...branch,
             base: baseBranchName,
-            recreate: true
+            recreate: true,
           },
           commit,
-          pullRequest
-        }
-      ]
+          pullRequest,
+        },
+      ],
     ]);
   });
 
@@ -562,6 +555,7 @@ describe('main', () => {
 
     envalidMock.cleanEnv.mockImplementation(() => {
       console.error(errorMessage);
+      // eslint-disable-next-line unicorn/no-process-exit
       process.exit(1);
     });
 
@@ -583,7 +577,7 @@ describe('main', () => {
     mockEnv();
     mockInputs({
       token,
-      'branch.name': branch.name
+      'branch.name': branch.name,
     });
 
     appMock.mockImplementation(() => {
@@ -602,9 +596,9 @@ describe('main', () => {
         {
           repository,
           token,
-          branch
-        }
-      ]
+          branch,
+        },
+      ],
     ]);
   });
 
@@ -614,10 +608,11 @@ describe('main', () => {
     mockEnv();
     mockInputs({
       token,
-      'branch.name': branch.name
+      'branch.name': branch.name,
     });
 
     appMock.mockImplementation(() => {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw errorMessage;
     });
 
@@ -633,9 +628,9 @@ describe('main', () => {
         {
           repository,
           token,
-          branch
-        }
-      ]
+          branch,
+        },
+      ],
     ]);
   });
 });

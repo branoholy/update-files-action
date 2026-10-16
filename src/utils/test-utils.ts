@@ -1,6 +1,11 @@
-import { Constructable, expect, Mocked, MockedClass, MockedFunction, SpyInstance } from 'vitest';
+import { expect, type Mocked, type MockedClass, type MockedFunction, type MockInstance } from 'vitest';
 
-const asMockedFunction = <T extends (...args: never[]) => unknown>(fn: T) => fn as MockedFunction<T>;
+interface Constructable {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  new (...args: any[]): any;
+}
+
+const asMockedFunction = <T extends (...args: never[]) => unknown>(function_: T) => function_ as MockedFunction<T>;
 
 const asMockedClass = <T extends Constructable>(cls: T) =>
   cls as MockedClass<T> & {
@@ -9,17 +14,16 @@ const asMockedClass = <T extends Constructable>(cls: T) =>
     };
   };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const expectToBeCalled = <T extends (...args: any[]) => unknown>(
-  fn: MockedFunction<T> | SpyInstance<Parameters<T>, ReturnType<T>> | undefined,
-  params: Parameters<T>[]
+const expectToBeCalled = <T extends ((...args: never[]) => unknown) | Constructable>(
+  function_: MockInstance<T> | undefined,
+  params: MockInstance<T>['mock']['calls'],
 ) => {
-  params.forEach((param, index) => expect(fn).nthCalledWith(index + 1, ...param));
-  expect(fn).toBeCalledTimes(params.length);
+  for (const [index, param] of params.entries()) expect(function_).nthCalledWith(index + 1, ...param);
+  expect(function_).toHaveBeenCalledTimes(params.length);
 };
 
 export const TestUtils = {
   asMockedFunction,
   asMockedClass,
-  expectToBeCalled
+  expectToBeCalled,
 };

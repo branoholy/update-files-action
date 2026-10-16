@@ -1,4 +1,4 @@
-import OS from 'os';
+import OS from 'node:os';
 
 function parseList(listString: null): null;
 function parseList(listString: string): string[];
@@ -16,5 +16,5 @@ function parseList(listString: string | null): string[] | null {
 }
 
 export const StringUtils = {
-  parseList
+  parseList,
 };

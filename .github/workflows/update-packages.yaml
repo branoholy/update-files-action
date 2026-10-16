@@ -1,0 +1,39 @@
+name: 📦 Update packages
+
+on:
+  schedule:
+    - cron: '0 17 * * 5' # Every Friday at 17:00 UTC
+  workflow_dispatch:
+    inputs:
+      update-strategy:
+        type: choice
+        description: Update strategy
+        options:
+          - Single PR
+          - Multiple PRs
+        default: Single PR
+      max-pull-requests:
+        type: number
+        description: Max pull requests
+
+jobs:
+  update-packages:
+    name: Cluerise
+    uses: cluerise/actions/.github/workflows/update-packages.yaml@v7.5.1
+    with:
+      app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
+      update-strategy: ${{ inputs.update-strategy || 'Single PR' }}
+      max-pull-requests: ${{ fromJSON(inputs.max-pull-requests || '3') }}
+      package-groups: |
+        {
+          "vite": [
+            "vite",
+            "vitest"
+          ]
+        }
+      ignored-packages: |
+        [
+          "typescript"
+        ]
+    secrets:
+      app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}

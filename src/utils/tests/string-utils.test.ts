@@ -1,7 +1,8 @@
-import OS from 'os';
+import OS from 'node:os';
+
 import { describe, expect, it } from 'vitest';
 
-import { StringUtils } from '../string-utils';
+import { StringUtils } from '../string-utils.ts';
 
 describe('StringUtils', () => {
   describe('parseList', () => {

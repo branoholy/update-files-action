@@ -1,4 +1,4 @@
-name: Lint merge commit
+name: 🔍 Lint merge commit
 
 on:
   pull_request:
@@ -6,7 +6,5 @@ on:
 
 jobs:
   lint-merge-commit:
-    name: Cluenar
-    uses: cluenar/actions/.github/workflows/lint-merge-commit.yaml@v1.0.4
-    with:
-      command: npm run lint commit
+    name: Cluerise
+    uses: cluerise/actions/.github/workflows/lint-merge-commit.yaml@v7.5.1

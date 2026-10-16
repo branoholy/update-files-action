@@ -1,21 +1,19 @@
-import { builtinModules } from 'module';
+import { builtinModules } from 'node:module';
+
 import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
+    target: 'node24',
     lib: {
       entry: './src/index.ts',
       formats: ['es'],
-      fileName: 'index'
+      fileName: 'index',
     },
     outDir: './build',
-    rollupOptions: {
-      external: [...builtinModules, /^node:/]
-    }
+    rolldownOptions: {
+      platform: 'node',
+      external: [...builtinModules, /^node:/],
+    },
   },
-  resolve: {
-    alias: {
-      ':': '/src'
-    }
-  }
 });
