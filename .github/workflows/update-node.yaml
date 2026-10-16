@@ -2,7 +2,7 @@ name: 🟢 Update Node.js
 
 on:
   schedule:
-    - cron: '0 15 * * 1' # Every Monday at 15:00 UTC
+    - cron: '0 17 * * 1' # Every Monday at 17:00 UTC
   workflow_dispatch:
 
 jobs:

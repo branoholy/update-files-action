@@ -32,7 +32,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           trusted-user: branoholy
-          trusted-bot: branoholy-bot[bot]
+          trusted-bot: branoholy-public-bot[bot]
           reviewer: branoholy
           dependency-approved: >-
             ${{
@@ -63,4 +63,4 @@ jobs:
         with:
           token: ${{ steps.get-bot-token.outputs.token }}
           title: ${{ steps.update-title.outputs.title }}
-          trusted-bot: branoholy-bot[bot]
+          trusted-bot: branoholy-public-bot[bot]

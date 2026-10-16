@@ -2,7 +2,7 @@ name: 🔩 Update package manager
 
 on:
   schedule:
-    - cron: '0 15 * * 2' # Every Tuesday at 15:00 UTC
+    - cron: '0 17 * * 2' # Every Tuesday at 17:00 UTC
   workflow_dispatch:
 
 jobs:
