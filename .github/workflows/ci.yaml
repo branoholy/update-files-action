@@ -10,13 +10,16 @@ concurrency: ci-${{ github.sha }}
 env:
   CI: true
 
+permissions:
+  contents: read
+
 jobs:
   install:
     name: Install dependencies
     runs-on: ubuntu-latest
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.1
+        uses: cluerise/actions/install@v7.5.2
 
   build:
     name: Build project
@@ -24,7 +27,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.1
+        uses: cluerise/actions/install@v7.5.2
       - name: Build project
         run: pnpm run build
 
@@ -34,7 +37,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.1
+        uses: cluerise/actions/install@v7.5.2
       - name: Check types
         run: pnpm run tc
 
@@ -44,7 +47,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.1
+        uses: cluerise/actions/install@v7.5.2
       - name: Lint files
         run: NODE_OPTIONS=--max-old-space-size=8192 pnpm run lint all
 
@@ -54,7 +57,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.1
+        uses: cluerise/actions/install@v7.5.2
       - name: Test project
         run: pnpm run test:unit
 
@@ -64,6 +67,6 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.1
+        uses: cluerise/actions/install@v7.5.2
       - name: Test project
         run: pnpm run test:e2e

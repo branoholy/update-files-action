@@ -6,20 +6,25 @@ on:
   workflow_dispatch:
     inputs:
       update-strategy:
-        type: choice
         description: Update strategy
+        type: choice
+        default: Single PR
         options:
           - Single PR
           - Multiple PRs
-        default: Single PR
       max-pull-requests:
-        type: number
         description: Max pull requests
+        type: number
+        default: 3
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   update-packages:
     name: Cluerise
-    uses: cluerise/actions/.github/workflows/update-packages.yaml@v7.5.1
+    uses: cluerise/actions/.github/workflows/update-packages.yaml@v7.5.2
     with:
       app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
       update-strategy: ${{ inputs.update-strategy || 'Single PR' }}

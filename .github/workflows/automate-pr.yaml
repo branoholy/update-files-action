@@ -4,31 +4,34 @@ on:
   pull_request_target:
     types: [opened, edited, synchronize, reopened]
 
+permissions:
+  pull-requests: write
+
 jobs:
   automate-pr:
     name: Automate PR
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get bot token
-        id: get-bot-token
-        uses: cluerise/actions/get-github-app-token@v7.5.1
+      - name: Get app token
+        id: get-app-token
+        uses: cluerise/actions/get-github-app-token@v7.5.2
         with:
           app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
           app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}
 
       - name: Assign author
-        uses: cluerise/actions/assign-pr-author@v7.5.1
+        uses: cluerise/actions/assign-pr-author@v7.5.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add labels
-        uses: cluerise/actions/add-pr-labels@v7.5.1
+        uses: cluerise/actions/add-pr-labels@v7.5.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Approve or request review
-        uses: cluerise/actions/review-pr@v7.5.1
+        uses: cluerise/actions/review-pr@v7.5.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           trusted-user: branoholy
@@ -54,13 +57,13 @@ jobs:
 
       - name: Update title
         id: update-title
-        uses: cluerise/actions/update-pr-title@v7.5.1
+        uses: cluerise/actions/update-pr-title@v7.5.2
         with:
-          token: ${{ steps.get-bot-token.outputs.token }}
+          token: ${{ steps.get-app-token.outputs.token }}
 
       - name: Auto-merge
-        uses: cluerise/actions/auto-merge-pr@v7.5.1
+        uses: cluerise/actions/auto-merge-pr@v7.5.2
         with:
-          token: ${{ steps.get-bot-token.outputs.token }}
+          token: ${{ steps.get-app-token.outputs.token }}
           title: ${{ steps.update-title.outputs.title }}
           trusted-bot: branoholy-public-bot[bot]

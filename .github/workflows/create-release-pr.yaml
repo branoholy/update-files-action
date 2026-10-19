@@ -5,13 +5,13 @@ on: workflow_dispatch
 concurrency: create-release-pr
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
   create-release-pr:
     name: Cluerise
-    uses: cluerise/actions/.github/workflows/create-release-pr.yaml@v7.5.1
+    uses: cluerise/actions/.github/workflows/create-release-pr.yaml@v7.5.2
     with:
       app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
     secrets:
@@ -20,18 +20,20 @@ jobs:
   update-dist:
     name: Update dist
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: create-release-pr
 
     steps:
-      - name: Get bot token
-        id: get-bot-token
-        uses: cluerise/actions/get-github-app-token@v7.5.1
+      - name: Get app token
+        id: get-app-token
+        uses: cluerise/actions/get-github-app-token@v7.5.2
         with:
           app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
           app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}
 
       - name: Install
-        uses: cluerise/actions/install@v7.5.1
+        uses: cluerise/actions/install@v7.5.2
         with:
           ref: release
 
@@ -41,8 +43,7 @@ jobs:
       - name: Commit dist
         uses: branoholy/update-files-action@main
         with:
-          token: ${{ steps.get-bot-token.outputs.token }}
+          token: ${{ steps.get-app-token.outputs.token }}
           branch.name: release
           commit.paths: dist/**
           commit.message: 'release: Update dist'
-          commit.token: ${{ steps.get-bot-token.outputs.token }}
