@@ -1,4 +1,9 @@
 {
-  "prettier.ignorePath": "node_modules/@cluenar/tools/dist/configs/.prettierignore",
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "js/ts.tsdk.path": "./node_modules/typescript/lib",
+  "js/ts.preferences.importModuleSpecifier": "relative",
+  "js/ts.preferences.importModuleSpecifierEnding": "js",
+  "js/ts.preferences.preferTypeOnlyAutoImports": true
 }

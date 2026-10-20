@@ -1,0 +1,24 @@
+name: 🔄 Rebase PR
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  rebase-pr:
+    name: Cluerise
+    if: |
+      github.event.issue.pull_request != null &&
+      github.event.comment.body == '/rebase' &&
+      github.event.comment.user.login == 'branoholy'
+
+    uses: cluerise/actions/.github/workflows/rebase-pr.yaml@v7.5.2
+    with:
+      app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
+      squash: true
+    secrets:
+      app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}

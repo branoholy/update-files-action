@@ -4,9 +4,9 @@ const createCommitMessage = (sha: string) => `message-${sha}`;
 
 const createCommitSha = (id: number) => `commit-${id}-sha`;
 
-const getCommitId = (sha: string) => parseInt(sha.split('-')[1] ?? '', 10);
+const getCommitId = (sha: string) => Number(sha.split('-', 2)[1]);
 
-const getLastPartFromPath = (path: string) => path.split('/').filter(Boolean).at(-1);
+const getLastPartFromPath = (path: string) => path.split('/').findLast(Boolean);
 
 const getRefNameFromPath = (path: string) => {
   const ref = getLastPartFromPath(path);
@@ -24,5 +24,5 @@ export const GitHubMockUtils = {
   createCommitSha,
   getCommitId,
   getLastPartFromPath,
-  getRefNameFromPath
+  getRefNameFromPath,
 };

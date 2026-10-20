@@ -1,21 +1,17 @@
-import ChildProcess from 'child_process';
-import FileSystem from 'fs';
+import ChildProcess from 'node:child_process';
+import FileSystem from 'node:fs';
+import OS from 'node:os';
+import Path from 'node:path';
+
 import Nock from 'nock';
-import nodeFetch from 'node-fetch';
-import OS from 'os';
-import Path from 'path';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { TestUtils } from ':/utils';
-
-// eslint-disable-next-line no-restricted-imports
-import { main } from '../src/main';
-import { E2EConstants } from './e2e-constants';
-import { E2EExpects } from './e2e-expects';
-import { E2EMocks } from './e2e-mocks';
-import { GitHubMock } from './github-mock';
-
-const originalFetch = global.fetch;
+import { main } from '../src/main.ts';
+import { TestUtils } from '../src/utils/index.ts';
+import { E2EConstants } from './e2e-constants.ts';
+import { E2EExpects } from './e2e-expects.ts';
+import { E2EMocks } from './e2e-mocks.ts';
+import { GitHubMock } from './github-mock.ts';
 
 vi.mock('child_process', async () => {
   const originalModule = await vi.importActual<typeof ChildProcess>('child_process');
@@ -25,9 +21,9 @@ vi.mock('child_process', async () => {
     execSync: (...[command, options]: Parameters<(typeof ChildProcess)['execSync']>) => {
       return originalModule.execSync(command, {
         ...options,
-        env: process.env
+        env: process.env,
       });
-    }
+    },
   };
 });
 
@@ -35,39 +31,47 @@ describe('e2e tests', () => {
   let gitHubMock: GitHubMock;
   const token = E2EConstants.token;
   const branchName = E2EConstants.branchName;
+  const originalDirectory = process.cwd();
+  const originalEnv = { ...process.env };
+  let repositoryDirectory: string;
 
   beforeAll(() => {
-    // @ts-expect-error
-    global.fetch = nodeFetch;
-
     Nock.disableNetConnect();
 
-    FileSystem.mkdirSync(E2EConstants.testFilesDirectory);
+    repositoryDirectory = FileSystem.mkdtempSync(Path.join(OS.tmpdir(), 'update-files-action-e2e-'));
+    process.chdir(repositoryDirectory);
+    ChildProcess.execSync('git init --quiet');
+
     FileSystem.mkdirSync(E2EConstants.shellMocksDirectory);
-    process.env.PATH = `${E2EConstants.shellMocksDirectory}:${process.env.PATH}`;
-
-    FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path1'), 'content1');
-    FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path2'), 'content2');
-
-    ChildProcess.execSync(`git add ${E2EConstants.testFilesDirectory}`);
+    process.env.PATH = `${Path.resolve(E2EConstants.shellMocksDirectory)}:${process.env.PATH}`;
   });
 
   afterAll(() => {
-    global.fetch = originalFetch;
-
     // Restore E2EMocks
     vi.restoreAllMocks();
 
-    // Fix a memory leak
+    Nock.cleanAll();
     Nock.restore();
+    Nock.enableNetConnect();
 
-    ChildProcess.execSync(`git reset HEAD ${E2EConstants.testFilesDirectory}`);
-    FileSystem.rmSync(E2EConstants.testFilesDirectory, { recursive: true });
-    FileSystem.rmSync(E2EConstants.shellMocksDirectory, { recursive: true });
+    process.chdir(originalDirectory);
+    process.env = originalEnv;
+    FileSystem.rmSync(repositoryDirectory, { recursive: true, force: true });
   });
 
   beforeEach(() => {
-    ChildProcess.execSync(`git checkout ${E2EConstants.testFilesDirectory}`, { stdio: 'ignore' });
+    FileSystem.rmSync(E2EConstants.testFilesDirectory, { recursive: true, force: true });
+    FileSystem.mkdirSync(E2EConstants.testFilesDirectory);
+    FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path1'), 'content1');
+    FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path2'), 'content2');
+    ChildProcess.execSync('git read-tree --empty');
+    ChildProcess.execSync(`git add ${E2EConstants.testFilesDirectory}`);
+
+    for (const key of Object.keys(process.env)) {
+      if (key === 'GITHUB_OUTPUT' || key.startsWith('INPUT_')) {
+        delete process.env[key];
+      }
+    }
 
     vi.resetAllMocks();
     Nock.cleanAll();
@@ -84,16 +88,14 @@ describe('e2e tests', () => {
   afterEach(() => {
     delete process.env.GITHUB_REPOSITORY;
 
-    Object.keys(process.env).forEach((key) => {
-      if (key.startsWith('INPUT_') || key === 'GITHUB_OUTPUT') {
+    for (const key of Object.keys(process.env)) {
+      if (key === 'GITHUB_OUTPUT' || key.startsWith('INPUT_')) {
         delete process.env[key];
       }
-    });
+    }
 
-    FileSystem.rmSync(Path.join(E2EConstants.testFilesDirectory, 'path3'), { force: true });
-    FileSystem.rmSync(Path.join(E2EConstants.testFilesDirectory, 'path3-2'), { force: true });
-
-    ChildProcess.execSync(`rm -rf ${E2EConstants.shellMocksDirectory}/*`);
+    FileSystem.rmSync(E2EConstants.shellMocksDirectory, { recursive: true });
+    FileSystem.mkdirSync(E2EConstants.shellMocksDirectory);
   });
 
   test('flow #01: no file is changed => do not connect to GitHub', async () => {
@@ -136,7 +138,7 @@ describe('e2e tests', () => {
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" has been created`],
-      ['Changed files have been committed to commit-1-sha']
+      ['Changed files have been committed to commit-1-sha'],
     ]);
 
     // The branch is not deleted
@@ -175,7 +177,7 @@ describe('e2e tests', () => {
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" has been created`],
-      ['Changed files have been committed to commit-2-sha']
+      ['Changed files have been committed to commit-2-sha'],
     ]);
 
     // The branch is not deleted
@@ -185,7 +187,7 @@ describe('e2e tests', () => {
       gitHubMock,
       token,
       branchName,
-      baseBranchName
+      baseBranchName,
     });
     E2EExpects.filesAreCommitted({ gitHubMock, token, branchName });
   });
@@ -217,12 +219,12 @@ describe('e2e tests', () => {
       [`Deleting branch "${branchName}"...`],
       [`Branch "${branchName}" has been deleted`],
       [`Branch "${branchName}" has been created`],
-      ['Changed files have been committed to commit-1-sha']
+      ['Changed files have been committed to commit-1-sha'],
     ]);
 
     // The branch is deleted
     TestUtils.expectToBeCalled(gitHubMock.restMocks.git.deleteRef, [
-      [expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)), '']
+      [expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)), ''],
     ]);
 
     E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
@@ -253,7 +255,7 @@ describe('e2e tests', () => {
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" already exists`],
-      [`Changed files have been committed to commit-1-sha`]
+      [`Changed files have been committed to commit-1-sha`],
     ]);
 
     // The branch is not deleted
@@ -319,7 +321,7 @@ describe('e2e tests', () => {
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" already exists`],
-      [`Changed files have been committed to commit-1-sha`]
+      [`Changed files have been committed to commit-1-sha`],
     ]);
 
     // The branch is not deleted
@@ -360,7 +362,7 @@ describe('e2e tests', () => {
       [`File "${E2EConstants.testFilesDirectory}/path2" is changed`],
       [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" already exists`],
-      [`Changed files have been committed to commit-2-sha`]
+      [`Changed files have been committed to commit-2-sha`],
     ]);
 
     // The branch is not deleted
@@ -373,7 +375,7 @@ describe('e2e tests', () => {
       gitHubMock,
       token,
       branchName,
-      amend: true
+      amend: true,
     });
 
     // A pull request is not created
@@ -406,7 +408,7 @@ describe('e2e tests', () => {
       [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" already exists`],
       [`Changed files have been committed to commit-2-sha`],
-      [`Pull request has been created at html_url`]
+      [`Pull request has been created at html_url`],
     ]);
 
     // The branch is not deleted
@@ -420,7 +422,7 @@ describe('e2e tests', () => {
       token,
       branchName,
       amend: true,
-      withoutCommitMessage: true
+      withoutCommitMessage: true,
     });
 
     E2EExpects.pullRequestIsCreated({ gitHubMock, token, branchName, withoutCommitMessage: true });
@@ -484,7 +486,7 @@ describe('e2e tests', () => {
       [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" already exists`],
       [`Changed files have been committed to commit-1-sha`],
-      [`Pull request has been created at html_url`]
+      [`Pull request has been created at html_url`],
     ]);
 
     // The branch is not deleted
@@ -528,7 +530,7 @@ describe('e2e tests', () => {
       [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" has been created`],
       [`Changed files have been committed to commit-1-sha`],
-      [`Pull request has been created at html_url`]
+      [`Pull request has been created at html_url`],
     ]);
 
     // The branch is not deleted
@@ -539,13 +541,13 @@ describe('e2e tests', () => {
       gitHubMock,
       token,
       branchName,
-      commitToken: E2EConstants.commitToken
+      commitToken: E2EConstants.commitToken,
     });
     E2EExpects.pullRequestIsCreated({
       gitHubMock,
       token,
       branchName,
-      full: true
+      full: true,
     });
   });
 
@@ -566,7 +568,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
 
     expect(E2EMocks.consoleError).toBeCalledTimes(1);
-    expect(E2EMocks.consoleError.mock.calls[0]?.[0].toString()).toBe(error.toString());
+    expect(String(E2EMocks.consoleError.mock.calls[0]?.[0])).toBe(error.toString());
 
     // No request to GitHub is made
     expect(gitHubMock.restMocks.any).not.toBeCalled();
@@ -585,7 +587,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
 
     TestUtils.expectToBeCalled(E2EMocks.consoleError, [
-      [new Error('Repository "wrong" does not have the valid format (owner/repositoryName)')]
+      [new Error('Repository "wrong" does not have the valid format (owner/repositoryName)')],
     ]);
 
     // No request to GitHub is made
@@ -605,7 +607,7 @@ describe('e2e tests', () => {
     TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
 
     TestUtils.expectToBeCalled(E2EMocks.consoleError, [
-      [new Error('Commit message is missing, please specify the "commit.message" input')]
+      [new Error('Commit message is missing, please specify the "commit.message" input')],
     ]);
 
     // No request to GitHub is made
@@ -623,13 +625,12 @@ describe('e2e tests', () => {
     ChildProcess.execSync(E2EConstants.commands);
     // Additional files are created
     ChildProcess.execSync(
-      `echo cmd1 > ${E2EConstants.testFilesDirectory}/path1-2 && echo cmd2 > ${E2EConstants.testFilesDirectory}/path2-2 && echo cmd3 > ${E2EConstants.testFilesDirectory}/path3-2`
+      `echo cmd1 > ${E2EConstants.testFilesDirectory}/path1-2 && echo cmd2 > ${E2EConstants.testFilesDirectory}/path2-2 && echo cmd3 > ${E2EConstants.testFilesDirectory}/path3-2`,
     );
 
     // Commit the changes, use glob pattern
-    process.env[
-      'INPUT_COMMIT.PATHS'
-    ] = `${E2EConstants.testFilesDirectory}/path1*${OS.EOL} ${E2EConstants.testFilesDirectory}/path2*${OS.EOL} ${E2EConstants.testFilesDirectory}/path3*${OS.EOL}`;
+    process.env['INPUT_COMMIT.PATHS'] =
+      `${E2EConstants.testFilesDirectory}/path1*${OS.EOL} ${E2EConstants.testFilesDirectory}/path2*${OS.EOL} ${E2EConstants.testFilesDirectory}/path3*${OS.EOL}`;
     process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
 
     await main();
@@ -645,7 +646,7 @@ describe('e2e tests', () => {
       [`File "${E2EConstants.testFilesDirectory}/path3-2" is created`],
       [`File "${E2EConstants.testFilesDirectory}/path3" is created`],
       [`Branch "${branchName}" has been created`],
-      ['Changed files have been committed to commit-1-sha']
+      ['Changed files have been committed to commit-1-sha'],
     ]);
 
     // The branch is not deleted
@@ -659,29 +660,29 @@ describe('e2e tests', () => {
       files: [
         {
           path: `${E2EConstants.testFilesDirectory}/path1-2`,
-          content: 'Y21kMQo='
+          content: 'Y21kMQo=',
         },
         {
           path: `${E2EConstants.testFilesDirectory}/path1`,
-          content: 'Y21kMQo='
+          content: 'Y21kMQo=',
         },
         {
           path: `${E2EConstants.testFilesDirectory}/path2-2`,
-          content: 'Y21kMgo='
+          content: 'Y21kMgo=',
         },
         {
           path: `${E2EConstants.testFilesDirectory}/path2`,
-          content: 'Y21kMgo='
+          content: 'Y21kMgo=',
         },
         {
           path: `${E2EConstants.testFilesDirectory}/path3-2`,
-          content: 'Y21kMwo='
+          content: 'Y21kMwo=',
         },
         {
           path: `${E2EConstants.testFilesDirectory}/path3`,
-          content: 'Y21kMwo='
-        }
-      ]
+          content: 'Y21kMwo=',
+        },
+      ],
     });
   });
 

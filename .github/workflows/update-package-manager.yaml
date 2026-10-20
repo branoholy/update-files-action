@@ -1,0 +1,19 @@
+name: 🔩 Update package manager
+
+on:
+  schedule:
+    - cron: '0 17 * * 2' # Every Tuesday at 17:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-package-manager:
+    name: Cluerise
+    uses: cluerise/actions/.github/workflows/update-package-manager.yaml@v7.5.2
+    with:
+      app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
+    secrets:
+      app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}

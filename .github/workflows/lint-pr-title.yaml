@@ -1,12 +1,13 @@
-name: Lint PR title
+name: 🔎 Lint PR title
 
 on:
   pull_request:
     types: [opened, edited, synchronize]
 
+permissions:
+  contents: read
+
 jobs:
   lint-pr-title:
-    name: Cluenar
-    uses: cluenar/actions/.github/workflows/lint-pr-title.yaml@v1.0.4
-    with:
-      command: npm run lint commit
+    name: Cluerise
+    uses: cluerise/actions/.github/workflows/lint-pr-title.yaml@v7.5.2

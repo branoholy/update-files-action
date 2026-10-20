@@ -1,0 +1,91 @@
+# All hidden files and directories
+.*
+
+# Enable hidden files with extensions
+!.*.*
+
+# Enable all hidden directories
+!.*/
+
+# Build
+build/
+dist/
+packages/*/link/
+
+# Cloudflare
+.wrangler/
+worker-configuration.d.ts
+
+# Dependencies
+node_modules/
+
+# .dev.vars, .env, .envrc
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+.envrc
+.envrc.*
+
+# Fonts
+*.ttf
+*.woff2
+
+# Git
+.git/
+
+# Git hooks
+hooks/*
+!hooks/*.js
+!hooks/*.ts
+
+# Images
+*.avif
+*.ico
+*.png
+*.svg
+*.webp
+
+# I18n
+*.po
+packages/**/catalogs/*.ts
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Misc
+etc/
+.DS_Store
+
+# NPM, PNPM
+.npmrc.*
+
+# Patches
+*.patch
+
+# Stryker
+.stryker-tmp/
+
+# Swift
+*.swift
+
+# Tests coverage
+coverage/
+
+# Text
+*.txt
+
+# Xcode
+*.entitlements
+*.pbxproj
+*.plist
+*.resolved
+*.storekit
+*.swift
+*.xcscheme
+*.xcstrings
+
+# XML
+*.xml

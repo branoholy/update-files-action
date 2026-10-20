@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { JsUtils } from '../js-utils';
+import { JsUtils } from '../js-utils.ts';
 
 describe('JsUtils', () => {
   describe('definedProperty', () => {

@@ -1,10 +1,49 @@
-name: Create release PR
+name: 🚀 Create release PR
 
 on: workflow_dispatch
 
+concurrency: create-release-pr
+
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   create-release-pr:
-    name: Cluenar
-    uses: cluenar/actions/.github/workflows/create-release-pr.yaml@v1.0.4
+    name: Cluerise
+    uses: cluerise/actions/.github/workflows/create-release-pr.yaml@v7.5.2
+    with:
+      app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
     secrets:
-      token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
+      app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}
+
+  update-dist:
+    name: Update dist
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: create-release-pr
+
+    steps:
+      - name: Get app token
+        id: get-app-token
+        uses: cluerise/actions/get-github-app-token@v7.5.2
+        with:
+          app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
+          app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}
+
+      - name: Install
+        uses: cluerise/actions/install@v7.5.2
+        with:
+          ref: release
+
+      - name: Build
+        run: pnpm run build:production
+
+      - name: Commit dist
+        uses: branoholy/update-files-action@main
+        with:
+          token: ${{ steps.get-app-token.outputs.token }}
+          branch.name: release
+          commit.paths: dist/**
+          commit.message: 'release: Update dist'

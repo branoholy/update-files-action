@@ -1,12 +1,14 @@
-name: Lint merge commit
+name: 🔍 Lint merge commit
 
 on:
   pull_request:
     types: [auto_merge_enabled, auto_merge_disabled, edited, synchronize]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   lint-merge-commit:
-    name: Cluenar
-    uses: cluenar/actions/.github/workflows/lint-merge-commit.yaml@v1.0.4
-    with:
-      command: npm run lint commit
+    name: Cluerise
+    uses: cluerise/actions/.github/workflows/lint-merge-commit.yaml@v7.5.2

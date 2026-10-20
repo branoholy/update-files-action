@@ -1,15 +1,15 @@
-import { describe, expect, it, MockedClass, MockedFunction, vi } from 'vitest';
+import { describe, expect, it, type MockedClass, type MockedFunction, vi } from 'vitest';
 
-import { TestUtils } from '../test-utils';
+import { TestUtils } from '../test-utils.ts';
 
 describe('TestUtils', () => {
   describe('asMockedFunction', () => {
     // Typing check for (T) => jest.MockedFunction<T>.
     it('should return the same function and cast to a mocked function type', () => {
-      const fn = (n: number) => `${n}`;
-      const fnMock: MockedFunction<typeof fn> = TestUtils.asMockedFunction(fn);
+      const function_ = (n: number) => n.toString();
+      const functionMock: MockedFunction<typeof function_> = TestUtils.asMockedFunction(function_);
 
-      expect(fnMock).toBe(fn);
+      expect(functionMock).toBe(function_);
     });
   });
 
@@ -17,31 +17,31 @@ describe('TestUtils', () => {
     // Typing check for (T) => jest.MockedClass<T> & { mock: { instances: [{ getNum: jest.MockedFunction }] } }
     it('should return the same class and cast to a mocked class type', () => {
       class Cls {
-        constructor(private num: number) {}
+        constructor(private value: number) {}
         getNum() {
-          return this.num;
+          return this.value;
         }
       }
 
       const ClsMock = TestUtils.asMockedClass(Cls);
       const ClsMockWithType: MockedClass<typeof Cls> = ClsMock;
 
-      const getNumMock = ClsMock.mock?.instances[0]?.getNum;
+      const getNumberMock = ClsMock.mock?.instances[0]?.getNum.mock;
 
       expect(ClsMock).toBe(Cls);
       expect(ClsMockWithType).toBe(Cls);
-      expect(getNumMock).toBeUndefined();
+      expect(getNumberMock).toBeUndefined();
     });
   });
 
   describe('expectToBeCalled', () => {
     it('should check that a function has been called only 2 times with the specified args', () => {
-      const fn = vi.fn();
+      const function_ = vi.fn();
 
-      fn(4, 2);
-      fn(42);
+      function_(4, 2);
+      function_(42);
 
-      TestUtils.expectToBeCalled(fn, [[4, 2], [42]]);
+      TestUtils.expectToBeCalled(function_, [[4, 2], [42]]);
       expect.assertions(3);
     });
   });

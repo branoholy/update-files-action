@@ -1,13 +1,19 @@
-name: Update Node.js
+name: 🟢 Update Node.js
 
 on:
   schedule:
-    - cron: '0 13 * * 0'
+    - cron: '0 17 * * 1' # Every Monday at 17:00 UTC
   workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   update-node:
-    name: Cluenar
-    uses: cluenar/actions/.github/workflows/update-node.yaml@v1.0.4
+    name: Cluerise
+    uses: cluerise/actions/.github/workflows/update-node.yaml@v7.5.2
+    with:
+      app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
     secrets:
-      token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
+      app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}

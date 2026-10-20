@@ -1,8 +1,8 @@
 import * as ActionsCore from '@actions/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ActionUtils } from '../action-utils';
-import { TestUtils } from '../test-utils';
+import { ActionUtils } from '../action-utils.ts';
+import { TestUtils } from '../test-utils.ts';
 
 vi.mock('@actions/core');
 
@@ -123,7 +123,7 @@ describe('ActionUtils', () => {
 
     it('should throw an error if the input is not defined but required', () => {
       actionsCoreGetInputMock.mockImplementation(() => {
-        throw new Error();
+        throw new Error('Input is required but not defined');
       });
 
       const getNonDefinedRequiredInput = () => ActionUtils.getInputAsBoolean(inputName, { required: true });
@@ -204,7 +204,7 @@ describe('ActionUtils', () => {
 
     it('should throw an error if the input is not defined but required', () => {
       actionsCoreGetInputMock.mockImplementation(() => {
-        throw new Error();
+        throw new Error('Input is required but not defined');
       });
 
       const getNonDefinedRequiredInput = () => ActionUtils.getInputAsInteger(inputName, { required: true });
@@ -284,7 +284,7 @@ describe('ActionUtils', () => {
 
     it('should throw an error if the input is not defined but required', () => {
       actionsCoreGetInputMock.mockImplementation(() => {
-        throw new Error();
+        throw new Error('Input is required but not defined');
       });
 
       const getNonDefinedRequiredInput = () => ActionUtils.getInputAsString(inputName, { required: true });
@@ -365,7 +365,7 @@ describe('ActionUtils', () => {
 
     it('should throw an error if the input is not defined but required', () => {
       actionsCoreGetInputMock.mockImplementation(() => {
-        throw new Error();
+        throw new Error('Input is required but not defined');
       });
 
       const getNonDefinedRequiredInput = () => ActionUtils.getInputAsStrings(inputName, { required: true });

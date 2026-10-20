@@ -1,13 +1,18 @@
-name: Create release
+name: 🎉 Create release
 
 on:
   pull_request:
-    types: closed
-    branches: main
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
 
 jobs:
   create-release:
-    name: Cluenar
-    uses: cluenar/actions/.github/workflows/create-release.yaml@v1.0.4
+    name: Cluerise
+    uses: cluerise/actions/.github/workflows/create-release.yaml@v7.5.2
+    with:
+      app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
     secrets:
-      token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
+      app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}

@@ -13,9 +13,9 @@ export const E2EMocks = {
   processStdoutWrite,
 
   mockReset: () => {
-    consoleInfo.mockReset();
-    consoleError.mockReset();
-    processExit.mockReset();
-    processStdoutWrite.mockReset();
-  }
+    consoleInfo.mockReset().mockImplementation(() => {});
+    consoleError.mockReset().mockImplementation(() => {});
+    processExit.mockReset().mockImplementation(() => undefined as never);
+    processStdoutWrite.mockReset().mockImplementation(() => true);
+  },
 };

@@ -1,8 +1,9 @@
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { FileUtils } from '../file-utils';
-import { TestUtils } from '../test-utils';
+import { FileUtils } from '../file-utils.ts';
+import { TestUtils } from '../test-utils.ts';
 
 vi.mock('child_process');
 

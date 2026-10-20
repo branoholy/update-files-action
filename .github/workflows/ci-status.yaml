@@ -1,14 +1,19 @@
-name: CI status
+name: 📊 CI status
 
 on:
   workflow_run:
-    workflows: CI
-    types: completed
+    workflows: [⚙️ CI]
+    types: [completed]
     branches: [main, latest]
+
+permissions:
+  statuses: write
 
 jobs:
   send-status:
-    name: Cluenar
-    uses: cluenar/actions/.github/workflows/ci-status.yaml@v1.0.4
+    name: Cluerise
+    uses: cluerise/actions/.github/workflows/ci-status.yaml@v7.5.2
+    with:
+      app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
     secrets:
-      token: ${{ secrets.BRANOHOLY_BOT_TOKEN }}
+      app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}
