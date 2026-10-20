@@ -5,6 +5,7 @@ import { type GlobOptionsWithFileTypesUnset, globSync } from 'glob';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { app, type AppArgs, type BranchArgs } from '../app.ts';
+// eslint-disable-next-line unicorn/name-replacements
 import { RepoKit } from '../repo-kit.ts';
 import { FileUtils, TestUtils } from '../utils/index.ts';
 
@@ -26,6 +27,7 @@ const isFileUntrackedMock = TestUtils.asMockedFunction(FileUtils.isFileUntracked
 const isFileChangedMock = TestUtils.asMockedFunction(FileUtils.isFileChanged);
 
 vi.mock('../repo-kit');
+// eslint-disable-next-line unicorn/name-replacements
 const RepoKitMock = TestUtils.asMockedClass(RepoKit);
 const hasBranchMock = vi.spyOn(RepoKitMock.prototype, 'hasBranch');
 const getBranchMock = vi.spyOn(RepoKitMock.prototype, 'getBranch');

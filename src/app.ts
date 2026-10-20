@@ -1,6 +1,7 @@
 import * as ActionsCore from '@actions/core';
 import { globSync } from 'glob';
 
+// eslint-disable-next-line unicorn/name-replacements
 import { RepoKit } from './repo-kit.ts';
 import { dp, FileUtils } from './utils/index.ts';
 
@@ -44,6 +45,7 @@ export interface BranchArgs {
 }
 
 const createBranch = async (
+  // eslint-disable-next-line unicorn/name-replacements
   repoKit: RepoKit,
   { name: branchName, base: baseBranchName, recreate = false }: BranchArgs,
 ) => {
@@ -78,6 +80,7 @@ export interface CommitArgs {
   readonly amend?: boolean;
 }
 
+// eslint-disable-next-line unicorn/name-replacements
 const commitFiles = async (repoKit: RepoKit, paths: string[], branchName: string, commitArgs: CommitArgs) => {
   const commit = await repoKit.commitFiles({
     ...commitArgs,
@@ -101,6 +104,7 @@ export interface PullRequestArgs {
   readonly draft?: boolean;
 }
 
+// eslint-disable-next-line unicorn/name-replacements
 const createPullRequest = async (repoKit: RepoKit, branchName: string, pullRequestArgs: PullRequestArgs) => {
   const pullRequest = await repoKit.createPullRequest({
     ...pullRequestArgs,
@@ -145,6 +149,7 @@ export const app = async ({
       return 0;
     }
 
+    // eslint-disable-next-line unicorn/name-replacements
     const repoKit = new RepoKit(owner, repositoryName, token);
 
     await createBranch(repoKit, { name: branchName, ...restBranch });
