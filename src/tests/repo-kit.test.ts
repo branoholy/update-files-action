@@ -1,8 +1,10 @@
+// eslint-disable-next-line unicorn/name-replacements -- Keep the existing filename.
 import { readFileSync } from 'node:fs';
 
 import { Octokit } from '@octokit/rest';
 import { beforeEach, describe, expect, it, type MockedFunction, type MockInstance, vi } from 'vitest';
 
+// eslint-disable-next-line unicorn/name-replacements
 import { RepoKit } from '../repo-kit.ts';
 import { type ExtractCallable, TestUtils } from '../utils/index.ts';
 
@@ -44,10 +46,10 @@ const OctokitMock = Octokit as OctokitMockType;
 
 describe('RepoKit', () => {
   const owner = 'owner';
-  const repo = 'repo';
+  const repositoryName = 'repo';
   const token = 'token';
 
-  const repositoryInfo = { owner, repo };
+  const repositoryInfo = { owner, repo: repositoryName };
 
   const response = {
     headers: {} as Awaited<ReturnType<Octokit['git']['createRef']>>['headers'],
@@ -101,6 +103,7 @@ describe('RepoKit', () => {
     },
   };
 
+  // eslint-disable-next-line unicorn/name-replacements
   let repoKit: RepoKit;
 
   beforeEach(() => {
@@ -117,7 +120,7 @@ describe('RepoKit', () => {
       return this;
     });
 
-    repoKit = new RepoKit(owner, repo, token);
+    repoKit = new RepoKit(owner, repositoryName, token);
   });
 
   describe('constructor', () => {

@@ -1,3 +1,4 @@
+// eslint-disable-next-line unicorn/name-replacements -- Keep the existing filename.
 import { readFileSync } from 'node:fs';
 
 import { Octokit } from '@octokit/rest';
@@ -34,6 +35,7 @@ export interface CreatePullRequestArgs {
   readonly draft?: boolean;
 }
 
+// eslint-disable-next-line unicorn/name-replacements
 export class RepoKit {
   private octokit: Octokit;
 
