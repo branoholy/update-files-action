@@ -1,12 +1,10 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
-const isFileUntracked = (path: string) => {
-  return execSync(`git ls-files --exclude-standard --others ${path} | wc -l`).toString().trim() === '1';
-};
+const isFileUntracked = (path: string) =>
+  execFileSync('git', ['--literal-pathspecs', 'ls-files', '--exclude-standard', '--others', '--', path]).length > 0;
 
-const isFileChanged = (path: string) => {
-  return execSync(`git diff --shortstat ${path} | wc -l`).toString().trim() === '1';
-};
+const isFileChanged = (path: string) =>
+  execFileSync('git', ['--literal-pathspecs', 'diff', '--shortstat', '--', path]).length > 0;
 
 export const FileUtils = {
   isFileUntracked,
