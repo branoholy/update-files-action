@@ -1,11 +1,13 @@
 import * as ActionsCore from '@actions/core';
 import { globSync } from 'glob';
 
-// eslint-disable-next-line unicorn/name-replacements
 import { RepoKit } from './repo-kit.ts';
 import { dp, FileUtils } from './utils/index.ts';
 
 const branchRefPrefix = 'refs/heads/';
+
+const getBaseBranchName = async (repoKit: RepoKit, baseBranchName: string | null) =>
+  baseBranchName ?? (await repoKit.getDefaultBranchName());
 
 const findChangedFiles = (paths: string[]) => {
   const filePaths = paths.reduce<string[]>((acc, path) => {
@@ -38,17 +40,21 @@ const findChangedFiles = (paths: string[]) => {
   return changedPaths;
 };
 
-export interface BranchArgs {
-  readonly name: string;
-  readonly base?: string;
-  readonly recreate?: boolean;
-}
+type CreateBranchFromBaseBranchOptions = {
+  baseBranchName: string | null;
+  recreate: boolean;
+};
 
-const createBranch = async (
-  // eslint-disable-next-line unicorn/name-replacements
-  repoKit: RepoKit,
-  { name: branchName, base: baseBranchName, recreate = false }: BranchArgs,
-) => {
+type CreateBranchFromCommitOptions = {
+  commitSha: string;
+  recreate: boolean;
+};
+
+type CreateBranchOptions = CreateBranchFromBaseBranchOptions | CreateBranchFromCommitOptions;
+
+const createBranch = async (repoKit: RepoKit, branchName: string, options: CreateBranchOptions) => {
+  const { recreate } = options;
+
   // Delete the branch
   if (await repoKit.hasBranch(branchName)) {
     console.info(`Branch "${branchName}" already exists`);
@@ -60,18 +66,80 @@ const createBranch = async (
       console.info(`Branch "${branchName}" has been deleted`);
     } else {
       // Keep the original branch if it exists and the recreate option is not set
-      return;
+      return false;
     }
   }
 
   // Create the branch
-  const {
-    object: { sha: baseBranchSha },
-  } = await repoKit.getBranch(baseBranchName ?? (await repoKit.getDefaultBranchName()));
+  if ('baseBranchName' in options) {
+    const { baseBranchName } = options;
 
-  await repoKit.createBranch(branchName, baseBranchSha);
+    const {
+      object: { sha: baseBranchSha },
+    } = await repoKit.getBranch(await getBaseBranchName(repoKit, baseBranchName));
+
+    await repoKit.createBranch(branchName, baseBranchSha);
+  } else {
+    const { commitSha } = options;
+    await repoKit.createBranch(branchName, commitSha);
+  }
+
   console.info(`Branch "${branchName}" has been created`);
+
+  return true;
 };
+
+type CommitFilesOptions = {
+  message: string | null;
+  token: string | null;
+  amend: boolean;
+};
+
+const commitFiles = async (repoKit: RepoKit, paths: string[], branchName: string, options: CommitFilesOptions) => {
+  const commit = await repoKit.commit({
+    paths,
+    branchName,
+    ...dp(
+      {
+        message: options.message,
+        token: options.token,
+      },
+      null,
+    ),
+    amend: options.amend,
+  });
+
+  return commit.sha;
+};
+
+type CreatePullRequestOptions = {
+  title?: string;
+  body?: string;
+  base?: string;
+  labels?: string[];
+  assignees?: string[];
+  reviewers?: string[];
+  teamReviewers?: string[];
+  milestone?: number;
+  draft?: boolean;
+};
+
+const createPullRequest = async (repoKit: RepoKit, branchName: string, options: CreatePullRequestOptions) => {
+  const pullRequest = await repoKit.createPullRequest({
+    ...options,
+    ...dp({ baseBranchName: options.base }),
+    branchName,
+  });
+
+  console.info(`Pull request has been created at ${pullRequest.html_url}`);
+};
+
+export interface BranchArgs {
+  readonly name: string;
+  readonly base?: string;
+  readonly recreate?: boolean;
+  readonly creation?: 'base' | 'commit';
+}
 
 export interface CommitArgs {
   readonly paths: string[];
@@ -79,18 +147,6 @@ export interface CommitArgs {
   readonly token?: string;
   readonly amend?: boolean;
 }
-
-// eslint-disable-next-line unicorn/name-replacements
-const commitFiles = async (repoKit: RepoKit, paths: string[], branchName: string, commitArgs: CommitArgs) => {
-  const commit = await repoKit.commitFiles({
-    ...commitArgs,
-    paths,
-    branchName,
-  });
-
-  ActionsCore.setOutput('commit.sha', commit.sha);
-  console.info(`Changed files have been committed to ${commit.sha}`);
-};
 
 export interface PullRequestArgs {
   readonly title?: string;
@@ -104,17 +160,6 @@ export interface PullRequestArgs {
   readonly draft?: boolean;
 }
 
-// eslint-disable-next-line unicorn/name-replacements
-const createPullRequest = async (repoKit: RepoKit, branchName: string, pullRequestArgs: PullRequestArgs) => {
-  const pullRequest = await repoKit.createPullRequest({
-    ...pullRequestArgs,
-    ...dp({ baseBranchName: pullRequestArgs.base }),
-    branchName,
-  });
-
-  console.info(`Pull request has been created at ${pullRequest.html_url}`);
-};
-
 export interface AppArgs {
   readonly repository: string;
   readonly token: string;
@@ -123,13 +168,7 @@ export interface AppArgs {
   readonly pullRequest?: PullRequestArgs;
 }
 
-export const app = async ({
-  repository,
-  token,
-  branch: { name: branchName, ...restBranch },
-  commit,
-  pullRequest,
-}: AppArgs) => {
+export const app = async ({ repository, token, branch, commit, pullRequest }: AppArgs) => {
   try {
     const [owner, repositoryName] = repository.split('/', 2);
     if (!owner || !repositoryName) {
@@ -140,6 +179,11 @@ export const app = async ({
       throw new Error('Commit message is missing, please specify the "commit.message" input');
     }
 
+    if (!commit && branch.creation === 'commit') {
+      throw new Error('The "branch.creation: commit" input requires committing to be enabled');
+    }
+
+    let branchName = branch.name;
     if (branchName.startsWith(branchRefPrefix)) {
       branchName = branchName.slice(branchRefPrefix.length);
     }
@@ -149,18 +193,59 @@ export const app = async ({
       return 0;
     }
 
-    // eslint-disable-next-line unicorn/name-replacements
+    const branchBase = branch.base ?? null;
+    const branchRecreate = branch.recreate ?? false;
+    const branchCreation = branch.creation ?? 'base';
+
+    const commitMessage = commit?.message ?? null;
+    const commitToken = commit?.token ?? null;
+    const commitAmend = commit?.amend ?? false;
+
     const repoKit = new RepoKit(owner, repositoryName, token);
 
-    await createBranch(repoKit, { name: branchName, ...restBranch });
+    const branchExists = branchCreation === 'commit' && (await repoKit.hasBranch(branchName));
+
+    if (branchCreation === 'base') {
+      await createBranch(repoKit, branchName, {
+        baseBranchName: branchBase,
+        recreate: branchRecreate,
+      });
+    }
 
     if (commit && changedPaths) {
-      await commitFiles(repoKit, changedPaths, branchName, commit);
+      const commitSha = await commitFiles(
+        repoKit,
+        changedPaths,
+        branchCreation === 'base' || (branchExists && !branchRecreate)
+          ? branchName
+          : await getBaseBranchName(repoKit, branchBase),
+        {
+          message: commitMessage,
+          token: commitToken,
+          amend: commitAmend,
+        },
+      );
+
+      if (branchCreation === 'base' || (branchExists && !branchRecreate)) {
+        await repoKit.updateBranch({
+          name: branchName,
+          commitSha,
+          force: commitAmend,
+        });
+      } else {
+        await createBranch(repoKit, branchName, {
+          commitSha,
+          recreate: branchRecreate,
+        });
+      }
+
+      ActionsCore.setOutput('commit.sha', commitSha);
+      console.info(`Changed files have been committed to ${commitSha}`);
     }
 
     if (pullRequest) {
       await createPullRequest(repoKit, branchName, {
-        ...dp({ title: commit?.message }),
+        ...dp({ title: commitMessage }, null),
         ...pullRequest,
       });
     }

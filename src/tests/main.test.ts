@@ -90,6 +90,7 @@ describe('main', () => {
     'token',
     'branch.name',
     'branch.base',
+    'branch.creation',
     'commit.message',
     'commit.token',
     'pull-request.title',
@@ -129,6 +130,7 @@ describe('main', () => {
     'branch.name': string;
     'branch.base'?: string;
     'branch.recreate'?: boolean;
+    'branch.creation'?: string;
 
     commit?: boolean;
     'commit.paths'?: string[];
@@ -215,6 +217,7 @@ describe('main', () => {
     expect(ActionUtilsMock.getInputAsString).toBeCalledWith('token', { required: true });
     expect(ActionUtilsMock.getInputAsString).toBeCalledWith('branch.name', { required: true });
     expect(ActionUtilsMock.getInputAsString).toBeCalledWith('branch.base');
+    expect(ActionUtilsMock.getInputAsString).toBeCalledWith('branch.creation');
   };
 
   const expectCommitInputs = () => {
@@ -275,6 +278,40 @@ describe('main', () => {
         },
       ],
     ]);
+  });
+
+  it.each(['base', 'commit'] as const)('should pass branch.creation=%s to app', async (creation) => {
+    mockEnv();
+    mockInputs({
+      token,
+      'branch.name': branch.name,
+      'branch.creation': creation,
+      'commit.paths': commit.paths,
+      'commit.message': commit.message,
+    });
+    appMock.mockResolvedValue(0);
+
+    await main();
+
+    expect(consoleErrorMock).not.toBeCalled();
+    expect(appMock).toBeCalledWith({
+      repository,
+      token,
+      branch: { ...branch, creation },
+      commit: { paths: commit.paths, message: commit.message },
+    });
+    TestUtils.expectToBeCalled(processExitMock, [[0]]);
+  });
+
+  it.each(['invalid', 'BASE', 'COMMIT'])('should reject invalid branch.creation=%s', async (creation) => {
+    mockEnv();
+    mockInputs({ token, 'branch.name': branch.name, 'branch.creation': creation });
+
+    await main();
+
+    expect(consoleErrorMock).toBeCalledWith('Invalid "branch.creation" input, expected "base" or "commit"');
+    expect(appMock).not.toBeCalled();
+    TestUtils.expectToBeCalled(processExitMock, [[1]]);
   });
 
   it('should print error and exit with 1 if commit arg is true and commit.paths arg is missing', async () => {

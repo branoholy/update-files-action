@@ -35,8 +35,9 @@ uses: branoholy/update-files-action
 with:
   token: ${{ secrets.GITHUB_TOKEN }}
   branch.name: branch-name
-  branch.base: develop
+  branch.base: main
   branch.recreate: false
+  branch.creation: base
   commit: true
   commit.paths: |
     path/to/file/*.txt
@@ -101,6 +102,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch.name: update-lock-file
           branch.recreate: true
+          branch.creation: commit
           commit.paths: pnpm-lock.yaml
           commit.message: Update lock file
           pull-request: true

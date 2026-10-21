@@ -14,6 +14,10 @@ inputs:
   branch.recreate:
     description: 'A flag for recreating the branch if it exists. Default: `false`.'
     required: false
+  branch.creation:
+    description: 'A strategy for branch creation (`base` or `commit`). Create the branch at the base branch and then optionally commit the changes, or prepare the commit first and create the branch with the commit. Requires committing to be enabled when set to `commit`. Default: `base`.'
+    required: false
+    default: base
   commit:
     description: 'A flag to enable/disable committing the changes. Default: `true` if any `commit.*` input is specified, otherwise `false`.'
     required: false

@@ -25,11 +25,17 @@ const getBranchArgs = (): BranchArgs => {
   const name = ActionUtils.getInputAsString('branch.name', { required: true });
   const base = ActionUtils.getInputAsString('branch.base');
   const recreate = ActionUtils.getInputAsBoolean('branch.recreate');
+  const creation = ActionUtils.getInputAsString('branch.creation');
+
+  if (creation !== null && creation !== 'base' && creation !== 'commit') {
+    throw new Error('Invalid "branch.creation" input, expected "base" or "commit"');
+  }
 
   return {
     name,
     ...dp({ base }, null),
     ...dp({ recreate }, null),
+    ...dp({ creation } as const, null),
   };
 };
 

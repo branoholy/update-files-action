@@ -721,4 +721,254 @@ describe('e2e tests', () => {
     // No request to GitHub is made
     expect(gitHubMock.restMocks.any).not.toBeCalled();
   });
+
+  describe('branch.creation', () => {
+    test.each([
+      { creation: 'base', exists: false, recreate: false },
+      { creation: 'base', exists: true, recreate: false },
+      { creation: 'base', exists: true, recreate: true },
+      { creation: 'commit', exists: false, recreate: false },
+      { creation: 'commit', exists: true, recreate: false },
+      { creation: 'commit', exists: true, recreate: true },
+    ])('$creation mode with exists=$exists and recreate=$recreate', async ({ creation, exists, recreate }) => {
+      ChildProcess.execSync(E2EConstants.commands);
+      const baseSha = gitHubMock.getBranchSha(E2EConstants.defaultBranchName);
+      if (exists) {
+        gitHubMock.createBranch(branchName);
+        gitHubMock.commit(branchName);
+      }
+      const parentSha = exists && !recreate ? gitHubMock.getBranchSha(branchName) : baseSha;
+
+      process.env['INPUT_BRANCH.CREATION'] = creation;
+      process.env['INPUT_BRANCH.RECREATE'] = String(recreate);
+      process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+      process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+      process.env['INPUT_PULL-REQUEST'] = 'true';
+
+      await main();
+
+      expect(E2EMocks.consoleError).not.toBeCalled();
+      TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
+      const newSha = gitHubMock.getBranchSha(branchName);
+      expect(newSha).not.toBe(parentSha);
+      expect(gitHubMock.getBranchSha(E2EConstants.defaultBranchName)).toBe(baseSha);
+      expect(gitHubMock.restMocks.git.createTree).toBeCalledWith(
+        expect.any(String),
+        expect.objectContaining({ base_tree: parentSha }),
+      );
+      expect(gitHubMock.restMocks.git.createCommit).toBeCalledWith(
+        expect.any(String),
+        expect.objectContaining({ parents: [parentSha], message: E2EConstants.commitMessage }),
+      );
+      expect(gitHubMock.restMocks.git.createCommit).toHaveBeenCalledBefore(gitHubMock.restMocks.pulls.create);
+      TestUtils.expectToBeCalled(E2EMocks.processStdoutWrite, [
+        [OS.EOL],
+        [`::set-output name=commit.sha::${newSha}` + OS.EOL],
+      ]);
+      E2EExpects.pullRequestIsCreated({ gitHubMock, token, branchName });
+
+      if (exists && !recreate) {
+        expect(gitHubMock.restMocks.git.createRef).not.toBeCalled();
+        expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
+        expect(gitHubMock.restMocks.git.updateRef).toBeCalledTimes(1);
+      } else {
+        expect(gitHubMock.restMocks.git.createRef).toBeCalledTimes(1);
+        expect(gitHubMock.restMocks.git.createRef).toBeCalledWith(expect.any(String), {
+          ref: `refs/heads/${branchName}`,
+          sha: creation === 'commit' ? newSha : baseSha,
+        });
+        expect(gitHubMock.restMocks.git.deleteRef).toBeCalledTimes(exists ? 1 : 0);
+
+        if (creation === 'commit') {
+          expect(gitHubMock.restMocks.git.updateRef).not.toBeCalled();
+          expect(gitHubMock.restMocks.git.createCommit).toHaveBeenCalledBefore(gitHubMock.restMocks.git.createRef);
+          expect(gitHubMock.restMocks.git.createRef).toHaveBeenCalledBefore(gitHubMock.restMocks.pulls.create);
+          if (exists) {
+            expect(gitHubMock.restMocks.git.createCommit).toHaveBeenCalledBefore(gitHubMock.restMocks.git.deleteRef);
+            expect(gitHubMock.restMocks.git.deleteRef).toHaveBeenCalledBefore(gitHubMock.restMocks.git.createRef);
+          }
+        } else {
+          expect(gitHubMock.restMocks.git.updateRef).toBeCalledTimes(1);
+          expect(gitHubMock.restMocks.git.createRef).toHaveBeenCalledBefore(gitHubMock.restMocks.git.createCommit);
+        }
+      }
+    });
+
+    test.each([false, true])('commit mode uses a custom base and token with amend=%s', async (amend) => {
+      ChildProcess.execSync(E2EConstants.commands);
+      const defaultSha = gitHubMock.getBranchSha(E2EConstants.defaultBranchName);
+      const baseBranchName = 'custom-base';
+      gitHubMock.createBranch(baseBranchName);
+      gitHubMock.commit(baseBranchName);
+      const baseSha = gitHubMock.getBranchSha(baseBranchName);
+
+      process.env['INPUT_BRANCH.NAME'] = `refs/heads/${branchName}`;
+      process.env['INPUT_BRANCH.CREATION'] = 'commit';
+      process.env['INPUT_BRANCH.BASE'] = baseBranchName;
+      process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+      process.env['INPUT_COMMIT.TOKEN'] = E2EConstants.commitToken;
+      process.env['INPUT_COMMIT.AMEND'] = String(amend);
+      if (!amend) {
+        process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+      }
+      process.env['INPUT_PULL-REQUEST'] = 'true';
+
+      await main();
+
+      expect(E2EMocks.consoleError).not.toBeCalled();
+      TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
+      expect(gitHubMock.restMocks.git.createCommit).toBeCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          parents: [amend ? defaultSha : baseSha],
+          message: amend ? `message-${baseSha}` : E2EConstants.commitMessage,
+        }),
+      );
+      expect(gitHubMock.restMocks.git.createTree).toBeCalledWith(
+        expect.any(String),
+        expect.objectContaining({ base_tree: baseSha }),
+      );
+      expect(gitHubMock.getBranchSha(baseBranchName)).toBe(baseSha);
+      expect(gitHubMock.getBranchSha(E2EConstants.defaultBranchName)).toBe(defaultSha);
+      expect(gitHubMock.restMocks.git.createRef).toBeCalledWith(expect.any(String), {
+        ref: `refs/heads/${branchName}`,
+        sha: gitHubMock.getBranchSha(branchName),
+      });
+      expect(gitHubMock.restMocks.git.createCommit.mock.contexts[0]?.req.headers.get('authorization')).toBe(
+        `token ${E2EConstants.commitToken}`,
+      );
+      expect(gitHubMock.restMocks.git.createRef.mock.contexts[0]?.req.headers.get('authorization')).toBe(
+        `token ${token}`,
+      );
+      expect(gitHubMock.restMocks.git.updateRef).not.toBeCalled();
+      expect(gitHubMock.restMocks.pulls.create).toBeCalledTimes(1);
+    });
+
+    test.each(['createBlob', 'createTree', 'createCommit'] as const)(
+      'commit mode preserves the existing branch when %s fails',
+      async (operation) => {
+        ChildProcess.execSync(E2EConstants.commands);
+        gitHubMock.createBranch(branchName);
+        gitHubMock.commit(branchName);
+        const originalSha = gitHubMock.getBranchSha(branchName);
+        gitHubMock.restMocks.git[operation].mockReturnValue([422]);
+        process.env['INPUT_BRANCH.CREATION'] = 'commit';
+        process.env['INPUT_BRANCH.RECREATE'] = 'true';
+        process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+        process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+        process.env['INPUT_PULL-REQUEST'] = 'true';
+
+        await main();
+
+        TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
+        expect(E2EMocks.consoleError).toBeCalledTimes(1);
+        expect(gitHubMock.getBranchSha(branchName)).toBe(originalSha);
+        expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
+        expect(gitHubMock.restMocks.git.createRef).not.toBeCalled();
+        expect(gitHubMock.restMocks.git.updateRef).not.toBeCalled();
+        expect(gitHubMock.restMocks.pulls.create).not.toBeCalled();
+        expect(E2EMocks.processStdoutWrite).not.toBeCalled();
+      },
+    );
+
+    test('commit mode does not publish an output or PR when branch creation fails', async () => {
+      ChildProcess.execSync(E2EConstants.commands);
+      gitHubMock.restMocks.git.createRef.mockReturnValue([422]);
+      process.env['INPUT_BRANCH.CREATION'] = 'commit';
+      process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+      process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+      process.env['INPUT_PULL-REQUEST'] = 'true';
+
+      await main();
+
+      TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
+      expect(gitHubMock.restMocks.git.createCommit).toBeCalledTimes(1);
+      expect(gitHubMock.restMocks.git.updateRef).not.toBeCalled();
+      expect(gitHubMock.restMocks.pulls.create).not.toBeCalled();
+      expect(E2EMocks.processStdoutWrite).not.toBeCalled();
+      expect(() => gitHubMock.getBranchSha(branchName)).toThrow('Branch not found');
+    });
+
+    test.each(['base', 'commit'])(
+      'does not publish an output or PR when %s mode branch update fails',
+      async (creation) => {
+        ChildProcess.execSync(E2EConstants.commands);
+        gitHubMock.createBranch(branchName);
+        const originalSha = gitHubMock.getBranchSha(branchName);
+        gitHubMock.restMocks.git.updateRef.mockReturnValue([422]);
+        process.env['INPUT_BRANCH.CREATION'] = creation;
+        process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+        process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+        process.env['INPUT_PULL-REQUEST'] = 'true';
+
+        await main();
+
+        TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
+        expect(E2EMocks.consoleError).toBeCalledTimes(1);
+        expect(gitHubMock.restMocks.git.createCommit).toBeCalledTimes(1);
+        expect(gitHubMock.restMocks.git.updateRef).toBeCalledTimes(1);
+        expect(gitHubMock.getBranchSha(branchName)).toBe(originalSha);
+        expect(gitHubMock.restMocks.git.createRef).not.toBeCalled();
+        expect(gitHubMock.restMocks.pulls.create).not.toBeCalled();
+        expect(E2EMocks.processStdoutWrite).not.toBeCalled();
+      },
+    );
+
+    test.each([undefined, 'base'])('creates a branch without committing with creation=%s', async (creation) => {
+      if (creation) {
+        process.env['INPUT_BRANCH.CREATION'] = creation;
+      }
+      process.env.INPUT_COMMIT = 'false';
+
+      await main();
+
+      TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
+      expect(E2EMocks.consoleError).not.toBeCalled();
+      E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
+      expect(gitHubMock.getBranchSha(branchName)).toBe(gitHubMock.getBranchSha(E2EConstants.defaultBranchName));
+      expect(gitHubMock.restMocks.git.createCommit).not.toBeCalled();
+      expect(gitHubMock.restMocks.git.updateRef).not.toBeCalled();
+      expect(E2EMocks.processStdoutWrite).not.toBeCalled();
+    });
+
+    test.each([undefined, 'false'])('commit mode rejects disabled committing (%s)', async (commitInput) => {
+      process.env['INPUT_BRANCH.CREATION'] = 'commit';
+      if (commitInput) {
+        process.env.INPUT_COMMIT = commitInput;
+        process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+        process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+      }
+
+      await main();
+
+      TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
+      expect(E2EMocks.consoleError).toBeCalledWith(
+        new Error('The "branch.creation: commit" input requires committing to be enabled'),
+      );
+      expect(gitHubMock.restMocks.any).not.toBeCalled();
+    });
+
+    test('commit mode makes no requests when files are unchanged', async () => {
+      process.env['INPUT_BRANCH.CREATION'] = 'commit';
+      process.env['INPUT_COMMIT.PATHS'] = `${E2EConstants.testFilesDirectory}/path1`;
+      process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+      process.env['INPUT_PULL-REQUEST'] = 'true';
+
+      await main();
+
+      TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
+      expect(E2EMocks.consoleError).not.toBeCalled();
+      expect(gitHubMock.restMocks.any).not.toBeCalled();
+    });
+
+    test('invalid creation mode fails before making requests', async () => {
+      process.env['INPUT_BRANCH.CREATION'] = 'invalid';
+
+      await main();
+
+      TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
+      expect(E2EMocks.consoleError).toBeCalledWith('Invalid "branch.creation" input, expected "base" or "commit"');
+      expect(gitHubMock.restMocks.any).not.toBeCalled();
+    });
+  });
 });
