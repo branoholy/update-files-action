@@ -552,10 +552,10 @@ describe('e2e tests', () => {
   });
 
   test('flow #13: exception is thrown when checking for changed files => print error, do not connect to GitHub, exit 1', async () => {
-    FileSystem.writeFileSync(`${E2EConstants.shellMocksDirectory}/wc`, 'exit 1');
-    FileSystem.chmodSync(`${E2EConstants.shellMocksDirectory}/wc`, 0o755);
+    FileSystem.writeFileSync(`${E2EConstants.shellMocksDirectory}/git`, '#!/bin/sh\nexit 1\n');
+    FileSystem.chmodSync(`${E2EConstants.shellMocksDirectory}/git`, 0o755);
 
-    const command = 'git ls-files --exclude-standard --others temp-e2e-test-files/path1 | wc -l';
+    const command = 'git --literal-pathspecs ls-files --exclude-standard --others -- temp-e2e-test-files/path1';
     const error = new Error(`Command failed: ${command}`);
 
     // Commit the changes
