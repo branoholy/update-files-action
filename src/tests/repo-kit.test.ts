@@ -1,10 +1,8 @@
-// eslint-disable-next-line unicorn/name-replacements -- Keep the existing filename.
 import { readFileSync } from 'node:fs';
 
 import { Octokit } from '@octokit/rest';
 import { beforeEach, describe, expect, it, type MockedFunction, type MockInstance, vi } from 'vitest';
 
-// eslint-disable-next-line unicorn/name-replacements
 import { RepoKit } from '../repo-kit.ts';
 import { type ExtractCallable, TestUtils } from '../utils/index.ts';
 
@@ -103,7 +101,6 @@ describe('RepoKit', () => {
     },
   };
 
-  // eslint-disable-next-line unicorn/name-replacements
   let repoKit: RepoKit;
 
   beforeEach(() => {
@@ -203,6 +200,40 @@ describe('RepoKit', () => {
     });
   });
 
+  describe('updateBranch', () => {
+    const name = 'branch';
+    const sha = 'new-commit-sha';
+
+    it.each([false, true])('should update the branch and return the ref with force=%s', async (force) => {
+      octokitMock.rest.git.updateRef.mockResolvedValue({ ...response200, data: ref });
+
+      expect(await repoKit.updateBranch(name, sha, force)).toBe(ref);
+      TestUtils.expectToBeCalled(octokitMock.rest.git.updateRef, [
+        [{ ...repositoryInfo, ref: `heads/${name}`, sha, force }],
+      ]);
+    });
+
+    it('should default to a non-forced update', async () => {
+      octokitMock.rest.git.updateRef.mockResolvedValue({ ...response200, data: ref });
+
+      await repoKit.updateBranch(name, sha);
+
+      expect(octokitMock.rest.git.updateRef).toBeCalledWith({
+        ...repositoryInfo,
+        ref: `heads/${name}`,
+        sha,
+        force: false,
+      });
+    });
+
+    it('should propagate a rejected branch update', async () => {
+      const error = new Error('Branch could not be updated');
+      octokitMock.rest.git.updateRef.mockRejectedValue(error);
+
+      await expect(repoKit.updateBranch(name, sha)).rejects.toBe(error);
+    });
+  });
+
   describe('deleteBranch', () => {
     const name = 'branch';
 
@@ -234,7 +265,7 @@ describe('RepoKit', () => {
     });
   });
 
-  describe('commitFiles', () => {
+  describe('commit', () => {
     const paths = ['path1', 'path2'];
     const commitMessage = 'commit-message';
     const branchName = 'branch';
@@ -278,6 +309,8 @@ describe('RepoKit', () => {
       });
 
       expect(getBranchMock).toBeCalledWith(branchName);
+      expect(octokitMock.rest.git.createRef).not.toBeCalled();
+      expect(octokitMock.rest.git.deleteRef).not.toBeCalled();
 
       expect(octokitMock.rest.git.createTree).toBeCalledWith({
         ...repositoryInfo,
@@ -317,7 +350,7 @@ describe('RepoKit', () => {
     });
 
     it('should call all necessary methods in the correct order', async () => {
-      expect(await repoKit.commitFiles({ paths, message: commitMessage, branchName })).toBe(commit);
+      expect(await repoKit.commit({ paths, message: commitMessage, branchName })).toBe(commit);
 
       expectCommitMethods();
 
@@ -329,20 +362,17 @@ describe('RepoKit', () => {
         message: commitMessage,
       });
 
-      expect(octokitMock.rest.git.updateRef).toBeCalledWith({
-        ...repositoryInfo,
-        ref: `heads/${branchName}`,
-        sha: commit.sha,
-        force: false,
-      });
+      expect(octokitMock.rest.git.createBlob).toHaveBeenCalledBefore(getBranchMock);
+      expect(getBranchMock).toHaveBeenCalledBefore(octokitMock.rest.git.createTree);
+      expect(octokitMock.rest.git.createTree).toHaveBeenCalledBefore(octokitMock.rest.git.createCommit);
     });
 
     it('should call all necessary methods in the correct order and use a custom token when it is specified', async () => {
       const commitToken = 'commit-token';
 
-      expect(
-        await repoKit.commitFiles({ paths, message: commitMessage, branchName, token: commitToken }),
-      ).toStrictEqual(commit);
+      expect(await repoKit.commit({ paths, message: commitMessage, branchName, token: commitToken })).toStrictEqual(
+        commit,
+      );
 
       expectCommitMethods();
 
@@ -356,24 +386,16 @@ describe('RepoKit', () => {
         tree: tree.sha,
         message: commitMessage,
       });
-
-      expect(octokitMock.rest.git.updateRef).toBeCalledWith({
-        ...repositoryInfo,
-        ref: `heads/${branchName}`,
-        sha: commit.sha,
-        force: false,
-      });
     });
 
     it('should throw an error if the commit message is missing', async () => {
-      await expect(repoKit.commitFiles({ paths, branchName })).rejects.toMatchObject({
+      await expect(repoKit.commit({ paths, branchName })).rejects.toMatchObject({
         message: 'Commit message is empty',
       });
 
       expectCommitMethods();
 
       expect(octokitMock.rest.git.createCommit).not.toBeCalled();
-      expect(octokitMock.rest.git.updateRef).not.toBeCalled();
     });
 
     it('should call all necessary methods in the correct order for an amended commit', async () => {
@@ -386,7 +408,7 @@ describe('RepoKit', () => {
         },
       });
 
-      expect(await repoKit.commitFiles({ paths, message: commitMessage, branchName, amend: true })).toBe(commit);
+      expect(await repoKit.commit({ paths, message: commitMessage, branchName, amend: true })).toBe(commit);
 
       expectCommitMethods();
 
@@ -401,13 +423,6 @@ describe('RepoKit', () => {
         tree: tree.sha,
         message: commitMessage,
       });
-
-      expect(octokitMock.rest.git.updateRef).toBeCalledWith({
-        ...repositoryInfo,
-        ref: `heads/${branchName}`,
-        sha: commit.sha,
-        force: true,
-      });
     });
 
     it('should use old commit message if the commit message is missing for an amended commit', async () => {
@@ -420,7 +435,7 @@ describe('RepoKit', () => {
         },
       });
 
-      expect(await repoKit.commitFiles({ paths, branchName, amend: true })).toBe(commit);
+      expect(await repoKit.commit({ paths, branchName, amend: true })).toBe(commit);
 
       expectCommitMethods();
 
@@ -434,13 +449,6 @@ describe('RepoKit', () => {
         parents: ['old-commit-parent-sha'],
         tree: tree.sha,
         message: commit.message,
-      });
-
-      expect(octokitMock.rest.git.updateRef).toBeCalledWith({
-        ...repositoryInfo,
-        ref: `heads/${branchName}`,
-        sha: commit.sha,
-        force: true,
       });
     });
   });

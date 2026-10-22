@@ -1,4 +1,3 @@
-// eslint-disable-next-line unicorn/name-replacements -- Keep the existing filename.
 import { readFileSync } from 'node:fs';
 
 import { Octokit } from '@octokit/rest';
@@ -11,10 +10,10 @@ interface CreateCommitArgs {
   readonly treeSha: string;
   readonly message?: string;
   readonly token?: string;
-  readonly amend: boolean;
+  readonly amend?: boolean;
 }
 
-export interface CommitFilesArgs {
+export interface CommitArgs {
   readonly paths: string[];
   readonly message?: string;
   readonly branchName: string;
@@ -35,7 +34,6 @@ export interface CreatePullRequestArgs {
   readonly draft?: boolean;
 }
 
-// eslint-disable-next-line unicorn/name-replacements
 export class RepoKit {
   private octokit: Octokit;
 
@@ -81,6 +79,17 @@ export class RepoKit {
       ...this.getRepositoryInfo(),
       ref: `refs/heads/${name}`,
       sha,
+    });
+
+    return data;
+  }
+
+  async updateBranch(name: string, sha: string, force = false) {
+    const { data } = await this.octokit.rest.git.updateRef({
+      ...this.getRepositoryInfo(),
+      ref: `heads/${name}`,
+      sha,
+      force,
     });
 
     return data;
@@ -153,7 +162,7 @@ export class RepoKit {
     return data;
   }
 
-  async commitFiles({ paths, branchName, amend = false, ...restCommitArgs }: CommitFilesArgs) {
+  async commit({ paths, branchName, ...restCommitArgs }: CommitArgs) {
     const treeBlobs = await this.createBlobs(paths);
 
     const {
@@ -168,16 +177,7 @@ export class RepoKit {
       base_tree: branchSha,
     });
 
-    const commit = await this.createCommit({ branchSha, treeSha, amend, ...restCommitArgs });
-
-    await this.octokit.rest.git.updateRef({
-      ...this.getRepositoryInfo(),
-      ref: `heads/${branchName}`,
-      sha: commit.sha,
-      force: amend,
-    });
-
-    return commit;
+    return this.createCommit({ branchSha, treeSha, ...restCommitArgs });
   }
 
   private async getBranchCommitMessage(branchName: string) {
