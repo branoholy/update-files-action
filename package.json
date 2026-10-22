@@ -1,6 +1,6 @@
 {
   "name": "update-files-action",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A GitHub action for updating files.",
   "author": "Branislav Holý <brano@holy.am>",
   "repository": "github:branoholy/update-files-action",
