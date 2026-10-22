@@ -14,21 +14,15 @@ interface BranchIsCreatedArgs {
   readonly gitHubMock: GitHubMock;
   readonly token: string;
   readonly branchName: string;
-  readonly baseBranchName?: GitHubMock['defaultBranchName'];
 }
 
-const branchIsCreated = ({
-  gitHubMock,
-  token,
-  branchName,
-  baseBranchName = gitHubMock.defaultBranchName,
-}: BranchIsCreatedArgs) => {
+const branchIsCreated = ({ gitHubMock, token, branchName }: BranchIsCreatedArgs) => {
   TestUtils.expectToBeCalled(gitHubMock.restMocks.git.createRef, [
     [
       expect.any(String),
       expect.objectContaining<Partial<GitHubRestParameters<'git/create-ref'>>>({
         ref: `refs/heads/${branchName}`,
-        sha: gitHubMock.getBranchSha(baseBranchName),
+        sha: gitHubMock.getBranchSha(branchName),
       }),
     ],
   ]);
@@ -61,6 +55,8 @@ interface FilesAreCommittedArgs {
   readonly gitHubMock: GitHubMock;
   readonly token: string;
   readonly branchName: string;
+  readonly branchCreated?: boolean;
+  readonly baseCommitSha?: string;
   readonly commitToken?: string;
   readonly amend?: boolean;
   readonly withoutCommitMessage?: boolean;
@@ -71,13 +67,15 @@ const filesAreCommitted = ({
   gitHubMock,
   token,
   branchName,
+  branchCreated = false,
+  baseCommitSha,
   commitToken = token,
   amend = false,
   withoutCommitMessage = false,
   files = defaultFiles,
 }: FilesAreCommittedArgs) => {
   const newCommitSha = gitHubMock.getBranchSha(branchName);
-  const oldCommitSha = GitHubMockUtils.createCommitSha(GitHubMockUtils.getCommitId(newCommitSha) - 1);
+  const oldCommitSha = baseCommitSha ?? GitHubMockUtils.createCommitSha(GitHubMockUtils.getCommitId(newCommitSha) - 1);
 
   TestUtils.expectToBeCalled(
     gitHubMock.restMocks.git.createBlob,
@@ -144,18 +142,31 @@ const filesAreCommitted = ({
   const gitCreateCommitMock = gitHubMock.restMocks.git.createCommit.mock.contexts[0];
   expect(gitCreateCommitMock?.req.headers.get('authorization')).toStrictEqual(`token ${commitToken}`);
 
-  TestUtils.expectToBeCalled(gitHubMock.restMocks.git.updateRef, [
-    [
-      expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)),
-      expect.objectContaining<Partial<GitHubRestParameters<'git/update-ref'>>>({
-        sha: newCommitSha,
-        force: amend,
-      }),
-    ],
-  ]);
+  if (branchCreated) {
+    const commitResponse = gitHubMock.restMocks.git.createCommit.mock.results[0]?.value as
+      ReturnType<typeof gitHubMock.restMocks.git.createCommit> | undefined;
+    expect(newCommitSha).toBe(commitResponse?.[1]?.sha);
+    expect(gitHubMock.restMocks.git.updateRef).not.toBeCalled();
+    expect(gitHubMock.restMocks.git.createCommit).toHaveBeenCalledBefore(gitHubMock.restMocks.git.createRef);
+    if (gitHubMock.restMocks.git.deleteRef.mock.calls.length > 0) {
+      expect(gitHubMock.restMocks.git.createCommit).toHaveBeenCalledBefore(gitHubMock.restMocks.git.deleteRef);
+      expect(gitHubMock.restMocks.git.deleteRef).toHaveBeenCalledBefore(gitHubMock.restMocks.git.createRef);
+    }
+  } else {
+    TestUtils.expectToBeCalled(gitHubMock.restMocks.git.updateRef, [
+      [
+        expect.stringMatching(new RegExp(`/heads%2F${branchName}$`)),
+        expect.objectContaining<Partial<GitHubRestParameters<'git/update-ref'>>>({
+          sha: newCommitSha,
+          force: amend,
+        }),
+      ],
+    ]);
+    expect(gitHubMock.restMocks.git.createCommit).toHaveBeenCalledBefore(gitHubMock.restMocks.git.updateRef);
 
-  const gitUpdateRefMock = gitHubMock.restMocks.git.updateRef.mock.contexts[0];
-  expect(gitUpdateRefMock?.req.headers.get('authorization')).toStrictEqual(`token ${token}`);
+    const gitUpdateRefMock = gitHubMock.restMocks.git.updateRef.mock.contexts[0];
+    expect(gitUpdateRefMock?.req.headers.get('authorization')).toStrictEqual(`token ${token}`);
+  }
 
   if (process.env['GITHUB_OUTPUT']) {
     const delimiterPrefix = 'ghadelimiter_';
@@ -205,6 +216,12 @@ const pullRequestIsCreated = ({
 }: PullRequestIsCreatedArgs) => {
   const newCommitSha = gitHubMock.getBranchSha(branchName);
   const oldCommitSha = GitHubMockUtils.createCommitSha(GitHubMockUtils.getCommitId(newCommitSha) - 1);
+
+  const publishMock =
+    gitHubMock.restMocks.git.createRef.mock.calls.length > 0
+      ? gitHubMock.restMocks.git.createRef
+      : gitHubMock.restMocks.git.updateRef;
+  expect(publishMock).toHaveBeenCalledBefore(gitHubMock.restMocks.pulls.create);
 
   if (withoutCommitMessage) {
     TestUtils.expectToBeCalled(gitHubMock.restMocks.repos.getBranch, [

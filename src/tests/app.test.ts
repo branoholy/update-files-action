@@ -5,7 +5,6 @@ import { type GlobOptionsWithFileTypesUnset, globSync } from 'glob';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { app, type AppArgs, type BranchArgs } from '../app.ts';
-// eslint-disable-next-line unicorn/name-replacements
 import { RepoKit } from '../repo-kit.ts';
 import { FileUtils, TestUtils } from '../utils/index.ts';
 
@@ -27,13 +26,14 @@ const isFileUntrackedMock = TestUtils.asMockedFunction(FileUtils.isFileUntracked
 const isFileChangedMock = TestUtils.asMockedFunction(FileUtils.isFileChanged);
 
 vi.mock('../repo-kit');
-// eslint-disable-next-line unicorn/name-replacements
+
 const RepoKitMock = TestUtils.asMockedClass(RepoKit);
 const hasBranchMock = vi.spyOn(RepoKitMock.prototype, 'hasBranch');
 const getBranchMock = vi.spyOn(RepoKitMock.prototype, 'getBranch');
 const deleteBranchMock = vi.spyOn(RepoKitMock.prototype, 'deleteBranch');
 const createBranchMock = vi.spyOn(RepoKitMock.prototype, 'createBranch');
-const commitFilesMock = vi.spyOn(RepoKitMock.prototype, 'commitFiles');
+const updateBranchMock = vi.spyOn(RepoKitMock.prototype, 'updateBranch');
+const commitMock = vi.spyOn(RepoKitMock.prototype, 'commit');
 const createPullRequestMock = vi.spyOn(RepoKitMock.prototype, 'createPullRequest');
 
 describe('app', () => {
@@ -80,9 +80,9 @@ describe('app', () => {
     url: 'url',
   };
 
-  const commitFilesResult = {
+  const commitResult = {
     sha: 'new-commit-sha',
-  } as Awaited<ReturnType<RepoKit['commitFiles']>>;
+  } as Awaited<ReturnType<RepoKit['commit']>>;
 
   const createPullRequestResult = {
     html_url: 'html_url',
@@ -102,7 +102,7 @@ describe('app', () => {
     RepoKitMock.prototype.getDefaultBranchName.mockResolvedValue(defaultBranchName);
 
     // Commit files
-    commitFilesMock.mockResolvedValue(commitFilesResult);
+    commitMock.mockResolvedValue(commitResult);
 
     // Create a pull request
     createPullRequestMock.mockResolvedValue(createPullRequestResult);
@@ -138,16 +138,13 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances.length).toBe(0);
   });
 
-  test('flow #02: all files are changed, branch does not exist => create branch, commit', async () => {
+  test('flow #02: all files are changed, branch does not exist => commit, create branch', async () => {
     // All files are changed
     isFileUntrackedMock.mockImplementation((path) => path === 'path3');
     isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch does not exist
     hasBranchMock.mockResolvedValue(false);
-
-    // Use the default base branch
-    getBranchMock.mockResolvedValue(getDefaultBranchResult);
 
     const exitCode = await app({
       ...appArgs,
@@ -163,7 +160,7 @@ describe('app', () => {
       ['File "path2" is changed'],
       ['File "path3" is created'],
       [`Branch "${branch.name}" has been created`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Changed files have been committed to ${commitResult.sha}`],
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
@@ -176,31 +173,33 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
     TestUtils.expectToBeCalled(hasBranchMock, [[branch.name]]);
-    TestUtils.expectToBeCalled(getBranchMock, [[defaultBranchName]]);
+    expect(getBranchMock).not.toBeCalled();
 
     // The branch is not deleted
     expect(deleteBranchMock).not.toBeCalled();
 
     // The branch is created
-    TestUtils.expectToBeCalled(createBranchMock, [[branch.name, defaultBranchSha]]);
+    TestUtils.expectToBeCalled(createBranchMock, [[branch.name, commitResult.sha]]);
 
     // All files are committed
-    TestUtils.expectToBeCalled(commitFilesMock, [
+    TestUtils.expectToBeCalled(commitMock, [
       [
         {
           ...commit,
-          branchName: branch.name,
+          branchName: defaultBranchName,
         },
       ],
     ]);
 
+    expect(commitMock).toHaveBeenCalledBefore(createBranchMock);
+    expect(updateBranchMock).not.toBeCalled();
+
     // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
   });
 
-  test('flow #03: all files are changed, branch does not exist => create branch, use non-default base, commit', async () => {
+  test('flow #03: all files are changed, branch does not exist => commit from non-default base, create branch', async () => {
     const baseBranchName = 'base-branch';
-    const baseBranchSha = 'base-branch-sha';
 
     // All files are changed
     isFileUntrackedMock.mockImplementation((path) => path === 'path3');
@@ -208,15 +207,6 @@ describe('app', () => {
 
     // The branch does not exist
     hasBranchMock.mockResolvedValue(false);
-
-    // Use a non-default base branch
-    getBranchMock.mockResolvedValue({
-      name: baseBranchName,
-      node_id: 'node_id',
-      object: { sha: baseBranchSha, type: 'type', url: 'url' },
-      ref: 'base-branch-ref',
-      url: 'url',
-    });
 
     const exitCode = await app({
       ...appArgs,
@@ -237,7 +227,7 @@ describe('app', () => {
       ['File "path2" is changed'],
       ['File "path3" is created'],
       [`Branch "${branch.name}" has been created`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Changed files have been committed to ${commitResult.sha}`],
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
@@ -250,38 +240,38 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
     TestUtils.expectToBeCalled(hasBranchMock, [[branch.name]]);
-    TestUtils.expectToBeCalled(getBranchMock, [[baseBranchName]]);
+    expect(getBranchMock).not.toBeCalled();
 
     // The branch is not deleted
     expect(deleteBranchMock).not.toBeCalled();
 
     // The branch is created
-    TestUtils.expectToBeCalled(createBranchMock, [[branch.name, baseBranchSha]]);
+    TestUtils.expectToBeCalled(createBranchMock, [[branch.name, commitResult.sha]]);
 
     // All files are committed
-    TestUtils.expectToBeCalled(commitFilesMock, [
+    TestUtils.expectToBeCalled(commitMock, [
       [
         {
           ...commit,
-          branchName: branch.name,
+          branchName: baseBranchName,
         },
       ],
     ]);
 
+    expect(commitMock).toHaveBeenCalledBefore(createBranchMock);
+    expect(updateBranchMock).not.toBeCalled();
+
     // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
   });
 
-  test('flow #04: all files are changed, branch exists => recreate branch, commit', async () => {
+  test('flow #04: all files are changed, branch exists => commit, recreate branch', async () => {
     // All files are changed
     isFileUntrackedMock.mockImplementation((path) => path === 'path3');
     isFileChangedMock.mockImplementation((path) => ['path1', 'path2'].includes(path));
 
     // The branch exists
     hasBranchMock.mockResolvedValue(true);
-
-    // Use the default base branch
-    getBranchMock.mockResolvedValue(getDefaultBranchResult);
 
     const exitCode = await app({
       ...appArgs,
@@ -305,7 +295,7 @@ describe('app', () => {
       [`Deleting branch "${branch.name}"...`],
       [`Branch "${branch.name}" has been deleted`],
       [`Branch "${branch.name}" has been created`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Changed files have been committed to ${commitResult.sha}`],
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
@@ -318,26 +308,31 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
     TestUtils.expectToBeCalled(hasBranchMock, [[branch.name]]);
-    TestUtils.expectToBeCalled(getBranchMock, [[defaultBranchName]]);
+    expect(getBranchMock).not.toBeCalled();
 
     // The branch is deleted
     TestUtils.expectToBeCalled(deleteBranchMock, [[branch.name]]);
 
     // The branch is created
-    TestUtils.expectToBeCalled(createBranchMock, [[branch.name, defaultBranchSha]]);
+    TestUtils.expectToBeCalled(createBranchMock, [[branch.name, commitResult.sha]]);
 
     // All files are committed
-    TestUtils.expectToBeCalled(commitFilesMock, [
+    TestUtils.expectToBeCalled(commitMock, [
       [
         {
           ...commit,
-          branchName: branch.name,
+          branchName: defaultBranchName,
         },
       ],
     ]);
 
+    expect(commitMock).toHaveBeenCalledBefore(createBranchMock);
+    expect(updateBranchMock).not.toBeCalled();
+    expect(commitMock).toHaveBeenCalledBefore(deleteBranchMock);
+    expect(deleteBranchMock).toHaveBeenCalledBefore(createBranchMock);
+
     // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
   });
 
   test('flow #05: all files are changed, ref exists => do not recreate branch, commit', async () => {
@@ -366,7 +361,7 @@ describe('app', () => {
       ['File "path2" is changed'],
       ['File "path3" is created'],
       [`Branch "${branch.name}" already exists`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Changed files have been committed to ${commitResult.sha}`],
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
@@ -387,7 +382,7 @@ describe('app', () => {
     expect(createBranchMock).not.toBeCalled();
 
     // All files are committed
-    TestUtils.expectToBeCalled(commitFilesMock, [
+    TestUtils.expectToBeCalled(commitMock, [
       [
         {
           ...commit,
@@ -396,8 +391,11 @@ describe('app', () => {
       ],
     ]);
 
+    TestUtils.expectToBeCalled(updateBranchMock, [[branch.name, commitResult.sha, false]]);
+    expect(commitMock).toHaveBeenCalledBefore(updateBranchMock);
+
     // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
   });
 
   test('flow #06: all files are changed, branch exists => do not recreate branch, do not commit', async () => {
@@ -432,7 +430,8 @@ describe('app', () => {
     expect(createBranchMock).not.toBeCalled();
 
     // No file is committed
-    expect(commitFilesMock).not.toBeCalled();
+    expect(commitMock).not.toBeCalled();
+    expect(updateBranchMock).not.toBeCalled();
 
     // The commit hash is not sent to the output
     expect(actionsCoreSetOutputMock).not.toBeCalled();
@@ -462,7 +461,7 @@ describe('app', () => {
       ['File "path2" is changed'],
       ['File "path3" is created'],
       [`Branch "${branch.name}" already exists`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Changed files have been committed to ${commitResult.sha}`],
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
@@ -483,7 +482,7 @@ describe('app', () => {
     expect(createBranchMock).not.toBeCalled();
 
     // All files are committed
-    TestUtils.expectToBeCalled(commitFilesMock, [
+    TestUtils.expectToBeCalled(commitMock, [
       [
         {
           ...commit,
@@ -492,8 +491,11 @@ describe('app', () => {
       ],
     ]);
 
+    TestUtils.expectToBeCalled(updateBranchMock, [[branch.name, commitResult.sha, false]]);
+    expect(commitMock).toHaveBeenCalledBefore(updateBranchMock);
+
     // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
 
     // A pull request is not created
     expect(createPullRequestMock).not.toBeCalled();
@@ -526,7 +528,7 @@ describe('app', () => {
       ['File "path2" is changed'],
       ['File "path3" is created'],
       [`Branch "${branch.name}" already exists`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Changed files have been committed to ${commitResult.sha}`],
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
@@ -547,7 +549,7 @@ describe('app', () => {
     expect(createBranchMock).not.toBeCalled();
 
     // All files are committed
-    TestUtils.expectToBeCalled(commitFilesMock, [
+    TestUtils.expectToBeCalled(commitMock, [
       [
         {
           ...commit,
@@ -557,8 +559,11 @@ describe('app', () => {
       ],
     ]);
 
+    TestUtils.expectToBeCalled(updateBranchMock, [[branch.name, commitResult.sha, true]]);
+    expect(commitMock).toHaveBeenCalledBefore(updateBranchMock);
+
     // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
 
     // A pull request is not created
     expect(createPullRequestMock).not.toBeCalled();
@@ -591,7 +596,7 @@ describe('app', () => {
       ['File "path2" is changed'],
       ['File "path3" is created'],
       [`Branch "${branch.name}" already exists`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Changed files have been committed to ${commitResult.sha}`],
       [`Pull request has been created at ${createPullRequestResult.html_url}`],
     ]);
 
@@ -613,7 +618,7 @@ describe('app', () => {
     expect(createBranchMock).not.toBeCalled();
 
     // All files are committed
-    TestUtils.expectToBeCalled(commitFilesMock, [
+    TestUtils.expectToBeCalled(commitMock, [
       [
         {
           paths: commit.paths,
@@ -623,8 +628,12 @@ describe('app', () => {
       ],
     ]);
 
+    TestUtils.expectToBeCalled(updateBranchMock, [[branch.name, commitResult.sha, true]]);
+    expect(commitMock).toHaveBeenCalledBefore(updateBranchMock);
+    expect(updateBranchMock).toHaveBeenCalledBefore(createPullRequestMock);
+
     // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
 
     // A pull request is created
     TestUtils.expectToBeCalled(createPullRequestMock, [
@@ -670,7 +679,8 @@ describe('app', () => {
     expect(createBranchMock).not.toBeCalled();
 
     // No file is committed
-    expect(commitFilesMock).not.toBeCalled();
+    expect(commitMock).not.toBeCalled();
+    expect(updateBranchMock).not.toBeCalled();
 
     // The commit hash is not sent to the output
     expect(actionsCoreSetOutputMock).not.toBeCalled();
@@ -703,7 +713,7 @@ describe('app', () => {
       ['File "path2" is changed'],
       ['File "path3" is created'],
       [`Branch "${branch.name}" already exists`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Changed files have been committed to ${commitResult.sha}`],
       [`Pull request has been created at ${createPullRequestResult.html_url}`],
     ]);
 
@@ -725,7 +735,7 @@ describe('app', () => {
     expect(createBranchMock).not.toBeCalled();
 
     // All files are committed
-    TestUtils.expectToBeCalled(commitFilesMock, [
+    TestUtils.expectToBeCalled(commitMock, [
       [
         {
           ...commit,
@@ -734,8 +744,12 @@ describe('app', () => {
       ],
     ]);
 
+    TestUtils.expectToBeCalled(updateBranchMock, [[branch.name, commitResult.sha, false]]);
+    expect(commitMock).toHaveBeenCalledBefore(updateBranchMock);
+    expect(updateBranchMock).toHaveBeenCalledBefore(createPullRequestMock);
+
     // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
 
     // A pull request is created
     TestUtils.expectToBeCalled(createPullRequestMock, [
@@ -748,7 +762,7 @@ describe('app', () => {
     ]);
   });
 
-  test('flow #12: all files are changed, branch does not exist => create branch, commit with token, create pull request with all args', async () => {
+  test('flow #12: all files are changed, branch does not exist => commit with token, create branch, create pull request with all args', async () => {
     const commitToken = 'commit-token';
 
     // All files are changed
@@ -757,9 +771,6 @@ describe('app', () => {
 
     // The branch does not exist
     hasBranchMock.mockResolvedValue(false);
-
-    // Use the default base branch
-    getBranchMock.mockResolvedValue(getDefaultBranchResult);
 
     const exitCode = await app({
       ...appArgs,
@@ -780,7 +791,7 @@ describe('app', () => {
       ['File "path2" is changed'],
       ['File "path3" is created'],
       [`Branch "${branch.name}" has been created`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Changed files have been committed to ${commitResult.sha}`],
       [`Pull request has been created at ${createPullRequestResult.html_url}`],
     ]);
 
@@ -794,27 +805,31 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
     TestUtils.expectToBeCalled(hasBranchMock, [[branch.name]]);
-    TestUtils.expectToBeCalled(getBranchMock, [[defaultBranchName]]);
+    expect(getBranchMock).not.toBeCalled();
 
     // The branch is not deleted
     expect(deleteBranchMock).not.toBeCalled();
 
     // The branch is created
-    TestUtils.expectToBeCalled(createBranchMock, [[branch.name, defaultBranchSha]]);
+    TestUtils.expectToBeCalled(createBranchMock, [[branch.name, commitResult.sha]]);
 
     // All files are committed
-    TestUtils.expectToBeCalled(commitFilesMock, [
+    TestUtils.expectToBeCalled(commitMock, [
       [
         {
           ...commit,
-          branchName: branch.name,
+          branchName: defaultBranchName,
           token: commitToken,
         },
       ],
     ]);
 
+    expect(commitMock).toHaveBeenCalledBefore(createBranchMock);
+    expect(updateBranchMock).not.toBeCalled();
+    expect(createBranchMock).toHaveBeenCalledBefore(createPullRequestMock);
+
     // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
 
     // A pull request is created
     TestUtils.expectToBeCalled(createPullRequestMock, [
@@ -909,7 +924,7 @@ describe('app', () => {
     expect(RepoKitMock.mock.instances.length).toBe(0);
   });
 
-  test('flow #16: glob finds more files, all files are changed, branch does not exist => create branch, commit', async () => {
+  test('flow #16: glob finds more files, all files are changed, branch does not exist => commit, create branch', async () => {
     // Glob finds more files
     globSyncMock.mockImplementation((path) => [path, `${path}-2`]);
 
@@ -919,9 +934,6 @@ describe('app', () => {
 
     // The branch does not exist
     hasBranchMock.mockResolvedValue(false);
-
-    // Use the default base branch
-    getBranchMock.mockResolvedValue(getDefaultBranchResult);
 
     const exitCode = await app({
       ...appArgs,
@@ -940,7 +952,7 @@ describe('app', () => {
       ['File "path3" is created'],
       ['File "path3-2" is created'],
       [`Branch "${branch.name}" has been created`],
-      [`Changed files have been committed to ${commitFilesResult.sha}`],
+      [`Changed files have been committed to ${commitResult.sha}`],
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
@@ -960,26 +972,126 @@ describe('app', () => {
     TestUtils.expectToBeCalled(RepoKitMock, [[owner, repositoryName, token]]);
 
     TestUtils.expectToBeCalled(hasBranchMock, [[branch.name]]);
-    TestUtils.expectToBeCalled(getBranchMock, [[defaultBranchName]]);
+    expect(getBranchMock).not.toBeCalled();
 
     // The branch is not deleted
     expect(deleteBranchMock).not.toBeCalled();
 
     // The branch is created
-    TestUtils.expectToBeCalled(createBranchMock, [[branch.name, defaultBranchSha]]);
+    TestUtils.expectToBeCalled(createBranchMock, [[branch.name, commitResult.sha]]);
 
     // All files are committed
-    TestUtils.expectToBeCalled(commitFilesMock, [
+    TestUtils.expectToBeCalled(commitMock, [
       [
         {
           ...commit,
           paths: ['path1', 'path1-2', 'path2', 'path2-2', 'path3', 'path3-2'],
-          branchName: branch.name,
+          branchName: defaultBranchName,
         },
       ],
     ]);
 
+    expect(commitMock).toHaveBeenCalledBefore(createBranchMock);
+    expect(updateBranchMock).not.toBeCalled();
+
     // The commit hash is sent to the output
-    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitFilesResult.sha]]);
+    TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
   });
+
+  test.each([
+    { flow: '19', branchExists: false, amend: false },
+    { flow: '20', branchExists: true, amend: false },
+    { flow: '21', branchExists: false, amend: true },
+    { flow: '22', branchExists: true, amend: true },
+  ])(
+    'flow #$flow: custom base, branchExists=$branchExists, amend=$amend => commit, create or recreate branch',
+    async ({ branchExists, amend }) => {
+      const baseBranchName = 'custom-base';
+      const commitArgs = {
+        paths: commit.paths,
+        token: 'commit-token',
+        amend,
+        ...(!amend && { message: commit.message }),
+      };
+      isFileChangedMock.mockReturnValue(true);
+      hasBranchMock.mockResolvedValue(branchExists);
+
+      const exitCode = await app({
+        ...appArgs,
+        branch: { name: `refs/heads/${branch.name}`, base: baseBranchName, recreate: true },
+        commit: commitArgs,
+      });
+
+      expect(exitCode).toBe(0);
+      expect(consoleErrorMock).not.toBeCalled();
+      TestUtils.expectToBeCalled(commitMock, [[{ ...commitArgs, branchName: baseBranchName }]]);
+      TestUtils.expectToBeCalled(createBranchMock, [[branch.name, commitResult.sha]]);
+      TestUtils.expectToBeCalled(deleteBranchMock, branchExists ? [[branch.name]] : []);
+      expect(commitMock).toHaveBeenCalledBefore(createBranchMock);
+      if (branchExists) {
+        expect(commitMock).toHaveBeenCalledBefore(deleteBranchMock);
+        expect(deleteBranchMock).toHaveBeenCalledBefore(createBranchMock);
+      }
+      expect(updateBranchMock).not.toBeCalled();
+      expect(RepoKitMock.prototype.getDefaultBranchName.mock.calls).toHaveLength(0);
+      TestUtils.expectToBeCalled(actionsCoreSetOutputMock, [['commit.sha', commitResult.sha]]);
+    },
+  );
+
+  test.each([
+    { flow: '23', branchExists: false },
+    { flow: '24', branchExists: true },
+  ])(
+    'flow #$flow: commit fails, branchExists=$branchExists => preserve branch state, exit 1',
+    async ({ branchExists }) => {
+      isFileChangedMock.mockReturnValue(true);
+      hasBranchMock.mockResolvedValue(branchExists);
+      const error = new Error('Commit could not be created');
+      commitMock.mockRejectedValue(error);
+
+      const exitCode = await app({
+        ...appArgs,
+        branch: { ...branch, recreate: true },
+        commit,
+        pullRequest: {},
+      });
+
+      expect(exitCode).toBe(1);
+      TestUtils.expectToBeCalled(consoleErrorMock, [[error]]);
+      expect(deleteBranchMock).not.toBeCalled();
+      expect(createBranchMock).not.toBeCalled();
+      expect(updateBranchMock).not.toBeCalled();
+      expect(createPullRequestMock).not.toBeCalled();
+      expect(actionsCoreSetOutputMock).not.toBeCalled();
+    },
+  );
+
+  test.each([
+    { flow: '25', branchExists: false },
+    { flow: '26', branchExists: true },
+  ])(
+    'flow #$flow: no commit, branchExists=$branchExists => create or recreate branch from custom base',
+    async ({ branchExists }) => {
+      const baseBranchName = 'custom-base';
+      hasBranchMock.mockResolvedValue(branchExists);
+      getBranchMock.mockResolvedValue(getDefaultBranchResult);
+
+      const exitCode = await app({
+        ...appArgs,
+        branch: { ...branch, base: baseBranchName, recreate: true },
+      });
+
+      expect(exitCode).toBe(0);
+      expect(consoleErrorMock).not.toBeCalled();
+      TestUtils.expectToBeCalled(getBranchMock, [[baseBranchName]]);
+      TestUtils.expectToBeCalled(createBranchMock, [[branch.name, defaultBranchSha]]);
+      TestUtils.expectToBeCalled(deleteBranchMock, branchExists ? [[branch.name]] : []);
+      if (branchExists) {
+        expect(deleteBranchMock).toHaveBeenCalledBefore(createBranchMock);
+      }
+      expect(commitMock).not.toBeCalled();
+      expect(updateBranchMock).not.toBeCalled();
+      expect(actionsCoreSetOutputMock).not.toBeCalled();
+    },
+  );
 });

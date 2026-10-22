@@ -120,7 +120,7 @@ describe('e2e tests', () => {
     expect(gitHubMock.restMocks.any).not.toBeCalled();
   });
 
-  test('flow #02: all files are changed, branch does not exist => create branch, commit', async () => {
+  test('flow #02: all files are changed, branch does not exist => commit, create branch', async () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
@@ -145,10 +145,10 @@ describe('e2e tests', () => {
     expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
 
     E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
-    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName });
+    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName, branchCreated: true });
   });
 
-  test('flow #03: all files are changed, branch does not exist => create branch, use non-default base, commit', async () => {
+  test('flow #03: all files are changed, branch does not exist => commit from non-default base, create branch', async () => {
     const baseBranchName = 'base-branch';
 
     // All files are changed
@@ -187,12 +187,11 @@ describe('e2e tests', () => {
       gitHubMock,
       token,
       branchName,
-      baseBranchName,
     });
-    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName });
+    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName, branchCreated: true });
   });
 
-  test('flow #04: all files are changed, branch exists => recreate branch, commit', async () => {
+  test('flow #04: all files are changed, branch exists => commit, recreate branch', async () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
@@ -228,7 +227,7 @@ describe('e2e tests', () => {
     ]);
 
     E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
-    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName });
+    E2EExpects.filesAreCommitted({ gitHubMock, token, branchName, branchCreated: true });
   });
 
   test('flow #05: all files are changed, ref exists => do not delete branch, commit', async () => {
@@ -499,7 +498,7 @@ describe('e2e tests', () => {
     E2EExpects.pullRequestIsCreated({ gitHubMock, token, branchName });
   });
 
-  test('flow #12: all files are changed, branch does not exist => create branch, commit with token, create pull request with all args', async () => {
+  test('flow #12: all files are changed, branch does not exist => commit with token, create branch, create pull request with all args', async () => {
     // All files are changed
     ChildProcess.execSync(E2EConstants.commands);
 
@@ -538,6 +537,7 @@ describe('e2e tests', () => {
 
     E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
     E2EExpects.filesAreCommitted({
+      branchCreated: true,
       gitHubMock,
       token,
       branchName,
@@ -614,7 +614,7 @@ describe('e2e tests', () => {
     expect(gitHubMock.restMocks.any).not.toBeCalled();
   });
 
-  test('flow #16: glob finds more files, all files are changed, branch does not exist => create branch, commit', async () => {
+  test('flow #16: glob finds more files, all files are changed, branch does not exist => commit, create branch', async () => {
     // Add additional files to repo
     FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path1-2'), 'content1-2');
     FileSystem.writeFileSync(Path.join(E2EConstants.testFilesDirectory, 'path2-2'), 'content2-2');
@@ -654,6 +654,7 @@ describe('e2e tests', () => {
 
     E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
     E2EExpects.filesAreCommitted({
+      branchCreated: true,
       gitHubMock,
       token,
       branchName,
@@ -721,4 +722,126 @@ describe('e2e tests', () => {
     // No request to GitHub is made
     expect(gitHubMock.restMocks.any).not.toBeCalled();
   });
+
+  test.each([
+    { flow: '19', branchExists: false, amend: false },
+    { flow: '20', branchExists: true, amend: false },
+    { flow: '21', branchExists: false, amend: true },
+    { flow: '22', branchExists: true, amend: true },
+  ])(
+    'flow #$flow: custom base, branchExists=$branchExists, amend=$amend => commit, create or recreate branch',
+    async ({ branchExists, amend }) => {
+      ChildProcess.execSync(E2EConstants.commands);
+      const baseBranchName = 'custom-base';
+      gitHubMock.createBranch(baseBranchName);
+      gitHubMock.commit(baseBranchName);
+      const baseCommitSha = gitHubMock.getBranchSha(baseBranchName);
+      const defaultCommitSha = gitHubMock.getBranchSha(gitHubMock.defaultBranchName);
+
+      if (branchExists) {
+        gitHubMock.createBranch(branchName);
+        gitHubMock.commit(branchName);
+      }
+
+      process.env['INPUT_BRANCH.NAME'] = `refs/heads/${branchName}`;
+      process.env['INPUT_BRANCH.BASE'] = baseBranchName;
+      process.env['INPUT_BRANCH.RECREATE'] = 'true';
+      process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+      process.env['INPUT_COMMIT.TOKEN'] = E2EConstants.commitToken;
+      process.env['INPUT_COMMIT.AMEND'] = String(amend);
+      if (!amend) {
+        process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+      }
+
+      await main();
+
+      expect(E2EMocks.consoleError).not.toBeCalled();
+      TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
+      E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
+      E2EExpects.filesAreCommitted({
+        gitHubMock,
+        token,
+        branchName,
+        branchCreated: true,
+        baseCommitSha,
+        amend,
+        withoutCommitMessage: amend,
+        commitToken: E2EConstants.commitToken,
+      });
+      expect(gitHubMock.getBranchSha(baseBranchName)).toBe(baseCommitSha);
+      expect(gitHubMock.getBranchSha(gitHubMock.defaultBranchName)).toBe(defaultCommitSha);
+      expect(gitHubMock.restMocks.git.deleteRef).toBeCalledTimes(branchExists ? 1 : 0);
+    },
+  );
+
+  test.each([
+    { flow: '23', branchExists: false },
+    { flow: '24', branchExists: true },
+  ])(
+    'flow #$flow: commit fails, branchExists=$branchExists => preserve branch state, exit 1',
+    async ({ branchExists }) => {
+      ChildProcess.execSync(E2EConstants.commands);
+      const originalCommitSha = gitHubMock.getBranchSha(gitHubMock.defaultBranchName);
+      if (branchExists) {
+        gitHubMock.createBranch(branchName);
+      }
+      gitHubMock.restMocks.git.createCommit.mockReturnValue([422]);
+
+      process.env['INPUT_BRANCH.RECREATE'] = 'true';
+      process.env['INPUT_COMMIT.PATHS'] = E2EConstants.commitPaths;
+      process.env['INPUT_COMMIT.MESSAGE'] = E2EConstants.commitMessage;
+      process.env['INPUT_PULL-REQUEST'] = 'true';
+
+      await main();
+
+      TestUtils.expectToBeCalled(E2EMocks.processExit, [[1]]);
+      expect(E2EMocks.consoleError).toBeCalledTimes(1);
+      expect(gitHubMock.restMocks.git.createCommit).toBeCalledTimes(1);
+      expect(gitHubMock.restMocks.git.deleteRef).not.toBeCalled();
+      expect(gitHubMock.restMocks.git.createRef).not.toBeCalled();
+      expect(gitHubMock.restMocks.git.updateRef).not.toBeCalled();
+      expect(gitHubMock.restMocks.pulls.create).not.toBeCalled();
+      expect(E2EMocks.processStdoutWrite).not.toBeCalled();
+      if (branchExists) {
+        expect(gitHubMock.getBranchSha(branchName)).toBe(originalCommitSha);
+      } else {
+        expect(() => gitHubMock.getBranchSha(branchName)).toThrow('Branch not found');
+      }
+    },
+  );
+
+  test.each([
+    { flow: '25', branchExists: false },
+    { flow: '26', branchExists: true },
+  ])(
+    'flow #$flow: no commit, branchExists=$branchExists => create or recreate branch from custom base',
+    async ({ branchExists }) => {
+      const baseBranchName = 'custom-base';
+      gitHubMock.createBranch(baseBranchName);
+      gitHubMock.commit(baseBranchName);
+      const baseCommitSha = gitHubMock.getBranchSha(baseBranchName);
+      if (branchExists) {
+        gitHubMock.createBranch(branchName);
+      }
+
+      process.env['INPUT_BRANCH.BASE'] = baseBranchName;
+      process.env['INPUT_BRANCH.RECREATE'] = 'true';
+      process.env.INPUT_COMMIT = 'false';
+
+      await main();
+
+      expect(E2EMocks.consoleError).not.toBeCalled();
+      TestUtils.expectToBeCalled(E2EMocks.processExit, [[0]]);
+      expect(gitHubMock.getBranchSha(branchName)).toBe(baseCommitSha);
+      E2EExpects.branchIsCreated({ gitHubMock, token, branchName });
+      expect(gitHubMock.restMocks.git.deleteRef).toBeCalledTimes(branchExists ? 1 : 0);
+      if (branchExists) {
+        expect(gitHubMock.restMocks.git.deleteRef).toHaveBeenCalledBefore(gitHubMock.restMocks.git.createRef);
+      }
+      expect(gitHubMock.restMocks.git.createBlob).not.toBeCalled();
+      expect(gitHubMock.restMocks.git.createCommit).not.toBeCalled();
+      expect(gitHubMock.restMocks.git.updateRef).not.toBeCalled();
+      expect(E2EMocks.processStdoutWrite).not.toBeCalled();
+    },
+  );
 });

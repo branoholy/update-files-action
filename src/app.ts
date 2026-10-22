@@ -1,11 +1,13 @@
 import * as ActionsCore from '@actions/core';
 import { globSync } from 'glob';
 
-// eslint-disable-next-line unicorn/name-replacements
 import { RepoKit } from './repo-kit.ts';
 import { dp, FileUtils } from './utils/index.ts';
 
 const branchRefPrefix = 'refs/heads/';
+
+const getBaseBranchName = async (repoKit: RepoKit, baseBranchName: string | undefined) =>
+  baseBranchName ?? (await repoKit.getDefaultBranchName());
 
 const findChangedFiles = (paths: string[]) => {
   const filePaths = paths.reduce<string[]>((acc, path) => {
@@ -45,7 +47,6 @@ export interface BranchArgs {
 }
 
 const createBranch = async (
-  // eslint-disable-next-line unicorn/name-replacements
   repoKit: RepoKit,
   { name: branchName, base: baseBranchName, recreate = false }: BranchArgs,
 ) => {
@@ -80,13 +81,38 @@ export interface CommitArgs {
   readonly amend?: boolean;
 }
 
-// eslint-disable-next-line unicorn/name-replacements
-const commitFiles = async (repoKit: RepoKit, paths: string[], branchName: string, commitArgs: CommitArgs) => {
-  const commit = await repoKit.commitFiles({
+const commitFiles = async (
+  repoKit: RepoKit,
+  paths: string[],
+  { name: branchName, base: baseBranchName, recreate = false }: BranchArgs,
+  commitArgs: CommitArgs,
+) => {
+  const branchExists = await repoKit.hasBranch(branchName);
+  if (branchExists) {
+    console.info(`Branch "${branchName}" already exists`);
+  }
+
+  const shouldCreateBranch = !branchExists || recreate;
+  const commitBranchName = shouldCreateBranch ? await getBaseBranchName(repoKit, baseBranchName) : branchName;
+
+  const commit = await repoKit.commit({
     ...commitArgs,
     paths,
-    branchName,
+    branchName: commitBranchName,
   });
+
+  if (shouldCreateBranch) {
+    if (branchExists) {
+      console.info(`Deleting branch "${branchName}"...`);
+      await repoKit.deleteBranch(branchName);
+      console.info(`Branch "${branchName}" has been deleted`);
+    }
+
+    await repoKit.createBranch(branchName, commit.sha);
+    console.info(`Branch "${branchName}" has been created`);
+  } else {
+    await repoKit.updateBranch(branchName, commit.sha, commitArgs.amend ?? false);
+  }
 
   ActionsCore.setOutput('commit.sha', commit.sha);
   console.info(`Changed files have been committed to ${commit.sha}`);
@@ -104,7 +130,6 @@ export interface PullRequestArgs {
   readonly draft?: boolean;
 }
 
-// eslint-disable-next-line unicorn/name-replacements
 const createPullRequest = async (repoKit: RepoKit, branchName: string, pullRequestArgs: PullRequestArgs) => {
   const pullRequest = await repoKit.createPullRequest({
     ...pullRequestArgs,
@@ -149,13 +174,12 @@ export const app = async ({
       return 0;
     }
 
-    // eslint-disable-next-line unicorn/name-replacements
     const repoKit = new RepoKit(owner, repositoryName, token);
 
-    await createBranch(repoKit, { name: branchName, ...restBranch });
-
     if (commit && changedPaths) {
-      await commitFiles(repoKit, changedPaths, branchName, commit);
+      await commitFiles(repoKit, changedPaths, { name: branchName, ...restBranch }, commit);
+    } else {
+      await createBranch(repoKit, { name: branchName, ...restBranch });
     }
 
     if (pullRequest) {
