@@ -17,7 +17,7 @@ import { readFileSync as b } from "node:fs";
 import { lstat as x, readdir as S, readlink as C, realpath as w } from "node:fs/promises";
 import { StringDecoder as T } from "node:string_decoder";
 import E from "node:os";
-import { execSync as D } from "node:child_process";
+import { execFileSync as D } from "node:child_process";
 //#region \0rolldown/runtime.js
 var O = Object.create, k = Object.defineProperty, A = Object.getOwnPropertyDescriptor, j = Object.getOwnPropertyNames, M = Object.getPrototypeOf, N = Object.prototype.hasOwnProperty, P = (e, t, n) => () => {
 	if (n) throw n[0];
@@ -16010,7 +16010,7 @@ function gl(e, t) {
 }
 function _l(e, t) {
 	let n = hl(e, t);
-	return typeof n == "string" ? Number(n) : null;
+	return typeof n == "string" ? Math.trunc(Number(n)) : null;
 }
 function vl(e, t) {
 	return hl(e, t);
@@ -16028,8 +16028,21 @@ var bl = {
 	let t = Object.keys(e);
 	if (t.length > 0) throw Error(`Missing env(s): ${t.join(", ")}`);
 } }) }, Sl = {
-	isFileUntracked: (e) => D(`git ls-files --exclude-standard --others ${e} | wc -l`).toString().trim() === "1",
-	isFileChanged: (e) => D(`git diff --shortstat ${e} | wc -l`).toString().trim() === "1"
+	isFileUntracked: (e) => D("git", [
+		"--literal-pathspecs",
+		"ls-files",
+		"--exclude-standard",
+		"--others",
+		"--",
+		e
+	]).length > 0,
+	isFileChanged: (e) => D("git", [
+		"--literal-pathspecs",
+		"diff",
+		"--shortstat",
+		"--",
+		e
+	]).length > 0
 }, $ = (e, t) => Object.values(e)[0] === t ? {} : e, Cl = class {
 	owner;
 	repositoryName;
@@ -16067,6 +16080,15 @@ var bl = {
 			sha: t
 		});
 		return n;
+	}
+	async updateBranch(e, t, n = !1) {
+		let { data: r } = await this.octokit.rest.git.updateRef({
+			...this.getRepositoryInfo(),
+			ref: `heads/${e}`,
+			sha: t,
+			force: n
+		});
+		return r;
 	}
 	deleteBranch(e) {
 		return this.octokit.rest.git.deleteRef({
@@ -16117,23 +16139,17 @@ var bl = {
 		});
 		return o;
 	}
-	async commitFiles({ paths: e, branchName: t, amend: n = !1, ...r }) {
-		let i = await this.createBlobs(e), { object: { sha: a } } = await this.getBranch(t), { data: { sha: o } } = await this.octokit.rest.git.createTree({
+	async commit({ paths: e, branchName: t, ...n }) {
+		let r = await this.createBlobs(e), { object: { sha: i } } = await this.getBranch(t), { data: { sha: a } } = await this.octokit.rest.git.createTree({
 			...this.getRepositoryInfo(),
-			tree: i,
-			base_tree: a
-		}), s = await this.createCommit({
-			branchSha: a,
-			treeSha: o,
-			amend: n,
-			...r
+			tree: r,
+			base_tree: i
 		});
-		return await this.octokit.rest.git.updateRef({
-			...this.getRepositoryInfo(),
-			ref: `heads/${t}`,
-			sha: s.sha,
-			force: n
-		}), s;
+		return this.createCommit({
+			branchSha: i,
+			treeSha: a,
+			...n
+		});
 	}
 	async getBranchCommitMessage(e) {
 		let { data: { commit: t } } = await this.octokit.rest.repos.getBranch({
@@ -16164,43 +16180,48 @@ var bl = {
 			...$({ milestone: c })
 		}), u;
 	}
-}, wl = "refs/heads/", Tl = (e) => {
+}, wl = "refs/heads/", Tl = async (e, t) => t ?? await e.getDefaultBranchName(), El = (e) => {
 	let t = e.reduce((e, t) => (e.push(...Bo(t, { nodir: !0 })), e), []).reduce((e, t) => Sl.isFileUntracked(t) ? (console.info(`File "${t}" is created`), e.push(t), e) : (Sl.isFileChanged(t) && (console.info(`File "${t}" is changed`), e.push(t)), e), []);
 	return t.length === 0 && console.info("No file has been changed"), t;
-}, El = async (e, { name: t, base: n, recreate: r = !1 }) => {
+}, Dl = async (e, { name: t, base: n, recreate: r = !1 }) => {
 	if (await e.hasBranch(t)) {
 		if (console.info(`Branch "${t}" already exists`), r) console.info(`Deleting branch "${t}"...`), await e.deleteBranch(t), console.info(`Branch "${t}" has been deleted`);
 		else return;
 	}
 	let { object: { sha: i } } = await e.getBranch(n ?? await e.getDefaultBranchName());
 	await e.createBranch(t, i), console.info(`Branch "${t}" has been created`);
-}, Dl = async (e, t, n, r) => {
-	let i = await e.commitFiles({
-		...r,
+}, Ol = async (e, t, { name: n, base: r, recreate: i = !1 }, a) => {
+	let o = await e.hasBranch(n);
+	o && console.info(`Branch "${n}" already exists`);
+	let s = !o || i, c = s ? await Tl(e, r) : n, l = await e.commit({
+		...a,
 		paths: t,
-		branchName: n
+		branchName: c
 	});
-	rr("commit.sha", i.sha), console.info(`Changed files have been committed to ${i.sha}`);
-}, Ol = async (e, t, n) => {
+	s ? (o && (console.info(`Deleting branch "${n}"...`), await e.deleteBranch(n), console.info(`Branch "${n}" has been deleted`)), await e.createBranch(n, l.sha), console.info(`Branch "${n}" has been created`)) : await e.updateBranch(n, l.sha, a.amend ?? !1), rr("commit.sha", l.sha), console.info(`Changed files have been committed to ${l.sha}`);
+}, kl = async (e, t, n) => {
 	let r = await e.createPullRequest({
 		...n,
 		...$({ baseBranchName: n.base }),
 		branchName: t
 	});
 	console.info(`Pull request has been created at ${r.html_url}`);
-}, kl = async ({ repository: e, token: t, branch: { name: n, ...r }, commit: i, pullRequest: a }) => {
+}, Al = async ({ repository: e, token: t, branch: { name: n, ...r }, commit: i, pullRequest: a }) => {
 	try {
 		let [o, s] = e.split("/", 2);
 		if (!o || !s) throw Error(`Repository "${e}" does not have the valid format (owner/repositoryName)`);
 		if (i && !i.message && !i.amend) throw Error("Commit message is missing, please specify the \"commit.message\" input");
 		n.startsWith(wl) && (n = n.slice(11));
-		let c = i ? Tl(i.paths) : null;
+		let c = i ? El(i.paths) : null;
 		if (c?.length === 0) return 0;
 		let l = new Cl(o, s, t);
-		await El(l, {
+		i && c ? await Ol(l, c, {
 			name: n,
 			...r
-		}), i && c && await Dl(l, c, n, i), a && await Ol(l, n, {
+		}, i) : await Dl(l, {
+			name: n,
+			...r
+		}), a && await kl(l, n, {
 			...$({ title: i?.message }),
 			...a
 		});
@@ -16208,12 +16229,12 @@ var bl = {
 		return console.error(e), 1;
 	}
 	return 0;
-}, Al = [
+}, jl = [
 	"paths",
 	"message",
 	"token",
 	"amend"
-], jl = [
+], Ml = [
 	"title",
 	"body",
 	"base",
@@ -16223,15 +16244,15 @@ var bl = {
 	"team-reviewers",
 	"milestone",
 	"draft"
-], Ml = () => Al.some((e) => bl.hasInput(`commit.${e}`)), Nl = () => jl.some((e) => bl.hasInput(`pull-request.${e}`)), Pl = () => {
+], Nl = () => jl.some((e) => bl.hasInput(`commit.${e}`)), Pl = () => Ml.some((e) => bl.hasInput(`pull-request.${e}`)), Fl = () => {
 	let e = bl.getInputAsString("branch.name", { required: !0 }), t = bl.getInputAsString("branch.base"), n = bl.getInputAsBoolean("branch.recreate");
 	return {
 		name: e,
 		...$({ base: t }, null),
 		...$({ recreate: n }, null)
 	};
-}, Fl = () => {
-	if (!(bl.getInputAsBoolean("commit") ?? Ml())) return null;
+}, Il = () => {
+	if (!(bl.getInputAsBoolean("commit") ?? Nl())) return null;
 	let e = bl.getInputAsStrings("commit.paths", { required: !0 }), t = bl.getInputAsString("commit.message"), n = bl.getInputAsString("commit.token"), r = bl.getInputAsBoolean("commit.amend");
 	return {
 		paths: e,
@@ -16239,8 +16260,8 @@ var bl = {
 		...$({ token: n }, null),
 		...$({ amend: r }, null)
 	};
-}, Il = () => {
-	if (!(bl.getInputAsBoolean("pull-request") ?? Nl())) return null;
+}, Ll = () => {
+	if (!(bl.getInputAsBoolean("pull-request") ?? Pl())) return null;
 	let e = bl.getInputAsString("pull-request.title"), t = bl.getInputAsString("pull-request.body"), n = bl.getInputAsString("pull-request.base"), r = bl.getInputAsStrings("pull-request.labels"), i = bl.getInputAsStrings("pull-request.assignees"), a = bl.getInputAsStrings("pull-request.reviewers"), o = bl.getInputAsStrings("pull-request.team-reviewers"), s = bl.getInputAsInteger("pull-request.milestone"), c = bl.getInputAsBoolean("pull-request.draft");
 	return {
 		...$({ title: e }, null),
@@ -16258,7 +16279,7 @@ var bl = {
 //#region src/index.ts
 (async () => {
 	try {
-		let e = xl.requireEnv({ GITHUB_REPOSITORY: Re.str() }), t = bl.getInputAsString("token", { required: !0 }), n = Pl(), r = Fl(), i = Il(), a = await kl({
+		let e = xl.requireEnv({ GITHUB_REPOSITORY: Re.str() }), t = bl.getInputAsString("token", { required: !0 }), n = Fl(), r = Il(), i = Ll(), a = await Al({
 			repository: e.GITHUB_REPOSITORY,
 			token: t,
 			branch: n,
