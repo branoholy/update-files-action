@@ -16181,7 +16181,10 @@ var bl = {
 		}), u;
 	}
 }, wl = "refs/heads/", Tl = async (e, t) => t ?? await e.getDefaultBranchName(), El = (e) => {
-	let t = e.reduce((e, t) => (e.push(...Bo(t, { nodir: !0 })), e), []).reduce((e, t) => Sl.isFileUntracked(t) ? (console.info(`File "${t}" is created`), e.push(t), e) : (Sl.isFileChanged(t) && (console.info(`File "${t}" is changed`), e.push(t)), e), []);
+	let t = e.reduce((e, t) => (e.push(...Bo(t, {
+		nodir: !0,
+		dot: !0
+	})), e), []).reduce((e, t) => Sl.isFileUntracked(t) ? (console.info(`File "${t}" is created`), e.push(t), e) : (Sl.isFileChanged(t) && (console.info(`File "${t}" is changed`), e.push(t)), e), []);
 	return t.length === 0 && console.info("No file has been changed"), t;
 }, Dl = async (e, { name: t, base: n, recreate: r = !1 }) => {
 	if (await e.hasBranch(t)) {

@@ -1,5 +1,11 @@
 # Changelog: `update-files-action`
 
+## [1.0.1](https://github.com/branoholy/update-files-action/compare/v1.0.0...v1.0.1) (2026-10-23)
+
+### Fixes
+
+- Include hidden files ([#2587](https://github.com/branoholy/update-files-action/issues/2587)) ([146e6f4](https://github.com/branoholy/update-files-action/commit/146e6f4387ca77fab6dbfd3758fc9cf16c361f56))
+
 ## 1.0.0 (2026-10-22)
 
 ### ⚠ BREAKING CHANGES!
