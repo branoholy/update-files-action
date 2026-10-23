@@ -5,6 +5,8 @@ on:
     - cron: '0 17 * * 2' # Every Tuesday at 17:00 UTC
   workflow_dispatch:
 
+concurrency: update-package-manager
+
 permissions:
   contents: write
   pull-requests: write

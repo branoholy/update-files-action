@@ -1,6 +1,6 @@
 name: 🚀 Create release PR
 
-on: workflow_dispatch
+on: [workflow_dispatch]
 
 concurrency: create-release-pr
 

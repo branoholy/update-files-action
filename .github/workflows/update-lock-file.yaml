@@ -5,6 +5,8 @@ on:
     - cron: '0 17 * * 3' # Every Wednesday at 17:00 UTC
   workflow_dispatch:
 
+concurrency: update-lock-file
+
 permissions:
   contents: write
   pull-requests: write

@@ -17,6 +17,8 @@ on:
         type: number
         default: 3
 
+concurrency: update-packages
+
 permissions:
   contents: write
   pull-requests: write
