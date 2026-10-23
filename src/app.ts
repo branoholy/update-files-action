@@ -11,7 +11,7 @@ const getBaseBranchName = async (repoKit: RepoKit, baseBranchName: string | unde
 
 const findChangedFiles = (paths: string[]) => {
   const filePaths = paths.reduce<string[]>((acc, path) => {
-    acc.push(...globSync(path, { nodir: true }));
+    acc.push(...globSync(path, { nodir: true, dot: true }));
     return acc;
   }, []);
 
