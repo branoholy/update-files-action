@@ -127,9 +127,9 @@ describe('app', () => {
     TestUtils.expectToBeCalled(consoleInfoMock, [['No file has been changed']]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2'], ['path3']]);
@@ -164,9 +164,9 @@ describe('app', () => {
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -231,9 +231,9 @@ describe('app', () => {
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -299,9 +299,9 @@ describe('app', () => {
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -365,9 +365,9 @@ describe('app', () => {
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -465,9 +465,9 @@ describe('app', () => {
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -532,9 +532,9 @@ describe('app', () => {
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -601,9 +601,9 @@ describe('app', () => {
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -718,9 +718,9 @@ describe('app', () => {
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -796,9 +796,9 @@ describe('app', () => {
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1'], ['path2'], ['path3']]);
     TestUtils.expectToBeCalled(isFileChangedMock, [['path1'], ['path2']]);
@@ -862,9 +862,9 @@ describe('app', () => {
     TestUtils.expectToBeCalled(consoleErrorMock, [[error]]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [['path1']]);
 
@@ -956,9 +956,9 @@ describe('app', () => {
     ]);
 
     TestUtils.expectToBeCalled(globSyncMock, [
-      ['path1', { nodir: true }],
-      ['path2', { nodir: true }],
-      ['path3', { nodir: true }],
+      ['path1', { nodir: true, dot: true }],
+      ['path2', { nodir: true, dot: true }],
+      ['path3', { nodir: true, dot: true }],
     ]);
     TestUtils.expectToBeCalled(isFileUntrackedMock, [
       ['path1'],
