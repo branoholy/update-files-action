@@ -14,7 +14,7 @@ permissions:
 jobs:
   update-node:
     name: Cluerise
-    uses: cluerise/actions/.github/workflows/update-node.yaml@v7.5.2
+    uses: cluerise/actions/.github/workflows/update-node.yaml@v7.5.3
     with:
       app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
     secrets:

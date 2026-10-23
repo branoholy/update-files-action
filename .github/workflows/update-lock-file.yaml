@@ -14,7 +14,7 @@ permissions:
 jobs:
   update-lock-file:
     name: Cluerise
-    uses: cluerise/actions/.github/workflows/update-lock-file.yaml@v7.5.2
+    uses: cluerise/actions/.github/workflows/update-lock-file.yaml@v7.5.3
     with:
       app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
     secrets:
