@@ -6,9 +6,6 @@ updates:
       interval: weekly
       day: saturday
       time: '11:30'
-    cooldown:
-      exclude:
-        - cluerise/actions
     pull-request-branch-name:
       separator: '-'
     open-pull-requests-limit: 10
