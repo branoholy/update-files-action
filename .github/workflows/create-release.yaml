@@ -11,7 +11,7 @@ permissions:
 jobs:
   create-release:
     name: Cluerise
-    uses: cluerise/actions/.github/workflows/create-release.yaml@v7.5.3
+    uses: cluerise/actions/.github/workflows/create-release.yaml@v7.5.4
     with:
       app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
     secrets:

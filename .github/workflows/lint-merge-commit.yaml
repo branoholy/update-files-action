@@ -11,4 +11,4 @@ permissions:
 jobs:
   lint-merge-commit:
     name: Cluerise
-    uses: cluerise/actions/.github/workflows/lint-merge-commit.yaml@v7.5.3
+    uses: cluerise/actions/.github/workflows/lint-merge-commit.yaml@v7.5.4
