@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.4
+        uses: cluerise/actions/install@v7.5.5
 
   build:
     name: Build project
@@ -27,7 +27,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.4
+        uses: cluerise/actions/install@v7.5.5
       - name: Build project
         run: pnpm run build
 
@@ -37,7 +37,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.4
+        uses: cluerise/actions/install@v7.5.5
       - name: Check types
         run: pnpm run tc
 
@@ -47,7 +47,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.4
+        uses: cluerise/actions/install@v7.5.5
       - name: Lint files
         run: NODE_OPTIONS=--max-old-space-size=8192 pnpm run lint all
 
@@ -57,7 +57,7 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.4
+        uses: cluerise/actions/install@v7.5.5
       - name: Test project
         run: pnpm run test:unit
 
@@ -67,6 +67,6 @@ jobs:
     needs: install
     steps:
       - name: Install
-        uses: cluerise/actions/install@v7.5.4
+        uses: cluerise/actions/install@v7.5.5
       - name: Test project
         run: pnpm run test:e2e
