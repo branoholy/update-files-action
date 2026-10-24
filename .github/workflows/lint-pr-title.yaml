@@ -10,4 +10,4 @@ permissions:
 jobs:
   lint-pr-title:
     name: Cluerise
-    uses: cluerise/actions/.github/workflows/lint-pr-title.yaml@v7.5.4
+    uses: cluerise/actions/.github/workflows/lint-pr-title.yaml@v7.5.5

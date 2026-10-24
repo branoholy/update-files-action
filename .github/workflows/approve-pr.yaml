@@ -15,7 +15,7 @@ jobs:
       github.event.comment.body == '/approve' &&
       github.event.comment.user.login == 'branoholy'
 
-    uses: cluerise/actions/.github/workflows/approve-pr.yaml@v7.5.4
+    uses: cluerise/actions/.github/workflows/approve-pr.yaml@v7.5.5
     with:
       app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
     secrets:

@@ -11,7 +11,7 @@ permissions:
 jobs:
   create-release-pr:
     name: Cluerise
-    uses: cluerise/actions/.github/workflows/create-release-pr.yaml@v7.5.4
+    uses: cluerise/actions/.github/workflows/create-release-pr.yaml@v7.5.5
     with:
       app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
     secrets:
@@ -27,13 +27,13 @@ jobs:
     steps:
       - name: Get app token
         id: get-app-token
-        uses: cluerise/actions/get-github-app-token@v7.5.4
+        uses: cluerise/actions/get-github-app-token@v7.5.5
         with:
           app-id: ${{ vars.BRANOHOLY_PUBLIC_BOT_APP_ID }}
           app-private-key: ${{ secrets.BRANOHOLY_PUBLIC_BOT_APP_PRIVATE_KEY }}
 
       - name: Install
-        uses: cluerise/actions/install@v7.5.4
+        uses: cluerise/actions/install@v7.5.5
         with:
           ref: release
 
