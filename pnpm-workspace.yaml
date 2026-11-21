@@ -16,5 +16,4 @@ publicHoistPattern:
   - prettier-plugin-sh
 
 overrides:
-  prettier: 3.9.6
   typescript: ^6
